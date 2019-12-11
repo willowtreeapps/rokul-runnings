@@ -11,34 +11,29 @@ class WebDriver {
     this.rokuIPAddress = rokuIPAddress;
     this.timeoutInMillis = timeoutInMillis;
     this.pressDelayInMillis = pressDelayInMillis;
-    this.requestBody = this.buildRequestBody();
     this.sessionId = this.getSessionId();
   }
 
-  buildRequestBody() {
+  buildRequestBody(additionalParams = {}) {
     return {
       ip: this.rokuIPAddress,
       timeout: this.timeoutInMillis,
-      pressDelay: this.pressDelayInMillis
+      pressDelay: this.pressDelayInMillis,
+      ...additionalParams
     };
   }
 
-  addToRequestBody(key, value, requestBody = this.requestBody) {
-    newRequestBody = requestBody;
-    newRequestBody.key = value;
-    return newRequestBody;
-  }
-
   //may need to re-work
-  createURL(command = null) {
-    if (command == null) return BASE_URL + "session";
-    else return BASE_URL + "session/" + this.sessionId + command;
+  createURL(command) {
+    if (!command) return `${BASE_URL}/session`;
+    else return `${BASE_URL}session/${this.sessionId}${command}`;
   }
 
   getSessionId() {
-    var url = this.createURL();
-    axios
-      .post(url, this.requestBody)
+    const url = this.createURL();
+    const newRequestBody = this.buildRequestBody();
+    return axios
+      .post(url, newRequestBody)
       .then(function(response) {
         return response.sessionId;
       })
@@ -51,8 +46,8 @@ class WebDriver {
 
   //GET
   getDeviceInfo() {
-    var url = this.createURL("");
-    axios
+    const url = this.createURL("");
+    return axios
       .get(url)
       .then(function(response) {
         return response;
@@ -63,8 +58,8 @@ class WebDriver {
   }
 
   getPlayerInfo() {
-    var url = this.createURL("/player");
-    axios
+    const url = this.createURL("/player");
+    return axios
       .get(url)
       .then(function(response) {
         return response;
@@ -77,8 +72,8 @@ class WebDriver {
   //POST
 
   basePOST(url, requestBody) {
-    axios
-      .post(url, newRequestBody)
+    return axios
+      .post(url, requestBody)
       .then(function(response) {
         return response;
       })
@@ -88,25 +83,29 @@ class WebDriver {
   }
 
   sendLaunchChannel(channelCode) {
-    newRequestBody = this.addToRequestBody("channelId", channelCode);
-    var url = this.createURL("/launch");
-    this.basePOST(url, newRequestBody);
+    const newRequestBody = this.buildRequestBody({ channelId: channelCode });
+    const url = this.createURL("/launch");
+
+    return this.basePOST(url, newRequestBody);
   }
 
   sendInstallChannel(channelCode) {
-    newRequestBody = this.addToRequestBody("channelId", channelCode);
-    var url = this.createURL("/install");
-    this.basePOST(url, newRequestBody);
+    const newRequestBody = this.buildRequestBody({ channelId: channelCode });
+    const url = this.createURL("/install");
+
+    return this.basePOST(url, newRequestBody);
   }
 
   sendSequence(sequence) {
-    newRequestBody = this.addToRequestBody("button_sequence", sequence);
-    var url = this.createURL("/press");
-    this.basePOST(url, newRequestBody);
+    const newRequestBody = this.buildRequestBody({ button_sequence: sequence });
+    const url = this.createURL("/press");
+
+    return this.basePOST(url, newRequestBody);
   }
 
   getUIElement(data) {
-    var url = this.createURL("/element");
-    this.basePOST(url, data);
+    const url = this.createURL("/element");
+
+    return this.basePOST(url, data);
   }
 }
