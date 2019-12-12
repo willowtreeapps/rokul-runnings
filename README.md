@@ -13,7 +13,7 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
 ## FAQ
 
 - What is this?
-- - This library is an alternative to the Roku-provided framework written in python and robot framework [found here](https://github.com/rokudev/automated-channel-testing)
+- - This library is an alternative to the Roku-provided framework, which was written in python and robot framework [found here](https://github.com/rokudev/automated-channel-testing)
 - Why?
 - - Most test engineers are more familiar with javascript than they are with robot framework (and maybe also python.) By having the same functionality, but in a more well known language, it will allow more people to automate their tests and interactions with Roku devices
 - Does this Library have built in assertions?

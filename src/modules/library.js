@@ -1,4 +1,5 @@
 const WebDriver = require("./webdriver");
+const sleep = require("../utils");
 
 class Library {
   constructor(
@@ -22,12 +23,11 @@ class Library {
   launchTheChannel(channelCode) {
     const response = this.driver.sendLaunchChannel(channelCode);
     print(response);
-    return this.checkResponse(response);
+    return response;
   }
 
   getApps() {
     const response = this.driver.getApps();
-    this.checkResponse(response);
     return response.text.value;
   }
 
@@ -35,24 +35,24 @@ class Library {
     apps.array.forEach(app => {
       if (app.id === id) return true;
     });
-    throw Error("Channel does not exist!");
+    return false;
   }
 
   verifyIsScreenLoaded(data, maxRetries = 10, delayInMillis = 1000) {
     print(data);
     retries = 0;
     while (retries < maxRetries) {
-      const uiLayoutresponse = this.driver.getUIElement(data);
+      const uiLayoutresponse = this.driver.getUIElement(data, false);
       if (uiLayoutResponse.status != 200) retries++;
       else return true;
       sleep(delayInMillis);
     }
+    return false;
   }
 
   pressBtn(keyPress, delayInMillis = 2000) {
     sleep(delayInMillis);
-    const response = this.driver.sendKeypress(keyPress);
-    this.checkResponse(response);
+    this.driver.sendKeypress(keyPress);
   }
 
   sendWord(word, delayInMillis = 2000) {
@@ -62,27 +62,23 @@ class Library {
       const response = this.driver.sendKeypress(
         "LIT_" + word.charAt(charIndex)
       );
-      this.checkResponse(response);
     }
   }
 
   sendButtonSequence(sequence, delayInMillis = 2000) {
     sleep(delayInMillis);
-    const response = this.driver.sendSequence(sequence);
-    this.checkResponse(response);
+    this.driver.sendSequence(sequence);
   }
 
   getElement(data, delayInMillis = 1000) {
     sleep(delayInMillis);
     const response = this.driver.getUIElement(data);
-    this.checkResponse(response);
     return response.text.value;
   }
 
   getElements(data, delayInMillis = 1000) {
     sleep(delayInMillis);
     const response = this.driver.getUIElements(data);
-    this.checkResponse(response);
     print(delayInMillis);
     print(response.text.value.length);
     return response.text.value;
@@ -90,37 +86,32 @@ class Library {
 
   getFocusedElement() {
     const response = this.driver.getActiveElement();
-    this.checkResponse(response);
     return response.text.value;
   }
 
   verifyIsChannelLoaded(id, maxRetries = 10, delayInMillis = 1000) {
     var retries = 0;
     while (retries < maxRetries) {
-      const response = this.driver.getCurrentApp();
-      this.checkResponse(response);
+      const response = this.driver.getCurrentApp(false);
       if (response.text.value.id != id) retries++;
       else return true;
       sleep(delayInMillis);
     }
-    throw Error("Channel isn't launched");
+    return false;
   }
 
   getCurrentChannelInfo() {
     const response = this.driver.getCurrentApp();
-    this.checkResponse(response);
     return response.text.value;
   }
 
   getDeviceInfo() {
     const response = this.driver.getDeviceInfo();
-    this.checkResponse(response);
     return response.text.value;
   }
 
   getPlayerInfo() {
     const response = this.driver.getPlayerInfo();
-    this.checkResponse(response);
     value = response.text.value;
     value.position = parseInt(value.position.split(" ")[0]);
     value.duration = parseInt(value.duration.split(" ")[0]);
@@ -130,22 +121,21 @@ class Library {
   verifyIsPlaybackStarted(maxRetries = 10, delayInMillis = 1000) {
     var retries = 0;
     while (retries < maxRetries) {
-      const response = this.driver.getPlayerInfo();
+      const response = this.driver.getPlayerInfo(false);
       if ((response.status != 200) | (response.text.value.state != "play"))
         retries++;
       else return true;
       sleep(delayInMillis);
     }
+    return false;
   }
 
   setTimeout(timeoutInMillis) {
-    const response = this.driver.setTimeouts("implicit", timeoutInMillis);
-    this.checkResponse(response);
+    this.driver.setTimeouts("implicit", timeoutInMillis);
   }
 
   setDelay(delayInMillis) {
-    const response = this.driver.setTimeouts("pressDelay", this.delayInMillis);
-    this.checkResponse(response);
+    this.driver.setTimeouts("pressDelay", this.delayInMillis);
   }
 
   getAttribute(element, attribute) {
@@ -155,14 +145,4 @@ class Library {
     }
     throw Error("Can't find attribute!");
   }
-
-  checkResponse(response) {
-    if (response.status === 400) throw Error(response.text);
-    else if (response.status != 200) throw Error(response.value.message);
-    else return true;
-  }
 }
-
-const sleep = milliseconds => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
-};
