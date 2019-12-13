@@ -1,9 +1,8 @@
-const axios = require("axios");
-const http = require("../utils");
+const http = require("../utils/http");
 
-const BASE_URL = "http://localhost:9000/v1/";
+const BASE_URL = "http://localhost:9000/v1";
 
-export class WebDriver {
+class WebDriver {
   constructor(
     rokuIPAddress,
     timeoutInMillis = 20000,
@@ -12,7 +11,6 @@ export class WebDriver {
     this.rokuIPAddress = rokuIPAddress;
     this.timeoutInMillis = timeoutInMillis;
     this.pressDelayInMillis = pressDelayInMillis;
-    this.sessionId = this.createNewSession();
   }
 
   /**
@@ -34,9 +32,14 @@ export class WebDriver {
    *
    * @param {String} command The endpoint to be reached, nullable
    */
-  buildURL(command) {
+  async buildURL(command) {
     if (!command) return `${BASE_URL}/session`;
-    else return `${BASE_URL}session/${this.sessionId}${command}`;
+    else {
+      if (!this.sessionId) {
+        this.sessionId = await this.createNewSession();
+      }
+    }
+    return `${BASE_URL}/session/${this.sessionId}${command}`;
   }
 
   /**
@@ -44,11 +47,12 @@ export class WebDriver {
    *
    * @param {Boolean} check Determines if the response is checked, default to true
    */
-  createNewSession(check = true) {
-    const url = this.buildURL();
-    response = this.basePOST(url);
+  async createNewSession(check = true) {
+    const url = await this.buildURL();
+    const requestBody = this.buildRequestBody();
+    const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
-    return response.sessionId;
+    return response.body.sessionId;
   }
 
   //GET
@@ -60,7 +64,7 @@ export class WebDriver {
    */
   getDeviceInfo(check = true) {
     const url = this.buildURL("");
-    const response = this.baseGET(url);
+    const response = http.baseGET(url);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -72,7 +76,7 @@ export class WebDriver {
    */
   getPlayerInfo(check = true) {
     const url = this.buildURL("/player");
-    const response = this.baseGET(url);
+    const response = http.baseGET(url);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -84,7 +88,7 @@ export class WebDriver {
    */
   getApps(check = true) {
     const url = this.buildURL("/apps");
-    const response = this.baseGET(url);
+    const response = http.baseGET(url);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -96,7 +100,7 @@ export class WebDriver {
    */
   getCurrentApp(check = true) {
     const url = this.buildURL("/current_app");
-    const response = this.baseGET(url);
+    const response = http.baseGET(url);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -108,7 +112,7 @@ export class WebDriver {
    */
   getScreenSource(check = true) {
     const url = this.buildURL("/source");
-    const response = this.baseGET(url);
+    const response = http.baseGET(url);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -121,10 +125,10 @@ export class WebDriver {
    * @param {String} channelCode The ID of the channel to be launched
    * @param {Boolean} check Determines if the response is checked, default to true
    */
-  sendLaunchChannel(channelCode, check = true) {
+  async sendLaunchChannel(channelCode, check = true) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
-    const url = this.buildURL("/launch");
-    const response = this.basePOST(url, requestBody);
+    const url = await this.buildURL("/launch");
+    const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -138,7 +142,7 @@ export class WebDriver {
   sendInstallChannel(channelCode, check = true) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
     const url = this.buildURL("/install");
-    const response = this.basePOST(url, requestBody);
+    const response = http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -152,7 +156,7 @@ export class WebDriver {
   sendSequence(sequence, check = true) {
     const requestBody = this.buildRequestBody({ button_sequence: sequence });
     const url = this.buildURL("/press");
-    const response = this.basePOST(url, requestBody);
+    const response = http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -171,7 +175,7 @@ export class WebDriver {
    */
   getUIElement(data, check = true) {
     const url = this.buildURL("/element");
-    response = this.basePOST(url, data);
+    response = http.basePOST(url, data);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -189,7 +193,7 @@ export class WebDriver {
       ms: delayInMillis
     });
     const url = this.buildURL("/timeouts");
-    const response = this.basePOST(url, requestBody);
+    const response = http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -208,7 +212,7 @@ export class WebDriver {
    */
   getUIElements(data, check = true) {
     const url = this.buildURL("/elements");
-    const response = this.basePOST(url, data);
+    const response = http.basePOST(url, data);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -222,7 +226,7 @@ export class WebDriver {
   sendKeypress(keyPress, check = true) {
     const requestBody = this.buildRequestBody({ button: keyPress });
     const url = this.buildURL("/press");
-    const response = this.basePOST(url, requestBody);
+    const response = http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -235,7 +239,7 @@ export class WebDriver {
   getActiveElement(check = true) {
     const body = {};
     const url = this.buildURL("/element/active");
-    const response = this.basePOST(url, body);
+    const response = http.basePOST(url, body);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -245,9 +249,9 @@ export class WebDriver {
   /**
    * Deletes the session specified in the URL path.
    */
-  quiet() {
-    const url = this.buildURL("");
-    const response = this.baseDELETE(url);
+  async quiet() {
+    const url = await this.buildURL(" ");
+    const response = await http.baseDELETE(url);
     return response;
   }
 
@@ -258,8 +262,13 @@ export class WebDriver {
    * @param {JSON} response Response to be checked, provided by a request
    */
   checkResponse(response) {
-    if (response.status === 400) throw Error(response.text);
-    else if (response.status != 200) throw Error(response.value.message);
+    if (response.status === 400) throw Error(response.body.text);
+    else if (response.status !== 200) throw Error(response.body.value.message);
     else return true;
   }
 }
+
+module.exports = {
+  WebDriver,
+  BASE_URL
+};

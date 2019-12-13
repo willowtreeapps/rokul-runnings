@@ -34,3 +34,5 @@ Most of the documentation provided in the JSDocs information was provided from t
 - unit-ish tests `priority: 4`
 - assertions (no assertions for now, maybe integrate them later?) `priority: 5`
 - Maybe hook it up to swagger for even better documentation? `priority: 10`
+- dev dependencies for shipping
+- start/stop server via start/stop functions, called during before/after -- figure out

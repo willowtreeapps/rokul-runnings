@@ -1,15 +1,9 @@
 const WebDriver = require("./webdriver");
-const sleep = require("../utils");
+const sleep = require("../utils/sleep");
 
 class Library {
-  constructor(
-    rokuIPAddress,
-    timeoutInMillis = 0,
-    pressDelayInMillis = 0,
-    path = ""
-  ) {
-    this.path = path;
-    this.driver = new WebDriver(
+  constructor(rokuIPAddress, timeoutInMillis = 0, pressDelayInMillis = 0) {
+    this.driver = new WebDriver.WebDriver(
       rokuIPAddress,
       timeoutInMillis,
       pressDelayInMillis
@@ -19,8 +13,8 @@ class Library {
   /**
    * Closes the session
    */
-  close() {
-    this.driver.quiet();
+  async close() {
+    await this.driver.quiet();
   }
 
   /**
@@ -28,9 +22,9 @@ class Library {
    *
    * @param {String} channelCode The ID of the channel to be launched
    */
-  launchTheChannel(channelCode) {
-    const response = this.driver.sendLaunchChannel(channelCode);
-    print(response);
+  async launchTheChannel(channelCode) {
+    const response = await this.driver.sendLaunchChannel(channelCode);
+    console.log(response);
     return response;
   }
 
@@ -63,7 +57,7 @@ class Library {
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   verifyIsScreenLoaded(data, maxRetries = 10, delayInMillis = 1000) {
-    print(data);
+    console.log(data);
     retries = 0;
     while (retries < maxRetries) {
       const uiLayoutresponse = this.driver.getUIElement(data, false);
@@ -135,8 +129,8 @@ class Library {
   getElements(data, delayInMillis = 1000) {
     sleep(delayInMillis);
     const response = this.driver.getUIElements(data);
-    print(delayInMillis);
-    print(response.text.value.length);
+    console.log(delayInMillis);
+    console.log(response.text.value.length);
     return response.text.value;
   }
 
@@ -243,3 +237,7 @@ class Library {
     throw Error("Can't find attribute!");
   }
 }
+
+module.exports = {
+  Library: Library
+};
