@@ -1,6 +1,22 @@
 const WebDriver = require("./webdriver");
 const sleep = require("../utils/sleep");
 
+const buttons = {
+  up: "up",
+  down: "down",
+  right: "right",
+  left: "left",
+  back: "back",
+  select: "select",
+  replay: "replay",
+  play: "play",
+  stop: "stop",
+  rewind: "rewind",
+  fast_forward: "fast forward",
+  options: "options",
+  home: "home"
+};
+
 class Library {
   constructor(rokuIPAddress, timeoutInMillis = 0, pressDelayInMillis = 0) {
     this.driver = new WebDriver.WebDriver(
@@ -31,9 +47,9 @@ class Library {
   /**
    * Returns a list of installed channels as an array of objects
    */
-  getApps() {
-    const response = this.driver.getApps();
-    return response.text.value;
+  async getApps() {
+    const response = await this.driver.getApps();
+    return response.data.value;
   }
 
   /**
@@ -43,10 +59,11 @@ class Library {
    * @param {String} id The ID of the channel to be verified. Use 'dev' to verify a sideloaded channel.
    */
   verifyIsChannelExist(apps, id) {
-    apps.array.forEach(app => {
-      if (app.id === id) return true;
+    var isChannelExist = false;
+    apps.forEach(app => {
+      if (app.ID === id) isChannelExist = true;
     });
-    return false;
+    return isChannelExist;
   }
 
   /**
@@ -56,11 +73,11 @@ class Library {
    * @param {Number} maxRetries The number of requests that can be made before generating an error. This argument is optional, and it defaults to 10 if not specified.
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
-  verifyIsScreenLoaded(data, maxRetries = 10, delayInMillis = 1000) {
+  async verifyIsScreenLoaded(data, maxRetries = 10, delayInMillis = 1000) {
     console.log(data);
-    retries = 0;
+    const retries = 0;
     while (retries < maxRetries) {
-      const uiLayoutresponse = this.driver.getUIElement(data, false);
+      const uiLayoutResponse = await this.driver.getUIElement(data, false);
       if (uiLayoutResponse.status != 200) retries++;
       else return true;
       sleep(delayInMillis);
@@ -71,14 +88,13 @@ class Library {
   /**
    * Simulates the press and release of the specified key.
    *
-   * @param {String} keyPress The key to be pressed and released, which may be one of the following:
-   *                          "up", "down", "right", "left", "back, "select", "replay",
-   *                          "play", "stop", "rewind", "fast forward", and "options"
+   * @param {String} keyPress The key to be pressed and released, which may be one of the options in the "buttons" constant
    * @param {Number} delayInMillis The delay before the keypresses are executed. This argument is optional, and it defaults to 2000 milliseconds if not specified.
    */
-  pressBtn(keyPress, delayInMillis = 2000) {
-    sleep(delayInMillis);
-    this.driver.sendKeypress(keyPress);
+  async pressBtn(keyPress, delayInMillis = 2000) {
+    sleep.sleep(delayInMillis);
+    const response = await this.driver.sendKeypress(keyPress);
+    return response;
   }
 
   /**
@@ -87,14 +103,16 @@ class Library {
    * @param {String} word The specified word to be entered.
    * @param {Number} delayInMillis The delay before the keypresses are executed. This argument is optional, and it defaults to 2000 milliseconds if not specified.
    */
-  sendWord(word, delayInMillis = 2000) {
-    sleep(delayInMillis);
-    for (var charIndex = 0; charIndex < word.length; charIndex++) {
-      sleep(500);
-      const response = this.driver.sendKeypress(
+  async sendWord(word, delayInMillis = 2000) {
+    sleep.sleep(delayInMillis);
+    var wordResponse = {};
+    for (let charIndex = 0; charIndex < word.length; charIndex++) {
+      sleep.sleep(500);
+      wordResponse.charIndex = await this.driver.sendKeypress(
         "LIT_" + word.charAt(charIndex)
       );
     }
+    return wordResponse;
   }
 
   /**
@@ -103,9 +121,10 @@ class Library {
    * @param {JSON} sequence An array containing the sequence of keys to be pressed and released (for example, down, down, down, down, select).
    * @param {Number} delayInMillis The delay before the keypresses are executed. This argument is optional, and it defaults to 2000 milliseconds if not specified.
    */
-  sendButtonSequence(sequence, delayInMillis = 2000) {
-    sleep(delayInMillis);
-    this.driver.sendSequence(sequence);
+  async sendButtonSequence(sequence, delayInMillis = 2000) {
+    sleep.sleep(delayInMillis);
+    const response = await this.driver.sendSequence(sequence);
+    return response;
   }
 
   /**
@@ -114,10 +133,10 @@ class Library {
    * @param {JSON} data An object with locators for elementData and parentData (parentData is optional)
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
-  getElement(data, delayInMillis = 1000) {
-    sleep(delayInMillis);
-    const response = this.driver.getUIElement(data);
-    return response.text.value;
+  async getElement(data, delayInMillis = 1000) {
+    sleep.sleep(delayInMillis);
+    const response = await this.driver.getUIElement(data);
+    return response.body.value;
   }
 
   /**
@@ -126,20 +145,20 @@ class Library {
    * @param {JSON} data An object with locators for elementData and parentData (parentData is optional)
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
-  getElements(data, delayInMillis = 1000) {
-    sleep(delayInMillis);
-    const response = this.driver.getUIElements(data);
+  async getElements(data, delayInMillis = 1000) {
+    sleep.sleep(delayInMillis);
+    const response = await this.driver.getUIElements(data);
     console.log(delayInMillis);
-    console.log(response.text.value.length);
-    return response.text.value;
+    console.log(response.body.value.length);
+    return response.body.value;
   }
 
   /**
    * Return the element on the screen that currently has focus.
    */
-  getFocusedElement() {
-    const response = this.driver.getActiveElement();
-    return response.text.value;
+  async getFocusedElement() {
+    const response = await this.driver.getActiveElement();
+    return response.body.value;
   }
 
   /**
@@ -149,13 +168,13 @@ class Library {
    * @param {Number} maxRetries The number of requests that can be made before generating an error. This argument is optional, and it defaults to 10 if not specified.
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
-  verifyIsChannelLoaded(id, maxRetries = 10, delayInMillis = 1000) {
+  async verifyIsChannelLoaded(id, maxRetries = 10, delayInMillis = 1000) {
     var retries = 0;
     while (retries < maxRetries) {
-      const response = this.driver.getCurrentApp(false);
-      if (response.text.value.id != id) retries++;
+      const response = await this.driver.getCurrentApp(false);
+      if (response.data.value.ID != id) retries++;
       else return true;
-      sleep(delayInMillis);
+      sleep.sleep(delayInMillis);
     }
     return false;
   }
@@ -163,27 +182,27 @@ class Library {
   /**
    * Returns an object containing information about the channel currently loaded.
    */
-  getCurrentChannelInfo() {
-    const response = this.driver.getCurrentApp();
-    return response.text.value;
+  async getCurrentChannelInfo() {
+    const response = await this.driver.getCurrentApp();
+    return response.data.value;
   }
 
   /**
    * Returns an object containing the information about the device.
    */
-  getDeviceInfo() {
-    const response = this.driver.getDeviceInfo();
-    return response.text.value;
+  async getDeviceInfo() {
+    const response = await this.driver.getDeviceInfo();
+    return response.data.value;
   }
 
   /**
    * Returns an object containing information about the Roku media player
    */
-  getPlayerInfo() {
-    const response = this.driver.getPlayerInfo();
-    value = response.text.value;
-    value.position = parseInt(value.position.split(" ")[0]);
-    value.duration = parseInt(value.duration.split(" ")[0]);
+  async getPlayerInfo() {
+    const response = await this.driver.getPlayerInfo();
+    const value = response.data.value;
+    value.Position = parseInt(value.Position.split(" ")[0]);
+    value.Duration = parseInt(value.Duration.split(" ")[0]);
     return value;
   }
 
@@ -193,11 +212,11 @@ class Library {
    * @param {Number} maxRetries The number of requests that can be made before generating an error. This argument is optional, and it defaults to 10 if not specified.
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
-  verifyIsPlaybackStarted(maxRetries = 10, delayInMillis = 1000) {
+  async verifyIsPlaybackStarted(maxRetries = 10, delayInMillis = 1000) {
     var retries = 0;
     while (retries < maxRetries) {
-      const response = this.driver.getPlayerInfo(false);
-      if ((response.status != 200) | (response.text.value.state != "play"))
+      const response = await this.driver.getPlayerInfo(false);
+      if ((response.status != 200) | (response.data.value.State != "play"))
         retries++;
       else return true;
       sleep(delayInMillis);
@@ -210,8 +229,8 @@ class Library {
    *
    * @param {Number} timeoutInMillis The amount of time that Web driver client requests are allowed to run.
    */
-  setTimeout(timeoutInMillis) {
-    this.driver.setTimeouts("implicit", timeoutInMillis);
+  async setTimeout(timeoutInMillis) {
+    await this.driver.setTimeouts("implicit", timeoutInMillis);
   }
 
   /**
@@ -219,8 +238,8 @@ class Library {
    *
    * @param {Number} timeoutInMillis The interval to be used between key presses.
    */
-  setDelay(delayInMillis) {
-    this.driver.setTimeouts("pressDelay", this.delayInMillis);
+  async setDelay(delayInMillis) {
+    await this.driver.setTimeouts("pressDelay", this.delayInMillis);
   }
 
   /**
@@ -229,15 +248,16 @@ class Library {
    * @param {JSON} element An object that contains element information (attributes, child nodes).
    * @param {String} attribute The name of the attribute to retrieved
    */
-  getAttribute(element, attribute) {
-    for (var i = 0; i < element.attrs.length; i++) {
-      if (element.attrs[i].name.local === attribute)
-        return element.attrs[i].value;
+  async getAttribute(element, attribute) {
+    for (var i = 0; i < element.Attrs.length; i++) {
+      if (element.Attrs[i].Name.Local === attribute)
+        return element.Attrs[i].Value;
     }
     throw Error("Can't find attribute!");
   }
 }
 
 module.exports = {
-  Library: Library
+  buttons,
+  Library
 };
