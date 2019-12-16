@@ -39,9 +39,7 @@ class Library {
    * @param {String} channelCode The ID of the channel to be launched
    */
   async launchTheChannel(channelCode) {
-    const response = await this.driver.sendLaunchChannel(channelCode);
-    console.log(response);
-    return response;
+    return await this.driver.sendLaunchChannel(channelCode);
   }
 
   /**
@@ -60,9 +58,12 @@ class Library {
    */
   verifyIsChannelExist(apps, id) {
     var isChannelExist = false;
-    apps.forEach(app => {
-      if (app.ID === id) isChannelExist = true;
-    });
+    while (!isChannelExist) {
+      apps.forEach(app => {
+        console.log(app.ID);
+        if (app.ID === id) isChannelExist = true;
+      });
+    }
     return isChannelExist;
   }
 
@@ -74,8 +75,7 @@ class Library {
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   async verifyIsScreenLoaded(data, maxRetries = 10, delayInMillis = 1000) {
-    console.log(data);
-    const retries = 0;
+    var retries = 0;
     while (retries < maxRetries) {
       const uiLayoutResponse = await this.driver.getUIElement(data, false);
       if (uiLayoutResponse.status != 200) retries++;
@@ -93,8 +93,7 @@ class Library {
    */
   async pressBtn(keyPress, delayInMillis = 2000) {
     sleep.sleep(delayInMillis);
-    const response = await this.driver.sendKeypress(keyPress);
-    return response;
+    return await this.driver.sendKeypress(keyPress);
   }
 
   /**
@@ -123,8 +122,7 @@ class Library {
    */
   async sendButtonSequence(sequence, delayInMillis = 2000) {
     sleep.sleep(delayInMillis);
-    const response = await this.driver.sendSequence(sequence);
-    return response;
+    return await this.driver.sendSequence(sequence);
   }
 
   /**
@@ -148,8 +146,6 @@ class Library {
   async getElements(data, delayInMillis = 1000) {
     sleep.sleep(delayInMillis);
     const response = await this.driver.getUIElements(data);
-    console.log(delayInMillis);
-    console.log(response.body.value.length);
     return response.body.value;
   }
 
@@ -200,7 +196,7 @@ class Library {
    */
   async getPlayerInfo() {
     const response = await this.driver.getPlayerInfo();
-    const value = response.data.value;
+    var value = response.data.value;
     value.Position = parseInt(value.Position.split(" ")[0]);
     value.Duration = parseInt(value.Duration.split(" ")[0]);
     return value;
@@ -216,7 +212,7 @@ class Library {
     var retries = 0;
     while (retries < maxRetries) {
       const response = await this.driver.getPlayerInfo(false);
-      if ((response.status != 200) | (response.data.value.State != "play"))
+      if ((response.status !== 200) | (response.data.value.State !== "play"))
         retries++;
       else return true;
       sleep(delayInMillis);
