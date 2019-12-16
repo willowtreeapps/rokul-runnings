@@ -60,7 +60,6 @@ class Library {
     var isChannelExist = false;
     while (!isChannelExist) {
       apps.forEach(app => {
-        console.log(app.ID);
         if (app.ID === id) isChannelExist = true;
       });
     }
