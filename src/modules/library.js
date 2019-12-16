@@ -57,7 +57,7 @@ class Library {
    * @param {String} id The ID of the channel to be verified. Use 'dev' to verify a sideloaded channel.
    */
   verifyIsChannelExist(apps, id) {
-    var isChannelExist = false;
+    let isChannelExist = false;
     while (!isChannelExist) {
       apps.forEach(app => {
         if (app.ID === id) isChannelExist = true;
@@ -74,7 +74,7 @@ class Library {
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   async verifyIsScreenLoaded(data, maxRetries = 10, delayInMillis = 1000) {
-    var retries = 0;
+    let retries = 0;
     while (retries < maxRetries) {
       const uiLayoutResponse = await this.driver.getUIElement(data, false);
       if (uiLayoutResponse.status != 200) retries++;
@@ -103,7 +103,7 @@ class Library {
    */
   async sendWord(word, delayInMillis = 2000) {
     sleep.sleep(delayInMillis);
-    var wordResponse = {};
+    let wordResponse = {};
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       sleep.sleep(500);
       wordResponse.charIndex = await this.driver.sendKeypress(
@@ -164,7 +164,7 @@ class Library {
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   async verifyIsChannelLoaded(id, maxRetries = 10, delayInMillis = 1000) {
-    var retries = 0;
+    let retries = 0;
     while (retries < maxRetries) {
       const response = await this.driver.getCurrentApp(false);
       if (response.data.value.ID != id) retries++;
@@ -195,7 +195,7 @@ class Library {
    */
   async getPlayerInfo() {
     const response = await this.driver.getPlayerInfo();
-    var value = response.data.value;
+    let value = response.data.value;
     value.Position = parseInt(value.Position.split(" ")[0]);
     value.Duration = parseInt(value.Duration.split(" ")[0]);
     return value;
@@ -208,7 +208,7 @@ class Library {
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   async verifyIsPlaybackStarted(maxRetries = 10, delayInMillis = 1000) {
-    var retries = 0;
+    let retries = 0;
     while (retries < maxRetries) {
       const response = await this.driver.getPlayerInfo(false);
       if ((response.status !== 200) | (response.data.value.State !== "play"))
@@ -244,7 +244,7 @@ class Library {
    * @param {String} attribute The name of the attribute to retrieved
    */
   async getAttribute(element, attribute) {
-    for (var i = 0; i < element.Attrs.length; i++) {
+    for (let i = 0; i < element.Attrs.length; i++) {
       if (element.Attrs[i].Name.Local === attribute)
         return element.Attrs[i].Value;
     }

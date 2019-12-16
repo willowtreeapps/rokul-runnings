@@ -174,7 +174,7 @@ describe("Library tests", function() {
       .persist();
 
     const response = await libraryDriver.sendWord(word);
-    var finalMockResponse = {};
+    let finalMockResponse = {};
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       finalMockResponse.charIndex = mockResponse;
     }
@@ -694,7 +694,7 @@ describe("Library tests", function() {
   });
 
   it("Should Get Player Info", async function() {
-    var responseValue = {
+    let responseValue = {
       Error: "false",
       State: "play",
       Format: {
@@ -742,7 +742,7 @@ describe("Library tests", function() {
   });
 
   it("Should Verify Playback Is Started", async function() {
-    var responseValue = {
+    let responseValue = {
       Error: "false",
       State: "play",
       Format: {
