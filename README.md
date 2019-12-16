@@ -13,14 +13,14 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
 ## FAQ
 
 - What is this?
-- - This library is an alternative to the Roku-provided framework, which was written in python and robot framework [found here](https://github.com/rokudev/automated-channel-testing)
+  - This library is an alternative to the Roku-provided framework, which was written in python and robot framework [found here](https://github.com/rokudev/automated-channel-testing)
 - Why?
-- - Most test engineers are more familiar with javascript than they are with robot framework (and maybe also python.) By having the same functionality, but in a more well known language, it will allow more people to automate their tests and interactions with Roku devices
+  - Most test engineers are more familiar with javascript than they are with robot framework (and maybe also python.) By having the same functionality, but in a more well known language, it will allow more people to automate their tests and interactions with Roku devices
 - Does this Library have built in assertions?
-- - Somewhat. A few of the functions in the `library.js` class return boolean values and can be used with your favorite assertion libraries to verify that certain actions have been achieved.
-- - But by and large, this library does not have it's own assertion methods. We anticipate that you can use the responses from the various methods to inform your testing assertions.
+  - Somewhat. A few of the functions in the `library.js` class return boolean values and can be used with your favorite assertion libraries to verify that certain actions have been achieved.
+  - But by and large, this library does not have it's own assertion methods. We anticipate that you can use the responses from the various methods to inform your testing assertions. If you need ideas about how the data is returned or how assertions can work, the `library-unit-tests.js` file might be a good place to start.
 - What if I have suggestions or find issues?
-- - Write up any feature suggestions or issues on the Github.
+  - Write up any feature suggestions or issues on the Github.
 
 ## Documentation
 
@@ -29,8 +29,8 @@ Most of the documentation provided in the JSDocs information was provided from t
 ## Todo
 
 - test everything because this is still all theoretical `priority: 1`
-- real testing hook ins `priority: 2`
-- Figure out setUp/tearDown `priority: 3`
-- unit-ish tests `priority: 4`
-- assertions (no assertions for now, maybe integrate them later?) `priority: 5`
+- Figure out setUp/tearDown `priority: 2`
+  - start/stop server via start/stop functions, called during before/after -- figure out
+- real testing hook ins `priority: 3`
 - Maybe hook it up to swagger for even better documentation? `priority: 10`
+- dev dependencies for shipping
