@@ -32,6 +32,10 @@ describe("Library tests", function() {
   beforeEach(function() {
     libraryDriver = new Library("123.456.789.012");
     nock(BASE_URL)
+      .get("/sessions")
+      .reply(200, null);
+
+    nock(BASE_URL)
       .post("/session")
       .reply(200, {
         sessionId: sessionId,
@@ -244,7 +248,14 @@ describe("Library tests", function() {
       Nodes: null
     };
 
-    const { httpMock, mockResponse } = buildMockResponse(0, valueResponse);
+    const { httpMock } = buildMockResponse(0, valueResponse);
+
+    const mockResponse = {
+      bounds: "{0, 11, 340, 48}",
+      color: "#ddddddff",
+      index: "0",
+      text: "Item 1"
+    };
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/element`)
@@ -254,7 +265,7 @@ describe("Library tests", function() {
 
     assert.deepEqual(
       response,
-      valueResponse,
+      mockResponse,
       "Element response did not match expected value."
     );
   });
@@ -343,7 +354,23 @@ describe("Library tests", function() {
         Nodes: null
       }
     ];
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
+
+    const mockResponse = [
+      {
+        bounds: "{0, 11, 340, 48}",
+        color: "#ddddddff",
+        index: "0",
+        text: "HOME"
+      },
+      {
+        color: "#ddddddff",
+        index: "0",
+        opacity: "0",
+        text: "HOME",
+        visible: "false"
+      }
+    ];
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/elements`)
@@ -354,7 +381,7 @@ describe("Library tests", function() {
 
     assert.deepEqual(
       response,
-      responseValue,
+      mockResponse,
       "Elements response did not match expected value."
     );
   });
@@ -611,7 +638,7 @@ describe("Library tests", function() {
       ]
     };
 
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/element/active`)
@@ -795,60 +822,5 @@ describe("Library tests", function() {
   it("Should Set Delay Press Timeout", async function() {
     //To Do -- unable to see anywhere that the Timeout is actually set
     //will use libraryDriver.setDelay()
-  });
-
-  it("Should Get Attribute", async function() {
-    const responseValue = {
-      XMLName: {
-        Space: "",
-        Local: "Label"
-      },
-      Attrs: [
-        {
-          Name: {
-            Space: "",
-            Local: "bounds"
-          },
-          Value: "{0, 11, 340, 48}"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "color"
-          },
-          Value: "#ddddddff"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "index"
-          },
-          Value: "0"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "text"
-          },
-          Value: "Item 1"
-        }
-      ],
-      Nodes: null
-    };
-
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
-    nock(BASE_URL)
-      .post(`/session/${sessionId}/element`)
-      .reply(200, httpMock);
-
-    const response = await libraryDriver.getElement(elementData);
-
-    const attributeValue = await libraryDriver.getAttribute(response, "color");
-
-    assert.deepEqual(
-      attributeValue,
-      "#ddddddff",
-      "Attribute value does not match."
-    );
   });
 });

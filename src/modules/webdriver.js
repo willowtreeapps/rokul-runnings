@@ -44,18 +44,37 @@ class WebDriver {
 
   /**
    * Creates a new session, returning the sessionId to create the 'base' URL for the session
+   * If a session already exists for a specified IP address, that sessionId is used
    *
    * @param {Boolean} check Determines if the response is checked, default to true
    */
   async createNewSession(check = true) {
     const url = await this.buildURL();
-    const requestBody = this.buildRequestBody();
-    const response = await http.basePOST(url, requestBody);
-    if (check) this.checkResponse(response);
-    return response.body.sessionId;
+    const sessionsURL = `${url}s`;
+    const sessionsResponse = await this.getAllSessions();
+    if (sessionsResponse.data !== null) {
+      for (let i = 0; i < sessionsResponse.data.length; i++) {
+        if (sessionsResponse.data[i].value.ip === this.rokuIPAddress) {
+          return sessionsResponse.data[i].sessionId;
+        }
+      }
+    } else {
+      const requestBody = this.buildRequestBody();
+      const response = await http.basePOST(url, requestBody);
+      if (check) this.checkResponse(response);
+      return response.body.sessionId;
+    }
   }
 
   //GET
+
+  async getAllSessions(check = true) {
+    let url = await this.buildURL();
+    url = `${url}s`;
+    const response = await http.baseGET(url);
+    if (check) this.checkResponse(response);
+    return response;
+  }
 
   /**
    * Retrieves information about the specified session.
@@ -176,7 +195,7 @@ class WebDriver {
   async getUIElement(data, check = true) {
     const requestBody = this.buildRequestBody({ elementData: data });
     const url = await this.buildURL("/element");
-    const response = await http.basePOST(url, data);
+    const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -212,8 +231,9 @@ class WebDriver {
    * @param {Boolean} check Determines if the response is checked, default to true
    */
   async getUIElements(data, check = true) {
+    const requestBody = this.buildRequestBody({ elementData: data });
     const url = await this.buildURL("/elements");
-    const response = await http.basePOST(url, data);
+    const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }

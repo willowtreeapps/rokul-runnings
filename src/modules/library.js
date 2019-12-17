@@ -133,7 +133,8 @@ class Library {
   async getElement(data, delayInMillis = 1000) {
     sleep.sleep(delayInMillis);
     const response = await this.driver.getUIElement(data);
-    return response.body.value;
+    const [attributes] = await this.getAllAttributes([response.body.value]);
+    return attributes;
   }
 
   /**
@@ -145,7 +146,8 @@ class Library {
   async getElements(data, delayInMillis = 1000) {
     sleep.sleep(delayInMillis);
     const response = await this.driver.getUIElements(data);
-    return response.body.value;
+    const attributes = await this.getAllAttributes(response.body.value);
+    return attributes;
   }
 
   /**
@@ -238,17 +240,57 @@ class Library {
   }
 
   /**
-   * Get attribute value.
+   * Returns all elements in an array, with their attributes in Name.Local:Value pairs, and their child nodes in an array.
    *
-   * @param {JSON} element An object that contains element information (attributes, child nodes).
-   * @param {String} attribute The name of the attribute to retrieved
+   * @param {Array} elements Array of elements to derive attributes.
    */
-  async getAttribute(element, attribute) {
-    for (let i = 0; i < element.Attrs.length; i++) {
-      if (element.Attrs[i].Name.Local === attribute)
-        return element.Attrs[i].Value;
+  async getAllAttributes(elements) {
+    let allElements = [];
+    for (let i = 0; i < elements.length; i++) {
+      let element = elements[i].Attrs;
+      let allAttributesForElement = await this.parseAttributes(element);
+      if (elements[i].Nodes !== null) {
+        allAttributesForElement.Nodes = await this.parseAttributeNodes(
+          elements[i].Nodes
+        );
+      }
+      allElements[i] = allAttributesForElement;
     }
-    throw Error("Can't find attribute!");
+    return allElements;
+  }
+
+  /**
+   * Parses the given JSON object and returns it as an object with Name.Local:Value pairs.
+   *
+   * @param {Object} element JSON Object to be parsed
+   */
+  async parseAttributes(element) {
+    let parsedElement = {};
+    for (let i = 0; i < element.length; i++) {
+      let key = element[i].Name.Local;
+      parsedElement[key] = element[i].Value;
+    }
+    return parsedElement;
+  }
+
+  /**
+   * Resursive function to parse all child nodes of the parent element
+   *
+   * @param {Array} node
+   */
+  async parseAttributeNodes(node) {
+    let allAttributesForElement = [];
+    for (let i = 0; i < node.length; i++) {
+      allAttributesForElement[i] = await this.parseAttributes(node[i].Attrs);
+      if (node[i].Nodes !== null) {
+        allAttributesForElement[i].Nodes = [];
+        for (let j = 0; j < node[i].Nodes.length; j++)
+          allAttributesForElement[i].Nodes[j] = await this.parseAttributeNodes(
+            node[i].Nodes
+          );
+      }
+    }
+    return allAttributesForElement;
   }
 }
 
