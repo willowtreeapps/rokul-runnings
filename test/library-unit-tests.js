@@ -1,18 +1,13 @@
 const { buttons, Library } = require("../src/modules/library");
-const mocha = require("mocha");
 const assert = require("assert");
 const nock = require("nock");
-const { WebDriver, BASE_URL } = require("../src/modules/webdriver");
+const { BASE_URL } = require("../src/modules/webdriver");
 const { start, stop } = require("../src/utils/server");
+const elementData = require("../src/utils/elementData");
 
 let libraryDriver;
 const sessionId = "123456";
-const elementData = [
-  {
-    using: "text",
-    value: "test"
-  }
-];
+const defaultData = elementData.text("test");
 
 function buildMockResponse(responseStatus = 0, responseValue = null) {
   const response = {
@@ -24,12 +19,13 @@ function buildMockResponse(responseStatus = 0, responseValue = null) {
 }
 
 describe("Library tests", function() {
+  this.timeout(0);
+
   before(async function() {
-    //start();
-    //Method not properly implemented
+    await start();
   });
 
-  beforeEach(function() {
+  beforeEach(async function() {
     libraryDriver = new Library("123.456.789.012");
     nock(BASE_URL)
       .get("/sessions")
@@ -52,13 +48,17 @@ describe("Library tests", function() {
       });
   });
 
-  afterEach(function() {
+  afterEach(async function() {
+    nock(BASE_URL)
+      .delete(`/session/${sessionId}`)
+      .reply(200, defaultData);
+
+    await libraryDriver.close();
     nock.cleanAll();
   });
 
   after(async function() {
-    //stop();
-    //method not properly implemented
+    await stop();
   });
 
   it("Should Launch the Channel", async function() {
@@ -93,7 +93,7 @@ describe("Library tests", function() {
         Subtype: "rsga"
       }
     ];
-    const { httpMock, mockResponse } = buildMockResponse(0, value);
+    const { httpMock } = buildMockResponse(0, value);
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/apps`)
@@ -126,7 +126,7 @@ describe("Library tests", function() {
       }
     ];
 
-    const { httpMock, mockResponse } = buildMockResponse(0, value);
+    const { httpMock } = buildMockResponse(0, value);
     nock(BASE_URL)
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
@@ -141,13 +141,13 @@ describe("Library tests", function() {
   });
 
   it("Should Verify Screen is Loaded", async function() {
-    const { httpMock, mockResponse } = buildMockResponse();
+    const { httpMock } = buildMockResponse();
     nock(BASE_URL)
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
 
     assert.deepEqual(
-      await libraryDriver.verifyIsScreenLoaded(elementData),
+      await libraryDriver.verifyIsScreenLoaded(defaultData),
       true,
       "Unable to find identifying element that signals the screen as loaded"
     );
@@ -254,14 +254,15 @@ describe("Library tests", function() {
       bounds: "{0, 11, 340, 48}",
       color: "#ddddddff",
       index: "0",
-      text: "Item 1"
+      text: "Item 1",
+      XMLName: "Label"
     };
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
 
-    const response = await libraryDriver.getElement(elementData);
+    const response = await libraryDriver.getElement(defaultData);
 
     assert.deepEqual(
       response,
@@ -361,14 +362,16 @@ describe("Library tests", function() {
         bounds: "{0, 11, 340, 48}",
         color: "#ddddddff",
         index: "0",
-        text: "HOME"
+        text: "HOME",
+        XMLName: "Label"
       },
       {
         color: "#ddddddff",
         index: "0",
         opacity: "0",
         text: "HOME",
-        visible: "false"
+        visible: "false",
+        XMLName: "Label"
       }
     ];
 
@@ -377,7 +380,7 @@ describe("Library tests", function() {
       .reply(200, httpMock)
       .persist();
 
-    const response = await libraryDriver.getElements(elementData);
+    const response = await libraryDriver.getElements(defaultData);
 
     assert.deepEqual(
       response,
@@ -429,213 +432,16 @@ describe("Library tests", function() {
           Value: "0"
         }
       ],
-      Nodes: [
-        {
-          XMLName: {
-            Space: "",
-            Local: "LabelListItem"
-          },
-          Attrs: [
-            {
-              Name: {
-                Space: "",
-                Local: "index"
-              },
-              Value: "0"
-            }
-          ],
-          Nodes: [
-            {
-              XMLName: {
-                Space: "",
-                Local: "Poster"
-              },
-              Attrs: [
-                {
-                  Name: {
-                    Space: "",
-                    Local: "index"
-                  },
-                  Value: "0"
-                },
-                {
-                  Name: {
-                    Space: "",
-                    Local: "opacity"
-                  },
-                  Value: "0"
-                }
-              ],
-              Nodes: null
-            },
-            {
-              XMLName: {
-                Space: "",
-                Local: "Poster"
-              },
-              Attrs: [
-                {
-                  Name: {
-                    Space: "",
-                    Local: "index"
-                  },
-                  Value: "1"
-                }
-              ],
-              Nodes: null
-            },
-            {
-              XMLName: {
-                Space: "",
-                Local: "Label"
-              },
-              Attrs: [
-                {
-                  Name: {
-                    Space: "",
-                    Local: "color"
-                  },
-                  Value: "#262626ff"
-                },
-                {
-                  Name: {
-                    Space: "",
-                    Local: "index"
-                  },
-                  Value: "0"
-                },
-                {
-                  Name: {
-                    Space: "",
-                    Local: "text"
-                  },
-                  Value: "HOME"
-                },
-                {
-                  Name: {
-                    Space: "",
-                    Local: "visible"
-                  },
-                  Value: "false"
-                }
-              ],
-              Nodes: null
-            },
-            {
-              XMLName: {
-                Space: "",
-                Local: "ScrollingLabel"
-              },
-              Attrs: [
-                {
-                  Name: {
-                    Space: "",
-                    Local: "bounds"
-                  },
-                  Value: "{0, 11, 340, 26}"
-                },
-                {
-                  Name: {
-                    Space: "",
-                    Local: "children"
-                  },
-                  Value: "2"
-                },
-                {
-                  Name: {
-                    Space: "",
-                    Local: "index"
-                  },
-                  Value: "0"
-                }
-              ],
-              Nodes: [
-                {
-                  XMLName: {
-                    Space: "",
-                    Local: "Label"
-                  },
-                  Attrs: [
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "color"
-                      },
-                      Value: "#262626ff"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "index"
-                      },
-                      Value: "0"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "opacity"
-                      },
-                      Value: "0"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "text"
-                      },
-                      Value: "HOME"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "visible"
-                      },
-                      Value: "false"
-                    }
-                  ],
-                  Nodes: null
-                },
-                {
-                  XMLName: {
-                    Space: "",
-                    Local: "Label"
-                  },
-                  Attrs: [
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "bounds"
-                      },
-                      Value: "{0, 0, 340, 26}"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "color"
-                      },
-                      Value: "#262626ff"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "index"
-                      },
-                      Value: "1"
-                    },
-                    {
-                      Name: {
-                        Space: "",
-                        Local: "text"
-                      },
-                      Value: "HOME"
-                    }
-                  ],
-                  Nodes: null
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      Nodes: null
+    };
+
+    const mockResponse = {
+      XMLName: "RenderableNode",
+      bounds: "{0, 0, 340, 48}",
+      children: "1",
+      focusable: "true",
+      focused: "true",
+      index: "0"
     };
 
     const { httpMock } = buildMockResponse(0, responseValue);
@@ -648,7 +454,7 @@ describe("Library tests", function() {
 
     assert.deepEqual(
       response,
-      responseValue,
+      mockResponse,
       "Focused element response value is not as expected."
     );
   });
@@ -661,7 +467,7 @@ describe("Library tests", function() {
       Version: "1.0.1",
       Subtype: "rsga"
     };
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/current_app`)
@@ -680,7 +486,7 @@ describe("Library tests", function() {
       Version: "1.0.1",
       Subtype: "rsga"
     };
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/current_app`)
@@ -705,7 +511,7 @@ describe("Library tests", function() {
       language: "en",
       country: "US"
     };
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
 
     nock(BASE_URL)
       .get(`/session/${sessionId}`)
@@ -751,7 +557,7 @@ describe("Library tests", function() {
         Time: ""
       }
     };
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/player`)
@@ -799,7 +605,7 @@ describe("Library tests", function() {
         Time: ""
       }
     };
-    const { httpMock, mockResponse } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse(0, responseValue);
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/player`)

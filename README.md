@@ -2,7 +2,21 @@
 
 ## Setup
 
-- TBD
+- In your project, install via `npm install "future name of project"`
+
+### WebDriverServer
+
+- Import `/src/utils/server`, specifically the `start()` and `stop()` functions.
+- In your test setup, be sure to include `start()`.
+- In your test teardown, be sure to include `stop()`.
+  - For reference, look at `Before()` and `After()` in `/src/examples/tests`.
+
+### Library
+
+- Import `/src/modules/library`, specifically the `Library` class.
+- Before the tests begin running, you'll also need to instantiate the `Library` class
+- After your test has finished, you'll want to close the existing session, through the `Library.close()` function.
+  - For reference, look at `BeforeEach()` and `AfterEach()` in `/src/examples/tests`.
 
 ## WebDriverServer
 
@@ -28,9 +42,6 @@ Most of the documentation provided in the JSDocs information was provided from t
 
 ## Todo
 
-- test everything because this is still all theoretical `priority: 1`
-- Figure out setUp/tearDown `priority: 2`
-  - start/stop server via start/stop functions, called during before/after -- figure out
 - real testing hook ins `priority: 3`
 - Maybe hook it up to swagger for even better documentation? `priority: 10`
 - dev dependencies for shipping
