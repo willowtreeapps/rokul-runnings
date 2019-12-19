@@ -16,7 +16,8 @@ describe("Other tests", function() {
 
   beforeEach(async function() {
     //before each test, instantiate the driver
-    driver = new Library("192.168.128.145", 0, 2000);
+    //The first parameter should be the IP address of the Roku device
+    driver = new Library("0.0.0.0", 0, 2000);
   });
 
   afterEach(async function() {
@@ -32,9 +33,6 @@ describe("Other tests", function() {
   });
 
   it("Should Verify That The Channel Is Loaded", async function() {
-    //launch the channel with the id of "dev"
-    await driver.launchTheChannel("dev");
-
     //verify the currently displayed channel is "dev"
     const response = await driver.verifyIsChannelLoaded("dev");
 
@@ -91,7 +89,10 @@ describe("Other tests", function() {
     );
   });
 
-  it("Should Search For Netflix", async function() {
+  it("Should Search For Roku", async function() {
+    //launch the channel with the id of "dev"
+    await driver.launchTheChannel("dev");
+
     //define button sequence
     const buttonSequence = [
       buttons.home,
@@ -104,7 +105,7 @@ describe("Other tests", function() {
     //navigate according to the button sequence
     await driver.sendButtonSequence(buttonSequence);
 
-    //enter the word "Netflix" into the search bar
-    await driver.sendWord("Netflix");
+    //enter the word "Roku" into the search bar
+    await driver.sendWord("Roku");
   });
 });

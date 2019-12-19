@@ -57,11 +57,7 @@ class Library {
    * @param {String} id The ID of the channel to be verified. Use 'dev' to verify a sideloaded channel.
    */
   verifyIsChannelExist(apps, id) {
-    let isChannelExist = false;
-    apps.forEach(app => {
-      if (app.ID === id) isChannelExist = true;
-    });
-    return isChannelExist;
+    return apps.find(app => app.ID === id) || false;
   }
 
   /**
