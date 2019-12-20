@@ -1,5 +1,4 @@
 const axios = require("axios");
-const sleep = require("./sleep");
 
 function baseGET(url) {
   return axios
@@ -8,7 +7,15 @@ function baseGET(url) {
       return response;
     })
     .catch(function(error) {
-      console.log(error);
+      if (
+        (error.response.status === 500 || error.response.status === 400) &&
+        error.response.data.status
+      ) {
+        return {
+          status: error.response.status,
+          body: error.response.data
+        };
+      } else console.log(error);
     });
 }
 
@@ -22,7 +29,15 @@ function basePOST(url, requestBody) {
       };
     })
     .catch(function(error) {
-      console.log(error);
+      if (
+        (error.response.status === 500 || error.response.status === 400) &&
+        error.response.data.status
+      ) {
+        return {
+          status: error.response.status,
+          body: error.response.data
+        };
+      } else console.log(error);
     });
 }
 
@@ -33,7 +48,15 @@ function baseDELETE(url) {
       return response;
     })
     .catch(function(error) {
-      console.log(error);
+      if (
+        (error.response.status === 500 || error.response.status === 400) &&
+        error.response.data.status
+      ) {
+        return {
+          status: error.response.status,
+          body: error.response.data
+        };
+      } else console.log(error);
     });
 }
 

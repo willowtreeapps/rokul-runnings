@@ -2,7 +2,45 @@
 
 ## Setup
 
-- TBD
+- In your project, install via `npm install "future name of project"`
+
+### WebDriverServer
+
+- Import `/src/utils/server`, specifically the `start()` and `stop()` functions.
+- In your test setup, be sure to include `start()`.
+- In your test teardown, be sure to include `stop()`.
+- Mocha example:
+
+```
+const { start, stop } = require('./src/utils/server');
+
+before(async function() {
+    await start();
+})
+
+after(async function() {
+    await stop();
+})
+```
+
+### Library
+
+- Import `/src/modules/library`, specifically the `Library` class.
+- Before the tests begin running, you'll also need to instantiate the `Library` class
+- After your test has finished, you'll want to close the existing session, through the `Library.close()` function.
+- Mocha Example:
+
+```
+const Library = require('./src/modules/library');
+
+beforeEach(async function() {
+    const driver = new Library('0.0.0.0');
+})
+
+afterEach(async function() {
+    await library.close();
+})
+```
 
 ## WebDriverServer
 
@@ -21,6 +59,10 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
   - But by and large, this library does not have it's own assertion methods. We anticipate that you can use the responses from the various methods to inform your testing assertions. If you need ideas about how the data is returned or how assertions can work, the `library-unit-tests.js` file might be a good place to start.
 - What if I have suggestions or find issues?
   - Write up any feature suggestions or issues on the Github.
+- Most of the functions provided are asynchronous. Why?
+  - A majority of the functions are either HTTP requests or rely on responses from HTTP requests. In order to ensure that the requests have completed and the responses have returned, the functions were made asynchronous.
+- I need to test the requests or responses. Is there any easier way to do that than running writing automation?
+  - Yes! One of the contributors to this project has created a Postman collection. [See the collection here.](https://gist.github.com/aaron-goff/64152b5162bc4c0003c1962d8f811d9e)
 
 ## Documentation
 
@@ -28,9 +70,6 @@ Most of the documentation provided in the JSDocs information was provided from t
 
 ## Todo
 
-- test everything because this is still all theoretical `priority: 1`
-- Figure out setUp/tearDown `priority: 2`
-  - start/stop server via start/stop functions, called during before/after -- figure out
-- real testing hook ins `priority: 3`
+- Update references to files within the project to what they would look like to someone using the project as a dependency
 - Maybe hook it up to swagger for even better documentation? `priority: 10`
 - dev dependencies for shipping

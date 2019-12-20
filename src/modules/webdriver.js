@@ -1,4 +1,5 @@
 const http = require("../utils/http");
+const sleep = require("../utils/sleep");
 
 const BASE_URL = "http://localhost:9000/v1";
 
@@ -16,7 +17,7 @@ class WebDriver {
   /**
    * Creates a standard request body to be used in requests
    *
-   * @param {JSON} additionalParams Additional json objects to be included in the request body
+   * @param {Object} additionalParams Additional json objects to be included in the request body
    */
   buildRequestBody(additionalParams = {}) {
     return {
@@ -44,18 +45,37 @@ class WebDriver {
 
   /**
    * Creates a new session, returning the sessionId to create the 'base' URL for the session
+   * If a session already exists for a specified IP address, that sessionId is used
    *
    * @param {Boolean} check Determines if the response is checked, default to true
    */
   async createNewSession(check = true) {
     const url = await this.buildURL();
-    const requestBody = this.buildRequestBody();
-    const response = await http.basePOST(url, requestBody);
-    if (check) this.checkResponse(response);
-    return response.body.sessionId;
+    const sessionsURL = `${url}s`;
+    const sessionsResponse = await this.getAllSessions();
+    if (sessionsResponse.data !== null) {
+      for (let i = 0; i < sessionsResponse.data.length; i++) {
+        if (sessionsResponse.data[i].value.ip === this.rokuIPAddress) {
+          return sessionsResponse.data[i].sessionId;
+        }
+      }
+    } else {
+      const requestBody = this.buildRequestBody();
+      const response = await http.basePOST(url, requestBody);
+      if (check) this.checkResponse(response);
+      return response.body.sessionId;
+    }
   }
 
   //GET
+
+  async getAllSessions(check = true) {
+    let url = await this.buildURL();
+    url = `${url}s`;
+    const response = await http.baseGET(url);
+    if (check) this.checkResponse(response);
+    return response;
+  }
 
   /**
    * Retrieves information about the specified session.
@@ -130,6 +150,7 @@ class WebDriver {
     const url = await this.buildURL("/launch");
     const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
+    await sleep.sleep(2000);
     return response;
   }
 
@@ -150,7 +171,7 @@ class WebDriver {
   /**
    * Sends a sequence of keys to be input by the device
    *
-   * @param {*} sequence An array containing the sequence of keys to be pressed and released
+   * @param {Array} sequence An array containing the sequence of keys to be pressed and released
    * @param {Boolean} check Determines if the response is checked, default to true
    */
   async sendSequence(sequence, check = true) {
@@ -164,7 +185,7 @@ class WebDriver {
   /**
    * Searches for an element on the page, starting from the screen root. The first located element will be returned as a WebElement JSON object.
    *
-   * @param {JSON} data An elementData array and optional parentData array with the following objects that can be used to locate an element:
+   * @param {Array} data An elementData array and optional parentData array with the following objects that can be used to locate an element:
    *                  using - {string}: The locator strategy to use. This may be one of the following values:
    *                  text: Returns an element whose text matches the search value.
    *                  attr: Returns an element whose specified attributes matches the search value.
@@ -176,7 +197,7 @@ class WebDriver {
   async getUIElement(data, check = true) {
     const requestBody = this.buildRequestBody({ elementData: data });
     const url = await this.buildURL("/element");
-    const response = await http.basePOST(url, data);
+    const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -202,7 +223,7 @@ class WebDriver {
   /**
    * Searches for elements on the page matching the search criteria, starting from the screen root. All the matching elements will be returned in a WebElement JSON object.
    *
-   * @param {JSON} data An elementData array and optional parentData array with the following objects that can be used to locate an element:
+   * @param {Array} data An elementData array and optional parentData array with the following objects that can be used to locate an element:
    *                  using - {string}: The locator strategy to use. This may be one of the following values:
    *                  text: Returns an element whose text matches the search value.
    *                  attr: Returns an element whose specified attributes matches the search value.
@@ -212,8 +233,9 @@ class WebDriver {
    * @param {Boolean} check Determines if the response is checked, default to true
    */
   async getUIElements(data, check = true) {
+    const requestBody = this.buildRequestBody({ elementData: data });
     const url = await this.buildURL("/elements");
-    const response = await http.basePOST(url, data);
+    const response = await http.basePOST(url, requestBody);
     if (check) this.checkResponse(response);
     return response;
   }
@@ -260,7 +282,7 @@ class WebDriver {
   /**
    * Checks a response's status to determine if the request was successful
    *
-   * @param {JSON} response Response to be checked, provided by a request
+   * @param {Object} response Response to be checked, provided by a request
    */
   checkResponse(response) {
     if (response.status === 400) throw Error(response.body.text);

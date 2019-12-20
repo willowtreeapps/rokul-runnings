@@ -53,23 +53,17 @@ class Library {
   /**
    * Verifies the specified channel is installed on the device.
    *
-   * @param {JSON} apps An array containing the channels currently installed on the device.
+   * @param {Array} apps An array containing the channels currently installed on the device.
    * @param {String} id The ID of the channel to be verified. Use 'dev' to verify a sideloaded channel.
    */
   verifyIsChannelExist(apps, id) {
-    let isChannelExist = false;
-    while (!isChannelExist) {
-      apps.forEach(app => {
-        if (app.ID === id) isChannelExist = true;
-      });
-    }
-    return isChannelExist;
+    return apps.find(app => app.ID === id) || false;
   }
 
   /**
    * Verify that the screen is loaded based on the provided element data.
    *
-   * @param {JSON} data An object with locators for elementData and parentData (parentData is optional).
+   * @param {Object} data An object with locators for elementData and parentData (parentData is optional).
    * @param {Number} maxRetries The number of requests that can be made before generating an error. This argument is optional, and it defaults to 10 if not specified.
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
@@ -79,7 +73,7 @@ class Library {
       const uiLayoutResponse = await this.driver.getUIElement(data, false);
       if (uiLayoutResponse.status != 200) retries++;
       else return true;
-      sleep(delayInMillis);
+      await sleep.sleep(delayInMillis);
     }
     return false;
   }
@@ -91,7 +85,7 @@ class Library {
    * @param {Number} delayInMillis The delay before the keypresses are executed. This argument is optional, and it defaults to 2000 milliseconds if not specified.
    */
   async pressBtn(keyPress, delayInMillis = 2000) {
-    sleep.sleep(delayInMillis);
+    await sleep.sleep(delayInMillis);
     return await this.driver.sendKeypress(keyPress);
   }
 
@@ -102,10 +96,10 @@ class Library {
    * @param {Number} delayInMillis The delay before the keypresses are executed. This argument is optional, and it defaults to 2000 milliseconds if not specified.
    */
   async sendWord(word, delayInMillis = 2000) {
-    sleep.sleep(delayInMillis);
+    await sleep.sleep(delayInMillis);
     let wordResponse = {};
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
-      sleep.sleep(500);
+      await sleep.sleep(500);
       wordResponse.charIndex = await this.driver.sendKeypress(
         "LIT_" + word.charAt(charIndex)
       );
@@ -116,36 +110,38 @@ class Library {
   /**
    * Simulates the sequence of keypresses and releases.
    *
-   * @param {JSON} sequence An array containing the sequence of keys to be pressed and released (for example, down, down, down, down, select).
+   * @param {Array} sequence An array containing the sequence of keys to be pressed and released (for example, down, down, down, down, select).
    * @param {Number} delayInMillis The delay before the keypresses are executed. This argument is optional, and it defaults to 2000 milliseconds if not specified.
    */
   async sendButtonSequence(sequence, delayInMillis = 2000) {
-    sleep.sleep(delayInMillis);
+    await sleep.sleep(delayInMillis);
     return await this.driver.sendSequence(sequence);
   }
 
   /**
    * Searches for an element on the page based on the specified locator starting from the screen root. Returns information on the first matching element.
    *
-   * @param {JSON} data An object with locators for elementData and parentData (parentData is optional)
+   * @param {Object} data An object with locators for elementData and parentData (parentData is optional)
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   async getElement(data, delayInMillis = 1000) {
-    sleep.sleep(delayInMillis);
+    await sleep.sleep(delayInMillis);
     const response = await this.driver.getUIElement(data);
-    return response.body.value;
+    const [attributes] = await this.getAllAttributes([response.body.value]);
+    return attributes;
   }
 
   /**
    * Searches for elements on the page based on the specified locators starting from the screen root. Returns information on the matching elements.
    *
-   * @param {JSON} data An object with locators for elementData and parentData (parentData is optional)
+   * @param {Object} data An object with locators for elementData and parentData (parentData is optional)
    * @param {Number} delayInMillis The delay between retries. This argument is optional, and it defaults to 1000 millisecond if not specified.
    */
   async getElements(data, delayInMillis = 1000) {
-    sleep.sleep(delayInMillis);
+    await sleep.sleep(delayInMillis);
     const response = await this.driver.getUIElements(data);
-    return response.body.value;
+    const attributes = await this.getAllAttributes(response.body.value);
+    return attributes;
   }
 
   /**
@@ -153,7 +149,18 @@ class Library {
    */
   async getFocusedElement() {
     const response = await this.driver.getActiveElement();
-    return response.body.value;
+    const [element] = await this.getAllAttributes([response.body.value]);
+    return element;
+  }
+
+  async verifyFocusedElementIsRenderableNode(maxRetries = 10) {
+    let retries = 0;
+    let element;
+    while (element.XMLName !== "RenderableNode" && retries < maxRetries) {
+      element = await this.driver.getActiveElement();
+      retries++;
+    }
+    return element.XMLName === "RenderableNode";
   }
 
   /**
@@ -169,7 +176,7 @@ class Library {
       const response = await this.driver.getCurrentApp(false);
       if (response.data.value.ID != id) retries++;
       else return true;
-      sleep.sleep(delayInMillis);
+      await sleep.sleep(delayInMillis);
     }
     return false;
   }
@@ -214,7 +221,7 @@ class Library {
       if ((response.status !== 200) | (response.data.value.State !== "play"))
         retries++;
       else return true;
-      sleep(delayInMillis);
+      await sleep.sleep(delayInMillis);
     }
     return false;
   }
@@ -238,17 +245,58 @@ class Library {
   }
 
   /**
-   * Get attribute value.
+   * Returns all elements in an array, with their attributes in Name.Local:Value pairs, and their child nodes in an array.
    *
-   * @param {JSON} element An object that contains element information (attributes, child nodes).
-   * @param {String} attribute The name of the attribute to retrieved
+   * @param {Array} elements Array of elements to derive attributes.
    */
-  async getAttribute(element, attribute) {
-    for (let i = 0; i < element.Attrs.length; i++) {
-      if (element.Attrs[i].Name.Local === attribute)
-        return element.Attrs[i].Value;
+  async getAllAttributes(elements) {
+    let allElements = [];
+    for (let i = 0; i < elements.length; i++) {
+      let element = elements[i].Attrs;
+      let allAttributesForElement = await this.parseAttributes(element);
+      if (elements[i].Nodes !== null) {
+        allAttributesForElement.Nodes = await this.parseAttributeNodes(
+          elements[i].Nodes
+        );
+      }
+      allAttributesForElement.XMLName = elements[i].XMLName.Local;
+      allElements[i] = allAttributesForElement;
     }
-    throw Error("Can't find attribute!");
+    return allElements;
+  }
+
+  /**
+   * Parses the given JSON object and returns it as an object with Name.Local:Value pairs.
+   *
+   * @param {Object} element JSON Object to be parsed
+   */
+  async parseAttributes(element) {
+    let parsedElement = {};
+    for (let i = 0; i < element.length; i++) {
+      let key = element[i].Name.Local;
+      parsedElement[key] = element[i].Value;
+    }
+    return parsedElement;
+  }
+
+  /**
+   * Resursive function to parse all child nodes of the parent element
+   *
+   * @param {Array} node The array of nodes to be parsed
+   */
+  async parseAttributeNodes(node) {
+    let allAttributesForElement = [];
+    for (let i = 0; i < node.length; i++) {
+      allAttributesForElement[i] = await this.parseAttributes(node[i].Attrs);
+      if (node[i].Nodes !== null) {
+        allAttributesForElement[i].Nodes = [];
+        for (let j = 0; j < node[i].Nodes.length; j++)
+          allAttributesForElement[i].Nodes[j] = await this.parseAttributeNodes(
+            node[i].Nodes
+          );
+      }
+    }
+    return allAttributesForElement;
   }
 }
 

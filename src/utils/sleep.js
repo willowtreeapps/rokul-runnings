@@ -3,5 +3,5 @@ const sleep = milliseconds => {
 };
 
 module.exports = {
-  sleep: sleep
+  sleep
 };
