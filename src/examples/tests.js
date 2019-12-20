@@ -2,6 +2,7 @@ const { buttons, Library } = require("../modules/library");
 const assert = require("assert");
 const { start, stop } = require("../utils/server");
 const data = require("../utils/data");
+const channel = require("../modules/channel-installer");
 
 let driver;
 
@@ -10,6 +11,12 @@ describe("Other tests", function() {
   this.timeout(0);
 
   before(async function() {
+    //ensure the channel is sideloaded
+    await channel.installChannel({
+      rokuIP: "0.0.0.0",
+      fileLocation: "./main.zip",
+      username: "rokudev"
+    });
     //before all tests, start the WebDriverServer
     await start();
   });
@@ -30,6 +37,12 @@ describe("Other tests", function() {
   after(async function() {
     //after all tests, stop the WebDriverServer
     await stop();
+    //remove the sideloaded channel
+    await channel.deleteChannel({
+      rokuIP: "0.0.0.0",
+      fileLocation: "./main.zip",
+      username: "rokudev"
+    });
   });
 
   it("Should Verify That The Channel Is Loaded", async function() {
