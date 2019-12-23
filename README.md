@@ -42,6 +42,22 @@ afterEach(async function() {
 })
 ```
 
+## Sideloading
+
+You can sideload a new channel, replace the existing sideloaded channel, or remove the currently sidedloaded channel. This can be done through the exported functions from `channel-installer`.
+
+```
+const channel = require('channel-installer');
+
+await channel.installChannel({
+    rokuIP: "0.0.0.0",
+    fileLocation: "./main.zip",
+    username: "rokudev"
+});
+```
+
+All of the functions require the IP address of the roku, the location of the channel (as a .zip file), and the username used to log in to the Development Application Installer. You do not need the WebDriverServer active to sideload a channel, as the command goes directly from client to Roku device.
+
 ## WebDriverServer
 
 WebDriverServer is a binary compiled from the Go source code that Roku provided for [automated testing](https://github.com/rokudev/automated-channel-testing). It provides routing and handlers to forward commands to a Roku device.
@@ -72,4 +88,9 @@ Most of the documentation provided in the JSDocs information was provided from t
 
 - Update references to files within the project to what they would look like to someone using the project as a dependency
 - Maybe hook it up to swagger for even better documentation? `priority: 10`
+- switch to typescript?
 - dev dependencies for shipping
+
+```
+
+```
