@@ -105,14 +105,5 @@ Most of the documentation provided in the JSDocs information was provided from t
 ## Todo
 
 - Update references to files within the project to what they would look like to someone using the project as a dependency
-- Maybe hook it up to swagger for even better documentation? `priority: 10`
 - switch to typescript?
 - dev dependencies for shipping
-
-```
-
-```
-
-```
-
-```

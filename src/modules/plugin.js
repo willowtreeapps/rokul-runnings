@@ -26,16 +26,16 @@ async function getScreenshot({
   const getAuthorization = `Digest username="${username}", realm="rokudev", nonce="1576852005", uri="/pkgs/dev.jpg", algorithm="MD5", qop=auth, nc=00000046, cnonce="d3544c2af87b7af3", response="27196a8a1a0334c7fb17534a99f7fc4e", opaque="8de98612f4255c38c164b3ee3024723b"`;
   const postAuthorization = `Digest username="${username}", realm="rokudev", nonce="1576852005", uri="/plugin_inspect", algorithm="MD5", qop=auth, nc=00000046, cnonce="d3544c2af87b7af3", response="1c534f1ec6a7a76f2e729f1683408d36", opaque="8de98612f4255c38c164b3ee3024723b"`;
 
-  let response = await getScreenshotRaw({
+  await getScreenshotRaw({
     rokuIP: rokuIP,
     formData: formData,
     authorization: postAuthorization
   });
 
-  let fullImageURL = `${rokuIP}/pkgs/dev.jpg`;
+  let imageURL = `${rokuIP}/pkgs/dev.jpg`;
 
   await saveScreenshot({
-    fullImageURL: fullImageURL,
+    imageURL: imageURL,
     authorization: getAuthorization,
     directoryPath: directoryPath,
     directory: directory,
@@ -62,14 +62,18 @@ async function getScreenshotRaw({ rokuIP, formData, authorization }) {
         }
       },
       function(error, res) {
-        const chunks = [];
-        res.on("data", function(chunk) {
-          chunks.push(chunk);
-        });
-        res.on("end", function() {
-          result = Buffer.concat(chunks).toString();
-          resolve(result);
-        });
+        if (error) {
+          console.log(error);
+        } else {
+          const chunks = [];
+          res.on("data", function(chunk) {
+            chunks.push(chunk);
+          });
+          res.on("end", function() {
+            result = Buffer.concat(chunks).toString();
+            resolve(result);
+          });
+        }
       }
     );
   });
@@ -85,7 +89,7 @@ async function getScreenshotRaw({ rokuIP, formData, authorization }) {
  * @param {String} fileName Custom file name. Defaults to `YYYY-MM-DD_HH-MM-SS`. Does not need a file type (.jpg is automatically assigned)
  */
 async function saveScreenshot({
-  fullImageURL,
+  imageURL,
   authorization,
   directoryPath = "",
   directory = "",
@@ -106,7 +110,7 @@ async function saveScreenshot({
   const writer = fs.createWriteStream(filePath);
 
   const response = await axios({
-    url: `http://${fullImageURL}`,
+    url: `http://${imageURL}`,
     method: "GET",
     headers: {
       Authorization: authorization
