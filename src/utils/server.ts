@@ -2,7 +2,7 @@ const { spawn } = require("child_process");
 
 let startServer;
 
-async function start() {
+export async function start() {
   startServer = spawn("./WebDriverServer");
   startServer.stdout.on("data", data => {
     console.log(`stdout: ${data}`);
@@ -15,11 +15,6 @@ async function start() {
   });
 }
 
-async function stop() {
+export async function stop() {
   startServer.kill("SIGTERM");
 }
-
-module.exports = {
-  start,
-  stop
-};

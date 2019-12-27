@@ -1,22 +1,38 @@
-const { buttons, Library } = require("../src/modules/library");
-const assert = require("assert");
-const nock = require("nock");
-const { BASE_URL } = require("../src/modules/webdriver");
-const { start, stop } = require("../src/utils/server");
-const elementData = require("../src/utils/elementData");
-const plugin = require("../src/modules/plugin");
+import { buttons, Library } from "../src/modules/library";
+import assert = require("assert");
+import nock = require("nock");
+import { BASE_URL } from "../src/modules/webdriver";
+import { start, stop } from "../src/utils/server";
+import * as elementData from "../src/utils/elementData";
+import {
+  elementDataObject,
+  getPlayerInfoResponse
+} from "../src/types/webdriver";
+import * as mockData from "../test/resources/webdriver-mock-data";
+import { Plugin } from "../src/modules/plugin";
 
-let libraryDriver;
-const sessionId = "123456";
-const defaultData = elementData.text("test");
+let libraryDriver: Library;
+const sessionId: string = "123456";
+const defaultData: elementDataObject = elementData.text("test");
+const defaultResponses = { responsesStatus: 0, responseValue: null };
 
-function buildMockResponse(responseStatus = 0, responseValue = null) {
-  const response = {
+function buildMockResponse({
+  responseStatus,
+  responseValue
+}: {
+  responseStatus?: number;
+  responseValue?: object | Array<object>;
+}) {
+  if (!responseStatus) responseStatus = 0;
+  if (!responseValue) responseValue = null;
+  let response = {
     sessionId: sessionId,
     status: responseStatus,
     value: responseValue
   };
-  return { httpMock: response, mockResponse: { body: response, status: 200 } };
+  let httpMock = response;
+  let mockResponse = { body: response, status: 200 };
+  return { httpMock, mockResponse };
 }
 
 describe("Library tests", function() {
@@ -64,21 +80,25 @@ describe("Library tests", function() {
 
   //TO BE DELETED
   it("Should sideload", async function() {
-    await plugin.deleteChannel({
-      rokuIP: "192.168.128.145",
-      username: "rokudev",
-      password: "Pass123"
+    const plugin: Plugin = new Plugin("192.168.128.145", "rokudev", "Pass123");
+    await plugin.installChannel("./main.zip");
+  });
+
+  it("Should Get a Screenshot", async function() {
+    const plugin: Plugin = new Plugin("192.168.128.145", "rokudev", "Pass123");
+    await plugin.getScreenshot({
+      channelLocation: "./main.zip"
     });
   });
 
   it("Should Launch the Channel", async function() {
-    const { httpMock, mockResponse } = buildMockResponse();
+    const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/launch`)
       .reply(200, httpMock);
 
-    response = await libraryDriver.launchTheChannel("dev");
+    let response = await libraryDriver.launchTheChannel("dev");
     assert.deepEqual(
       response,
       mockResponse,
@@ -103,13 +123,15 @@ describe("Library tests", function() {
         Subtype: "rsga"
       }
     ];
-    const { httpMock } = buildMockResponse(0, value);
+    const { httpMock } = buildMockResponse({
+      responseValue: value
+    });
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
 
-    response = await libraryDriver.getApps();
+    let response = await libraryDriver.getApps();
 
     assert.deepEqual(
       response,
@@ -119,29 +141,16 @@ describe("Library tests", function() {
   });
 
   it("Should Verify Channel exists", async function() {
-    const value = [
-      {
-        Title: "YouTube TV",
-        ID: "195316",
-        Type: "appl",
-        Version: "1.0.80000001",
-        Subtype: "ndka"
-      },
-      {
-        Title: "rocute",
-        ID: "dev",
-        Type: "appl",
-        Version: "1.0.1",
-        Subtype: "rsga"
-      }
-    ];
+    const value = mockData.verifyChannelExists;
 
-    const { httpMock } = buildMockResponse(0, value);
+    const { httpMock } = buildMockResponse({
+      responseValue: value
+    });
     nock(BASE_URL)
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
 
-    response = await libraryDriver.getApps();
+    let response = await libraryDriver.getApps();
 
     assert.deepEqual(
       libraryDriver.verifyIsChannelExist(response, "dev"),
@@ -151,7 +160,7 @@ describe("Library tests", function() {
   });
 
   it("Should Verify Screen is Loaded", async function() {
-    const { httpMock } = buildMockResponse();
+    const { httpMock } = buildMockResponse(defaultResponses);
     nock(BASE_URL)
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
@@ -164,7 +173,7 @@ describe("Library tests", function() {
   });
 
   it("Should Verify Button is Pressed", async function() {
-    const { httpMock, mockResponse } = buildMockResponse();
+    const { httpMock } = buildMockResponse(defaultResponses);
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/press`)
@@ -172,15 +181,15 @@ describe("Library tests", function() {
 
     assert.deepEqual(
       await libraryDriver.pressBtn(buttons.up),
-      mockResponse,
+      httpMock,
       "Incorrect response when attempting to send a button to the device."
     );
   });
 
   it("Should Verify Word is Pressed", async function() {
-    const { httpMock, mockResponse } = buildMockResponse();
+    const { httpMock } = buildMockResponse(defaultResponses);
 
-    const word = "hello";
+    const word: string = "hello";
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/press`)
@@ -188,9 +197,10 @@ describe("Library tests", function() {
       .persist();
 
     const response = await libraryDriver.sendWord(word);
-    let finalMockResponse = {};
+    let finalMockResponse: { [key: string]: object }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
-      finalMockResponse.charIndex = mockResponse;
+      let key = word.charAt(charIndex);
+      finalMockResponse.push({ key: httpMock });
     }
 
     assert.deepEqual(
@@ -201,14 +211,14 @@ describe("Library tests", function() {
   });
 
   it("Should Verify Button Sequence is Entered", async function() {
-    const { httpMock, mockResponse } = buildMockResponse();
+    const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/press`)
       .reply(200, httpMock)
       .persist();
 
-    buttonSequence = [buttons.up, buttons.up, buttons.down];
+    let buttonSequence = [buttons.up, buttons.up, buttons.down];
 
     const response = await libraryDriver.sendButtonSequence(buttonSequence);
 
@@ -220,51 +230,19 @@ describe("Library tests", function() {
   });
 
   it("Should Get The Element", async function() {
-    const valueResponse = {
-      XMLName: {
-        Space: "",
-        Local: "Label"
-      },
-      Attrs: [
-        {
-          Name: {
-            Space: "",
-            Local: "bounds"
-          },
-          Value: "{0, 11, 340, 48}"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "color"
-          },
-          Value: "#ddddddff"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "index"
-          },
-          Value: "0"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "text"
-          },
-          Value: "Item 1"
-        }
-      ],
-      Nodes: null
-    };
+    const responseValue = mockData.getElement;
 
-    const { httpMock } = buildMockResponse(0, valueResponse);
+    const { httpMock } = buildMockResponse({
+      responseValue: responseValue
+    });
 
     const mockResponse = {
-      bounds: "{0, 11, 340, 48}",
-      color: "#ddddddff",
-      index: "0",
-      text: "Item 1",
+      Attrs: {
+        bounds: "{0, 11, 340, 48}",
+        color: "#ddddddff",
+        index: "0",
+        text: "Item 1"
+      },
       XMLName: "Label"
     };
 
@@ -282,108 +260,12 @@ describe("Library tests", function() {
   });
 
   it("Should Get Elements", async function() {
-    const responseValue = [
-      {
-        XMLName: {
-          Space: "",
-          Local: "Label"
-        },
-        Attrs: [
-          {
-            Name: {
-              Space: "",
-              Local: "bounds"
-            },
-            Value: "{0, 11, 340, 48}"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "color"
-            },
-            Value: "#ddddddff"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "index"
-            },
-            Value: "0"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "text"
-            },
-            Value: "HOME"
-          }
-        ],
-        Nodes: null
-      },
-      {
-        XMLName: {
-          Space: "",
-          Local: "Label"
-        },
-        Attrs: [
-          {
-            Name: {
-              Space: "",
-              Local: "color"
-            },
-            Value: "#ddddddff"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "index"
-            },
-            Value: "0"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "opacity"
-            },
-            Value: "0"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "text"
-            },
-            Value: "HOME"
-          },
-          {
-            Name: {
-              Space: "",
-              Local: "visible"
-            },
-            Value: "false"
-          }
-        ],
-        Nodes: null
-      }
-    ];
-    const { httpMock } = buildMockResponse(0, responseValue);
+    const responseValue = mockData.getElements;
+    const { httpMock } = buildMockResponse({
+      responseValue: responseValue
+    });
 
-    const mockResponse = [
-      {
-        bounds: "{0, 11, 340, 48}",
-        color: "#ddddddff",
-        index: "0",
-        text: "HOME",
-        XMLName: "Label"
-      },
-      {
-        color: "#ddddddff",
-        index: "0",
-        opacity: "0",
-        text: "HOME",
-        visible: "false",
-        XMLName: "Label"
-      }
-    ];
+    const mockResponse = mockData.getElementsMockResponse;
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/elements`)
@@ -400,61 +282,20 @@ describe("Library tests", function() {
   });
 
   it("Should Get Focused Element", async function() {
-    const responseValue = {
-      XMLName: {
-        Space: "",
-        Local: "RenderableNode"
-      },
-      Attrs: [
-        {
-          Name: {
-            Space: "",
-            Local: "bounds"
-          },
-          Value: "{0, 0, 340, 48}"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "children"
-          },
-          Value: "1"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "focusable"
-          },
-          Value: "true"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "focused"
-          },
-          Value: "true"
-        },
-        {
-          Name: {
-            Space: "",
-            Local: "index"
-          },
-          Value: "0"
-        }
-      ],
-      Nodes: null
-    };
+    const responseValue = mockData.getFocusedElement;
 
     const mockResponse = {
       XMLName: "RenderableNode",
-      bounds: "{0, 0, 340, 48}",
-      children: "1",
-      focusable: "true",
-      focused: "true",
-      index: "0"
+      Attrs: {
+        bounds: "{0, 0, 340, 48}",
+        children: "1",
+        focusable: "true",
+        focused: "true",
+        index: "0"
+      }
     };
 
-    const { httpMock } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
     nock(BASE_URL)
       .post(`/session/${sessionId}/element/active`)
@@ -477,13 +318,13 @@ describe("Library tests", function() {
       Version: "1.0.1",
       Subtype: "rsga"
     };
-    const { httpMock } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/current_app`)
       .reply(200, httpMock);
 
-    const response = await libraryDriver.verifyIsChannelLoaded("dev");
+    const response = await libraryDriver.verifyIsChannelLoaded({ id: "dev" });
 
     assert.deepEqual(response, true, "Current App is not launched.");
   });
@@ -496,7 +337,7 @@ describe("Library tests", function() {
       Version: "1.0.1",
       Subtype: "rsga"
     };
-    const { httpMock } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/current_app`)
@@ -521,7 +362,7 @@ describe("Library tests", function() {
       language: "en",
       country: "US"
     };
-    const { httpMock } = buildMockResponse(0, responseValue);
+    const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
     nock(BASE_URL)
       .get(`/session/${sessionId}`)
@@ -537,85 +378,31 @@ describe("Library tests", function() {
   });
 
   it("Should Get Player Info", async function() {
-    let responseValue = {
-      Error: "false",
-      State: "play",
-      Format: {
-        Audio: "aac_adts",
-        Captions: "none",
-        Container: "",
-        Drm: "none",
-        Video: "mpeg4_10b",
-        VideoRes: ""
-      },
-      Buffering: {
-        Current: "",
-        Max: "",
-        Target: ""
-      },
-      NewStream: {
-        Speed: ""
-      },
-      Position: "8500 ms",
-      Duration: "5000 ms",
-      IsLive: "false",
-      Runtime: "",
-      StreamSegment: {
-        Bitrate: "",
-        MediaSequence: "",
-        SegmentType: "",
-        Time: ""
-      }
-    };
-    const { httpMock } = buildMockResponse(0, responseValue);
+    let responseValue: getPlayerInfoResponse = mockData.getPlayerInfo(
+      sessionId
+    );
+    const { httpMock } = buildMockResponse({
+      responseValue: responseValue.value
+    });
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/player`)
       .reply(200, httpMock);
 
     const response = await libraryDriver.getPlayerInfo();
-    responseValue.Position = parseInt(responseValue.Position.split(" ")[0]);
-    responseValue.Duration = parseInt(responseValue.Duration.split(" ")[0]);
+    responseValue.value.Position = 8500;
+    responseValue.value.Duration = 5000;
 
     assert.deepEqual(
       response,
-      responseValue,
+      responseValue.value,
       "Player Info value does not match expcted Player Info value."
     );
   });
 
   it("Should Verify Playback Is Started", async function() {
-    let responseValue = {
-      Error: "false",
-      State: "play",
-      Format: {
-        Audio: "aac_adts",
-        Captions: "none",
-        Container: "",
-        Drm: "none",
-        Video: "mpeg4_10b",
-        VideoRes: ""
-      },
-      Buffering: {
-        Current: "",
-        Max: "",
-        Target: ""
-      },
-      NewStream: {
-        Speed: ""
-      },
-      Position: "8500 ms",
-      Duration: "5000 ms",
-      IsLive: "false",
-      Runtime: "",
-      StreamSegment: {
-        Bitrate: "",
-        MediaSequence: "",
-        SegmentType: "",
-        Time: ""
-      }
-    };
-    const { httpMock } = buildMockResponse(0, responseValue);
+    let responseValue = mockData.verifyPlaybackIsStarted;
+    const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
     nock(BASE_URL)
       .get(`/session/${sessionId}/player`)

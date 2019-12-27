@@ -1,3 +1,5 @@
+### If updating this file, did you consider if the new ignored file(s) need to be added to the .npmignore? ###
+
 ### Node Modules ###
 node_modules
 
@@ -5,6 +7,7 @@ node_modules
 .vscode
 
 ### Other ###
+built
 src/modules/images
 src/images
-images
+test/resources/images/screenshot-test.jpg
