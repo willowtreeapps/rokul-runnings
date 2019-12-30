@@ -2,6 +2,9 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const crypto = require("crypto");
+const md5 = require("md5");
+const request = require("request");
 
 /**
  * Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location.
@@ -91,21 +94,14 @@ async function getScreenshotRaw({ rokuIP, formData, authorization }) {
 async function saveScreenshot({
   imageURL,
   authorization,
-  directoryPath = "",
-  directory = "",
-  fileName = ""
+  directoryPath = path.resolve(__dirname),
+  directory = "images",
+  fileName = new Date(new Date().toString().split("GMT")[0] + " UTC")
+    .toISOString()
+    .split(".")[0]
+    .replace(/:/g, "-")
+    .replace("T", "_")
 }) {
-  if (!directoryPath) directoryPath = path.resolve(__dirname);
-  if (!directory) directory = "images";
-  if (!fileName) {
-    //returns Date as YYY-MM-DD_HH-MM-SS:
-    fileName = new Date(new Date().toString().split("GMT")[0] + " UTC")
-      .toISOString()
-      .split(".")[0]
-      .replace(/:/g, "-")
-      .replace("T", "_");
-  }
-
   const filePath = path.resolve(directoryPath, directory, `${fileName}.jpg`);
   const writer = fs.createWriteStream(filePath);
 
@@ -135,13 +131,15 @@ async function saveScreenshot({
  *
  * @param {String} rokuIP The IP of the Roku device
  * @param {String} username The username used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
+ * @param {String} password The password used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
  * @param {String} fileLocation The location of the channel to be installed
  */
-async function installChannel({ rokuIP, username, fileLocation }) {
+async function installChannel({ rokuIP, username, password, fileLocation }) {
   return await sideload({
     rokuIP: rokuIP,
     action: "Install",
     username: username,
+    password: password,
     fileLocation: fileLocation
   });
 }
@@ -151,13 +149,15 @@ async function installChannel({ rokuIP, username, fileLocation }) {
  *
  * @param {String} rokuIP The IP of the Roku device
  * @param {String} username The username used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
+ * @param {String} password The password used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
  * @param {String} fileLocation The location of the channel to be installed over the existing channel
  */
-async function replaceChannel({ rokuIP, username, fileLocation }) {
+async function replaceChannel({ rokuIP, username, password, fileLocation }) {
   return await sideload({
     rokuIP: rokuIP,
     action: "Replace",
     username: username,
+    password: password,
     fileLocation: fileLocation
   });
 }
@@ -167,13 +167,20 @@ async function replaceChannel({ rokuIP, username, fileLocation }) {
  *
  * @param {String} rokuIP The IP of the Roku device
  * @param {String} username The username used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
+ * @param {String} password The password used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
  * @param {String} fileLocation The location of the channel to be deleted. Not required
  */
-async function deleteChannel({ rokuIP, username, fileLocation = "" }) {
+async function deleteChannel({
+  rokuIP,
+  username,
+  password,
+  fileLocation = ""
+}) {
   return await sideload({
     rokuIP: rokuIP,
     action: "Delete",
     username: username,
+    password: password,
     fileLocation: fileLocation
   });
 }
@@ -184,9 +191,10 @@ async function deleteChannel({ rokuIP, username, fileLocation = "" }) {
  * @param {String} rokuIP The IP of the Roku device
  * @param {String} action Action to be taken. Sets the value of the `mysubmit` key
  * @param {String} username The username used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
+ * @param {String} password The password used to sign in to the Development Application Installer (what is reached when navigating to the IP of the Roku)
  * @param {String} fileLocation The location of the channel to be deleted. Not required
  */
-async function sideload({ rokuIP, action, username, fileLocation }) {
+async function sideload({ rokuIP, action, username, password, fileLocation }) {
   let formData = new FormData();
   formData.append("mysubmit", action);
   if (action !== "Delete") {
@@ -195,31 +203,92 @@ async function sideload({ rokuIP, action, username, fileLocation }) {
     formData.append("archive", "");
   }
 
-  const authorization = `Digest username="${username}", realm="rokudev", nonce="1577114671", uri="/plugin_install", algorithm="MD5", qop=auth, nc=0000002f, cnonce="", response="54116ad359a809de059a3e11d8d78ce0"`;
+  const authorization = await generateDigestAuth({
+    rokuIP: rokuIP,
+    endpoint: "/plugin_install",
+    username: username,
+    method: "POST",
+    password: password,
+    formData: formData
+  });
 
   return formData.submit(
     {
       host: `${rokuIP}`,
-      path: "/plugin_install",
+      path: `/plugin_install`,
       headers: {
         Authorization: authorization
-      }
+      }.toString()
     },
-    async function(error, res) {
-      console.log(res);
-      res.resume();
+    function(error, res) {
+      if (error) {
+        // console.log(error);
+      } else {
+        // console.log(res);
+      }
     }
   );
 }
 
-function generateNonce() {
-  let nonce = "";
-  let digits = Math.floor(Math.random() * 10);
-  for (let i = 0; i < digits; i++) {
-    nonce += Math.floor(Math.random() * 10).toString();
+async function generateDigestAuth({
+  rokuIP,
+  endpoint,
+  username,
+  realm = "rokudev",
+  formData,
+  method,
+  password
+}) {
+  let headers;
+  if (method === "GET") {
+    headers = await generateGetNonce(`http://${rokuIP}${endpoint}`);
+  } else {
+    headers = await generatePostNonce(rokuIP, endpoint, formData);
   }
-  return nonce;
+
+  const nonce = headers["www-authenticate"].split('nonce="')[1].split('"')[0];
+  const nc = "00000000";
+  const h1 = md5(`${username}:${realm}:${password}`);
+  const h2 = md5(`${method}:${endpoint}`);
+  const response = md5(`${h1}:${nonce}:${nc}::auth:${h2}`);
+
+  return `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="/plugin_install", algorithm="MD5", qop=auth, nc=${nc}, cnonce="", response="${response}"`;
 }
+
+async function generateGetNonce(url) {
+  return axios
+    .get(url)
+    .then(function(response) {
+      return response.headers;
+    })
+    .catch(function(error) {
+      if (error.response.status === 401) {
+        return error.response.headers;
+      } else {
+        console.log(error);
+        throw error;
+      }
+    });
+}
+
+async function generatePostNonce(baseURL, endpoint, formData) {
+  return new Promise(resolve => {
+    formData.submit(
+      {
+        host: baseURL,
+        path: endpoint
+      },
+      function(error, res) {
+        if (error) {
+          console.log(error);
+        } else {
+          resolve(res.headers);
+        }
+      }
+    );
+  });
+}
+
 module.exports = {
   installChannel,
   replaceChannel,
