@@ -5,6 +5,7 @@ import axios from "axios";
 import md5 = require("md5");
 import { rejects } from "assert";
 import { IncomingHttpHeaders } from "http";
+import { resolve } from "dns";
 
 /**
  * Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location.
@@ -233,24 +234,34 @@ async function sideload({
   username: string;
   channelLocation: string;
 }) {
-  let formData = new FormData();
-  formData.append("mysubmit", action);
-  if (action !== "Delete") {
-    formData.append("archive", fs.createReadStream(channelLocation));
-  } else {
-    formData.append("archive", "");
-  }
-
-  const authorization = await generateDigestAuth({
-    rokuIP: rokuIP,
-    endpoint: "/plugin_install",
-    username: username,
-    password: "Pass123",
-    method: "POST",
-    formData: formData
+  let formData = populateFormData({
+    action: action,
+    channelLocation: channelLocation
   });
 
-  return new Promise(reject => {
+  let authorization: string;
+  try {
+    authorization = await generateDigestAuth({
+      rokuIP: rokuIP,
+      endpoint: "/plugin_install",
+      username: username,
+      password: "Pass123",
+      method: "POST",
+      formData: formData
+    });
+  } catch (e) {
+    console.error(e);
+  }
+
+  console.log("breakpoint");
+
+  //re-populate formData after first submission
+  formData = populateFormData({
+    action: action,
+    channelLocation: channelLocation
+  });
+
+  return new Promise((resolve, reject) => {
     formData.submit(
       {
         host: `${rokuIP}`,
@@ -261,11 +272,11 @@ async function sideload({
       },
       function(error, res) {
         if (error) {
-          console.log(error);
+          console.error(error);
+          reject(error);
         } else {
-          res.on("error", function(error) {
-            reject(error);
-          });
+          console.log(res);
+          resolve(res);
         }
       }
     );
@@ -301,12 +312,14 @@ async function generateDigestAuth({
   }
 
   const nonce = headers["www-authenticate"].split('nonce="')[1].split('"')[0];
+  const qop = headers["www-authenticate"].split('qop="')[1].split('"')[0];
   const nc = "00000000";
+  const cnonce = "";
   const h1 = md5(`${username}:${realm}:${password}`);
   const h2 = md5(`${method}:${endpoint}`);
-  const response = md5(`${h1}:${nonce}:${nc}::auth:${h2}`);
+  const response = md5(`${h1}:${nonce}:${nc}:${cnonce}:${qop}:${h2}`);
 
-  return `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="/plugin_install", algorithm="MD5", qop=auth, nc=${nc}, cnonce="", response="${response}"`;
+  return `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="${endpoint}", algorithm="MD5", qop="${qop}", nc=${nc}, cnonce="${cnonce}", response="${response}"`;
 }
 
 async function generateGetNonce(url: string) {
@@ -319,13 +332,12 @@ async function generateGetNonce(url: string) {
       if (error.response.status === 401) {
         return error.response.headers;
       } else {
-        console.log(error);
-        throw error;
+        console.error(error);
       }
     });
 }
 
-async function generatePostNonce({
+function generatePostNonce({
   baseURL,
   endpoint,
   formData
@@ -337,19 +349,34 @@ async function generatePostNonce({
   return new Promise((resolve, reject) => {
     formData.submit(
       {
-        host: baseURL,
-        path: endpoint
+        host: `${baseURL}`,
+        path: `${endpoint}`
       },
       function(error, res) {
         if (error) {
-          console.log(error);
+          reject(error);
         } else {
-          res.on("error", error => {
-            reject(error);
-          });
           resolve(res.headers);
         }
       }
     );
   });
+}
+
+function populateFormData({
+  action,
+  channelLocation
+}: {
+  action: string;
+  channelLocation: string;
+}) {
+  let formData = new FormData();
+  formData.append("mysubmit", action);
+  if (action !== "Delete") {
+    formData.append("archive", fs.createReadStream(channelLocation));
+  } else {
+    formData.append("archive", "");
+  }
+
+  return formData;
 }
