@@ -1,7 +1,10 @@
 import FormData = require("form-data");
 import fs = require("fs");
 import path = require("path");
-import * as axios from "axios";
+import axios from "axios";
+import md5 = require("md5");
+import { rejects } from "assert";
+import { IncomingHttpHeaders } from "http";
 
 /**
  * Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location.
@@ -118,12 +121,8 @@ async function saveScreenshot(
   const filePath = path.resolve(directoryPath, directory, `${fileName}.jpg`);
   const writer = fs.createWriteStream(filePath);
 
-  const response = await axios.default({
-    url: `http://${imageURL}`,
-    method: "GET",
-    headers: {
-      Authorization: authorization
-    },
+  const response = await axios.get(`http://${imageURL}`, {
+    headers: { Authorization: authorization },
     responseType: "stream"
   });
 
@@ -155,12 +154,16 @@ export async function installChannel({
   username: string;
   channelLocation: string;
 }) {
-  return await sideload({
-    rokuIP: rokuIP,
-    action: "Install",
-    username: username,
-    channelLocation: channelLocation
-  });
+  try {
+    return await sideload({
+      rokuIP: rokuIP,
+      action: "Install",
+      username: username,
+      channelLocation: channelLocation
+    });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 /**
@@ -201,7 +204,7 @@ export async function deleteChannel({
 }: {
   rokuIP: string;
   username: string;
-  channelLocation: string;
+  channelLocation?: string;
 }) {
   return await sideload({
     rokuIP: rokuIP,
@@ -238,14 +241,20 @@ async function sideload({
     formData.append("archive", "");
   }
 
-  const authorization = `Digest username="${username}", realm="rokudev", nonce="1577114671", uri="/plugin_install", algorithm="MD5", qop=auth, nc=0000002f, cnonce="", response="54116ad359a809de059a3e11d8d78ce0"`;
+  const authorization = await generateDigestAuth({
+    rokuIP: rokuIP,
+    endpoint: "/plugin_install",
+    username: username,
+    password: "Pass123",
+    method: "POST",
+    formData: formData
+  });
 
-  return new Promise(resolve => {
-    let result;
+  return new Promise(reject => {
     formData.submit(
       {
         host: `${rokuIP}`,
-        path: "/plugin_install",
+        path: `/plugin_install`,
         headers: {
           Authorization: `${authorization}`
         }
@@ -254,13 +263,8 @@ async function sideload({
         if (error) {
           console.log(error);
         } else {
-          const chunks = [];
-          res.on("data", function(chunk) {
-            chunks.push(chunk);
-          });
-          res.on("end", function() {
-            result = Buffer.concat(chunks).toString();
-            resolve(result);
+          res.on("error", function(error) {
+            reject(error);
           });
         }
       }
@@ -268,11 +272,84 @@ async function sideload({
   });
 }
 
-function generateNonce() {
-  let nonce = "";
-  let digits = Math.floor(Math.random() * 10);
-  for (let i = 0; i < digits; i++) {
-    nonce += Math.floor(Math.random() * 10).toString();
+async function generateDigestAuth({
+  rokuIP,
+  endpoint,
+  username,
+  realm = "rokudev",
+  formData,
+  method,
+  password
+}: {
+  rokuIP: string;
+  endpoint: string;
+  username: string;
+  realm?: string;
+  formData: FormData;
+  method: string;
+  password: string;
+}) {
+  let headers: IncomingHttpHeaders = {};
+  if (method === "GET") {
+    headers = await generateGetNonce(`http://${rokuIP}${endpoint}`);
+  } else {
+    headers = await generatePostNonce({
+      baseURL: rokuIP,
+      endpoint: endpoint,
+      formData: formData
+    });
   }
-  return nonce;
+
+  const nonce = headers["www-authenticate"].split('nonce="')[1].split('"')[0];
+  const nc = "00000000";
+  const h1 = md5(`${username}:${realm}:${password}`);
+  const h2 = md5(`${method}:${endpoint}`);
+  const response = md5(`${h1}:${nonce}:${nc}::auth:${h2}`);
+
+  return `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="/plugin_install", algorithm="MD5", qop=auth, nc=${nc}, cnonce="", response="${response}"`;
+}
+
+async function generateGetNonce(url: string) {
+  return axios
+    .get(url)
+    .then(function(response) {
+      return response.headers;
+    })
+    .catch(function(error) {
+      if (error.response.status === 401) {
+        return error.response.headers;
+      } else {
+        console.log(error);
+        throw error;
+      }
+    });
+}
+
+async function generatePostNonce({
+  baseURL,
+  endpoint,
+  formData
+}: {
+  baseURL: string;
+  endpoint: string;
+  formData: FormData;
+}): Promise<IncomingHttpHeaders> {
+  return new Promise((resolve, reject) => {
+    formData.submit(
+      {
+        host: baseURL,
+        path: endpoint
+      },
+      function(error, res) {
+        if (error) {
+          console.log(error);
+        } else {
+          res.on("error", error => {
+            reject(error);
+          });
+          resolve(res.headers);
+        }
+      }
+    );
+  });
 }

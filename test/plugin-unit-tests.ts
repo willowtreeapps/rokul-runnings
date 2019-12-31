@@ -19,6 +19,27 @@ describe("Plugin tests", function() {
     nock.cleanAll();
   });
 
+  it("Should sideload", async function() {
+    try {
+      await plugin.installChannel({
+        rokuIP: "192.168.128.145",
+        username: "rokudev",
+        channelLocation: "./main.zip"
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  it("Should Install The Channel", async function() {
+    nock(`http://${rokuIP}`)
+      .post("/plugin_install")
+      .reply(200, sideloadResponse);
+
+    await plugin.installChannel({ rokuIP, username, channelLocation });
+    //No error indicates the channel was installed successfully.
+  });
+
   it("Should Get The Screenshot", async function() {
     nock(`http://${rokuIP}`)
       .post("/plugin_inspect")
@@ -42,14 +63,5 @@ describe("Plugin tests", function() {
     );
 
     assert.deepEqual(fileExists, true, "Unable to find created screenshot.");
-  });
-
-  it("Should Install The Channel", async function() {
-    nock(`http://${rokuIP}`)
-      .post("/plugin_install")
-      .reply(200, sideloadResponse);
-
-    await plugin.installChannel({ rokuIP, username, channelLocation });
-    //No error indicates the channel was installed successfully.
   });
 });

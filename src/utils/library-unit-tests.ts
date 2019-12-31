@@ -1,14 +1,11 @@
-import { buttons, Library } from "../src/modules/library";
+import { buttons, Library } from "../modules/library";
 import assert = require("assert");
 import nock = require("nock");
-import { BASE_URL } from "../src/modules/webdriver";
-import { start, stop } from "../src/utils/server";
-import * as elementData from "../src/utils/elementData";
-import {
-  elementDataObject,
-  getPlayerInfoResponse
-} from "../src/types/webdriver";
-import * as mockData from "../test/resources/webdriver-mock-data";
+import { BASE_URL } from "../modules/webdriver";
+import { start, stop } from "./server";
+import * as elementData from "./elementData";
+import { elementDataObject, getPlayerInfoResponse } from "../types/webdriver";
+import * as mockData from "../../test/resources/webdriver-mock-data";
 
 let libraryDriver: Library;
 const sessionId: string = "123456";
