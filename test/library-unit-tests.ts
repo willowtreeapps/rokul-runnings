@@ -8,8 +8,7 @@ import {
   elementDataObject,
   getPlayerInfoResponse
 } from "../src/types/webdriver";
-import * as mockData from "../test/resources/webdriver-mock-data";
-import { Plugin } from "../src/modules/plugin";
+import * as mockData from "./resources/webdriver-mock-data";
 
 let libraryDriver: Library;
 const sessionId: string = "123456";
@@ -47,7 +46,6 @@ describe("Library tests", function() {
     nock(BASE_URL)
       .get("/sessions")
       .reply(200, null);
-
     nock(BASE_URL)
       .post("/session")
       .reply(200, {
@@ -76,19 +74,6 @@ describe("Library tests", function() {
 
   after(async function() {
     await stop();
-  });
-
-  //TO BE DELETED
-  it("Should sideload", async function() {
-    const plugin: Plugin = new Plugin("192.168.128.145", "rokudev", "Pass123");
-    await plugin.installChannel("./main.zip");
-  });
-
-  it("Should Get a Screenshot", async function() {
-    const plugin: Plugin = new Plugin("192.168.128.145", "rokudev", "Pass123");
-    await plugin.getScreenshot({
-      channelLocation: "./main.zip"
-    });
   });
 
   it("Should Launch the Channel", async function() {

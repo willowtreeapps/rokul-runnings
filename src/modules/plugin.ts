@@ -4,6 +4,7 @@ import path = require("path");
 import axios from "axios";
 import md5 = require("md5");
 import { IncomingHttpHeaders } from "http";
+import { Stream } from "stream";
 
 export class Plugin {
   rokuIPAddress: string;
@@ -66,8 +67,8 @@ export class Plugin {
     } catch (e) {
       console.error(e);
     }
+
     return new Promise(resolve => {
-      let result;
       getFormData().submit(
         {
           host: `${this.rokuIPAddress}`,
@@ -85,8 +86,7 @@ export class Plugin {
               chunks.push(chunk);
             });
             res.on("end", function() {
-              result = Buffer.concat(chunks).toString();
-              resolve(result);
+              resolve();
             });
           }
         }
@@ -136,6 +136,7 @@ export class Plugin {
 
     return new Promise((resolve, reject) => {
       writer.on("finish", function() {
+        writer.end();
         resolve(
           console.log(`Saved at ${directoryPath}/${directory}/${fileName}.jpg`)
         );
@@ -215,7 +216,8 @@ export class Plugin {
     }
 
     return new Promise((resolve, reject) => {
-      getFormData().submit(
+      let formData = getFormData();
+      formData.submit(
         {
           host: `${this.rokuIPAddress}`,
           path: `/plugin_install`,
@@ -245,19 +247,22 @@ export class Plugin {
     formData?: FormData;
     method: string;
   }) {
-    let headers: IncomingHttpHeaders = {};
-    if (method === "GET") {
-      headers = await this.generateGetNonce(
-        `http://${this.rokuIPAddress}${endpoint}`
-      );
-    } else {
-      headers = await this.generatePostNonce({
-        endpoint: endpoint,
-        formData: formData
-      });
+    let headers: IncomingHttpHeaders = await this.generateHeaders({
+      method,
+      endpoint,
+      formData
+    });
+    let nonce: string, qop: string;
+    try {
+      if (headers) {
+        let authenticate = headers["www-authenticate"];
+        [, nonce] = authenticate.match(/nonce="([^"]+)"/);
+        [, qop] = authenticate.match(/qop="([^"]+)"/);
+      }
+    } catch (e) {
+      console.error(e);
     }
-    const nonce = headers["www-authenticate"].split('nonce="')[1].split('"')[0];
-    const qop = headers["www-authenticate"].split('qop="')[1].split('"')[0];
+
     const nc = "00000000";
     const cnonce = "";
     const h1 = md5(`${this.username}:${realm}:${this.password}`);
@@ -267,7 +272,38 @@ export class Plugin {
     return `Digest username="${this.username}", realm="${realm}", nonce="${nonce}", uri="${endpoint}", algorithm="MD5", qop="${qop}", nc=${nc}, cnonce="${cnonce}", response="${response}"`;
   }
 
-  async generateGetNonce(url: string): Promise<IncomingHttpHeaders> {
+  generateHeaders({
+    method,
+    endpoint,
+    formData
+  }: {
+    method: string;
+    endpoint: string;
+    formData?: FormData;
+  }): Promise<IncomingHttpHeaders> {
+    return new Promise(async (resolve, reject) => {
+      let headers: IncomingHttpHeaders = {};
+      if (method === "GET") {
+        headers = await this.generateGetHeaders(
+          `http://${this.rokuIPAddress}${endpoint}`
+        );
+        resolve(headers);
+      } else {
+        try {
+          headers = await this.generatePostHeaders({
+            endpoint: endpoint,
+            formData: formData
+          });
+          resolve(headers);
+        } catch (e) {
+          console.error(e);
+          reject(e);
+        }
+      }
+    });
+  }
+
+  async generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
     return axios
       .get(url)
       .then(function(response) {
@@ -282,7 +318,7 @@ export class Plugin {
       });
   }
 
-  generatePostNonce({
+  async generatePostHeaders({
     endpoint,
     formData
   }: {
@@ -290,19 +326,23 @@ export class Plugin {
     formData: FormData;
   }): Promise<IncomingHttpHeaders> {
     return new Promise((resolve, reject) => {
-      formData.submit(
-        {
-          host: `${this.rokuIPAddress}`,
-          path: `${endpoint}`
-        },
-        function(error, res) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(res.headers);
+      try {
+        formData.submit(
+          {
+            host: `${this.rokuIPAddress}`,
+            path: `${endpoint}`
+          },
+          function(error, res) {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(res.headers);
+            }
           }
-        }
-      );
+        );
+      } catch (e) {
+        console.error(e);
+      }
     });
   }
 
