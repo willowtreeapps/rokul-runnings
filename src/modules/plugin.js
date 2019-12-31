@@ -2,9 +2,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const crypto = require("crypto");
 const md5 = require("md5");
-const request = require("request");
 
 /**
  * Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location.
@@ -176,13 +174,19 @@ async function deleteChannel({
   password,
   fileLocation = ""
 }) {
-  return await sideload({
-    rokuIP: rokuIP,
-    action: "Delete",
-    username: username,
-    password: password,
-    fileLocation: fileLocation
-  });
+  try {
+    await sideload({
+      rokuIP: rokuIP,
+      action: "Delete",
+      username: username,
+      password: password,
+      fileLocation: fileLocation
+    });
+    console.log("success");
+    return "";
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 /**
@@ -203,31 +207,55 @@ async function sideload({ rokuIP, action, username, password, fileLocation }) {
     formData.append("archive", "");
   }
 
-  const authorization = await generateDigestAuth({
-    rokuIP: rokuIP,
-    endpoint: "/plugin_install",
-    username: username,
-    method: "POST",
-    password: password,
-    formData: formData
-  });
+  let authorization;
 
-  return formData.submit(
-    {
-      host: `${rokuIP}`,
-      path: `/plugin_install`,
+  try {
+    authorization = await generateDigestAuth({
+      rokuIP: rokuIP,
+      endpoint: "/plugin_install",
+      username: username,
+      method: "POST",
+      password: password,
+      formData: formData
+    });
+  } catch (e) {
+    console.error(e);
+  }
+
+  return axios
+    .post(`http://${rokuIP}/plugin_install`, formData, {
       headers: {
-        Authorization: authorization
-      }.toString()
-    },
-    function(error, res) {
-      if (error) {
-        // console.log(error);
-      } else {
-        // console.log(res);
+        Authorization: `${authorization}`
       }
-    }
-  );
+    })
+    .then(response => {
+      console.log(response);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+
+  // return new Promise((resolve, reject) => {
+  //   formData.submit(
+  //     {
+  //       host: `${rokuIP}`,
+  //       path: `/plugin_install`,
+  //       headers: {
+  //         Authorization: `${authorization}`,
+  //         "content-type": "application/x-www-form-urlencoded"
+  //       }
+  //     },
+  //     function(error, res) {
+  //       if (error) {
+  //         console.error(error);
+  //         reject(console.error(error));
+  //       } else {
+  //         console.log(res);
+  //         resolve(res);
+  //       }
+  //     }
+  //   );
+  // });
 }
 
 async function generateDigestAuth({
@@ -247,12 +275,16 @@ async function generateDigestAuth({
   }
 
   const nonce = headers["www-authenticate"].split('nonce="')[1].split('"')[0];
+  const qop = headers["www-authenticate"].split('qop="')[1].split('"')[0];
   const nc = "00000000";
+  const cnonce = "";
   const h1 = md5(`${username}:${realm}:${password}`);
   const h2 = md5(`${method}:${endpoint}`);
-  const response = md5(`${h1}:${nonce}:${nc}::auth:${h2}`);
+  const response = md5(`${h1}:${nonce}:${nc}:${cnonce}:${qop}:${h2}`);
 
-  return `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="/plugin_install", algorithm="MD5", qop=auth, nc=${nc}, cnonce="", response="${response}"`;
+  return Promise.resolve(
+    `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="/plugin_install", algorithm="MD5", qop="${qop}", nc=${nc}, cnonce="${cnonce}", response="${response}"`
+  );
 }
 
 async function generateGetNonce(url) {
@@ -271,16 +303,19 @@ async function generateGetNonce(url) {
     });
 }
 
-async function generatePostNonce(baseURL, endpoint, formData) {
-  return new Promise(resolve => {
+function generatePostNonce(baseURL, endpoint, formData) {
+  return new Promise((resolve, reject) => {
     formData.submit(
       {
-        host: baseURL,
-        path: endpoint
+        host: `${baseURL}`,
+        path: `${endpoint}`,
+        headers: {
+          "content-type": "application/x-www-form-urlencoded"
+        }
       },
       function(error, res) {
         if (error) {
-          console.log(error);
+          reject(error);
         } else {
           resolve(res.headers);
         }
