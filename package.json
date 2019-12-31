@@ -16,6 +16,7 @@
   "dependencies": {
     "@types/axios": "^0.14.0",
     "@types/form-data": "^2.5.0",
+    "@types/md5": "^2.1.33",
     "@types/mocha": "^5.2.7",
     "@types/node": "^13.1.0",
     "assert": "^2.0.0",

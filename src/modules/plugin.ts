@@ -256,7 +256,6 @@ export class Plugin {
         formData: formData
       });
     }
-
     const nonce = headers["www-authenticate"].split('nonce="')[1].split('"')[0];
     const qop = headers["www-authenticate"].split('qop="')[1].split('"')[0];
     const nc = "00000000";
@@ -321,7 +320,6 @@ export class Plugin {
     } else {
       formData.append("archive", "");
     }
-
     return formData;
   }
 }
