@@ -3,3 +3,8 @@ node_modules
 
 ### VSCode ###
 .vscode
+
+### Other ###
+src/modules/images
+src/images
+images

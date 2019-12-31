@@ -42,9 +42,15 @@ afterEach(async function() {
 })
 ```
 
+## WebDriverServer
+
+WebDriverServer is a binary compiled from the Go source code that Roku provided for [automated testing](https://github.com/rokudev/automated-channel-testing). It provides routing and handlers to forward commands to a Roku device.
+
+Note: this binary was compiled for OS X and will not work for Linux or Windows
+
 ## Sideloading
 
-You can sideload a new channel, replace the existing sideloaded channel, or remove the currently sidedloaded channel. This can be done through the exported functions from `channel-installer`.
+You can sideload a new channel, replace the existing sideloaded channel, or remove the currently sidedloaded channel. This can be done through the exported functions from `plugin`.
 
 ```
 const channel = require('channel-installer');
@@ -58,11 +64,23 @@ await channel.installChannel({
 
 All of the functions require the IP address of the roku, the location of the channel (as a .zip file), and the username used to log in to the Development Application Installer. You do not need the WebDriverServer active to sideload a channel, as the command goes directly from client to Roku device.
 
-## WebDriverServer
+## Screenshots
 
-WebDriverServer is a binary compiled from the Go source code that Roku provided for [automated testing](https://github.com/rokudev/automated-channel-testing). It provides routing and handlers to forward commands to a Roku device.
+You can screenshot what is currently displayed on the screen. This can be done through the `getScreenshot()` function in `plugin`
 
-Note: this binary was compiled for OS X and will not work for Linux or Windows
+```
+const { screenshot } = require('plugin').getScreenshot;
+
+await screenshot({
+    rokuIP: "0.0.0.0"
+    username: "rokudev",
+    directoryPath: "/Users/my-user/Code/WillowTreeApps/js-roku-automation/", //path to the directory, optional
+    directory: "images" //directory name, optional
+    fileName: "" //custom file name, optional
+});
+```
+
+The above would take a screenshot on the Roku device found at `0.0.0.0` and would save the screenshot to `/Users/my-user/Code/WillowTreeApps/js-roku-automation/images/` as a .jpg.
 
 ## FAQ
 
@@ -87,10 +105,5 @@ Most of the documentation provided in the JSDocs information was provided from t
 ## Todo
 
 - Update references to files within the project to what they would look like to someone using the project as a dependency
-- Maybe hook it up to swagger for even better documentation? `priority: 10`
 - switch to typescript?
 - dev dependencies for shipping
-
-```
-
-```

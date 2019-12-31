@@ -4,6 +4,7 @@ const nock = require("nock");
 const { BASE_URL } = require("../src/modules/webdriver");
 const { start, stop } = require("../src/utils/server");
 const elementData = require("../src/utils/elementData");
+const plugin = require("../src/modules/plugin");
 
 let libraryDriver;
 const sessionId = "123456";
@@ -59,6 +60,15 @@ describe("Library tests", function() {
 
   after(async function() {
     await stop();
+  });
+
+  //TO BE DELETED
+  it("Should sideload", async function() {
+    await plugin.deleteChannel({
+      rokuIP: "192.168.128.145",
+      username: "rokudev",
+      password: "Pass123"
+    });
   });
 
   it("Should Launch the Channel", async function() {
