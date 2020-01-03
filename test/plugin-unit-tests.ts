@@ -8,14 +8,19 @@ import { sideloadResponse } from "./resources/sideload-response";
 
 describe("Plugin tests", function() {
   this.timeout(0);
-  const rokuIP: string = "192.168.128.145";
+  const rokuIP: string = "0.0.0.0";
+  const baseURL: string = `http://${rokuIP}`;
   const username: string = "rokudev";
-  const password: string = "Pass123";
+  const password: string = "password";
   const channelLocation: string = "./test/resources/main.zip";
-  const directoryPath: string = "./test/resources";
+  const directoryPath: string = `${__dirname}/resources`;
   const directory: string = "images";
   const fileName: string = "screenshot-test";
   let plugin: Plugin;
+  const authenticateHeader = {
+    "www-authenticate": `Digest qop="auth", realm="rokudev", nonce="123456"`
+  };
+  const headerMatcher = { reqheaders: { authorization: /".*"/ } };
 
   this.beforeEach(function() {
     plugin = new Plugin(rokuIP, username, password);
@@ -25,53 +30,72 @@ describe("Plugin tests", function() {
     nock.cleanAll();
   });
 
-  it("Should sideload", async function() {
-    try {
-      await plugin.installChannel(channelLocation);
-    } catch (e) {
-      console.error(e);
-    }
+  it("Should Get The Screenshot", async function() {
+    nock(baseURL, headerMatcher)
+      .post("/plugin_inspect")
+      .reply(200, screenshotResponse);
+
+    nock(baseURL)
+      .post("/plugin_inspect")
+      .reply(401, "", authenticateHeader);
+
+    nock(baseURL, headerMatcher)
+      .get("/pkgs/dev.jpg")
+      .replyWithFile(200, `${__dirname}/resources/images/response.jpg`);
+
+    nock(baseURL)
+      .get("/pkgs/dev.jpg")
+      .reply(401, "", authenticateHeader);
+
+    await plugin.getScreenshot({
+      directoryPath,
+      directory,
+      fileName
+    });
+
+    const fileExists = fs.existsSync(
+      path.resolve(directoryPath, directory, `${fileName}.jpg`)
+    );
+
+    assert.deepEqual(fileExists, true, "Unable to find created screenshot.");
   });
 
-  // it("Should Get a Screenshot", async function() {
-  //   try {
-  //     await plugin.getScreenshot({
-  //       channelLocation: channelLocation
-  //     });
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // });
+  it("Should Install The Channel", async function() {
+    nock(baseURL, headerMatcher)
+      .post("/plugin_install")
+      .reply(200, sideloadResponse);
 
-  // it("Should Install The Channel", async function() {
-  //   nock(`http://${rokuIP}`)
-  //     .post("/plugin_install")
-  //     .reply(200, sideloadResponse);
+    nock(baseURL)
+      .post("/plugin_install")
+      .reply(401, "", authenticateHeader);
 
-  //   await plugin.installChannel(channelLocation);
-  //   //No error indicates the channel was installed successfully.
-  // });
+    await plugin.installChannel(channelLocation);
+    //No error indicates the channel was installed successfully.
+  });
 
-  // it("Should Get The Screenshot", async function() {
-  //   nock(`http://${rokuIP}`)
-  //     .post("/plugin_inspect")
-  //     .reply(200, screenshotResponse);
+  it("Should Replace The Channel", async function() {
+    nock(baseURL, headerMatcher)
+      .post("/plugin_install")
+      .reply(200, sideloadResponse);
 
-  //   nock(`http://${rokuIP}`)
-  //     .get("/pkgs/dev.jpg")
-  //     .replyWithFile(200, "./test/resources/images/response.jpg");
+    nock(baseURL)
+      .post("/plugin_install")
+      .reply(401, "", authenticateHeader);
 
-  //   await plugin.getScreenshot({
-  //     channelLocation,
-  //     directoryPath,
-  //     directory,
-  //     fileName
-  //   });
+    await plugin.replaceChannel(channelLocation);
+    //No error indicates the channel was replaced successfully.
+  });
 
-  //   const fileExists = fs.existsSync(
-  //     path.resolve(directoryPath, directory, `${fileName}.jpg`)
-  //   );
+  it("Should Delete The Channel", async function() {
+    nock(baseURL, headerMatcher)
+      .post("/plugin_install")
+      .reply(200, sideloadResponse);
 
-  //   assert.deepEqual(fileExists, true, "Unable to find created screenshot.");
-  // });
+    nock(baseURL)
+      .post("/plugin_install")
+      .reply(401, "", authenticateHeader);
+
+    await plugin.deleteChannel(channelLocation);
+    //No error indicates the channel was deleted successfully.
+  });
 });

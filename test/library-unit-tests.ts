@@ -1,7 +1,6 @@
 import { buttons, Library } from "../src/modules/library";
 import assert = require("assert");
 import nock = require("nock");
-import { BASE_URL } from "../src/modules/webdriver";
 import { start, stop } from "../src/utils/server";
 import * as elementData from "../src/utils/elementData";
 import {
@@ -43,10 +42,10 @@ describe("Library tests", function() {
 
   beforeEach(async function() {
     libraryDriver = new Library("123.456.789.012");
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get("/sessions")
       .reply(200, null);
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post("/session")
       .reply(200, {
         sessionId: sessionId,
@@ -64,7 +63,7 @@ describe("Library tests", function() {
   });
 
   afterEach(async function() {
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .delete(`/session/${sessionId}`)
       .reply(200, defaultData);
 
@@ -79,7 +78,7 @@ describe("Library tests", function() {
   it("Should Launch the Channel", async function() {
     const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/launch`)
       .reply(200, httpMock);
 
@@ -112,7 +111,7 @@ describe("Library tests", function() {
       responseValue: value
     });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
 
@@ -131,7 +130,7 @@ describe("Library tests", function() {
     const { httpMock } = buildMockResponse({
       responseValue: value
     });
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
 
@@ -146,7 +145,7 @@ describe("Library tests", function() {
 
   it("Should Verify Screen is Loaded", async function() {
     const { httpMock } = buildMockResponse(defaultResponses);
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
 
@@ -160,7 +159,7 @@ describe("Library tests", function() {
   it("Should Verify Button is Pressed", async function() {
     const { httpMock } = buildMockResponse(defaultResponses);
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/press`)
       .reply(200, httpMock);
 
@@ -176,7 +175,7 @@ describe("Library tests", function() {
 
     const word: string = "hello";
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/press`)
       .reply(200, httpMock)
       .persist();
@@ -198,7 +197,7 @@ describe("Library tests", function() {
   it("Should Verify Button Sequence is Entered", async function() {
     const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/press`)
       .reply(200, httpMock)
       .persist();
@@ -231,7 +230,7 @@ describe("Library tests", function() {
       XMLName: "Label"
     };
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
 
@@ -252,7 +251,7 @@ describe("Library tests", function() {
 
     const mockResponse = mockData.getElementsMockResponse;
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/elements`)
       .reply(200, httpMock)
       .persist();
@@ -282,7 +281,7 @@ describe("Library tests", function() {
 
     const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .post(`/session/${sessionId}/element/active`)
       .reply(200, httpMock);
 
@@ -305,7 +304,7 @@ describe("Library tests", function() {
     };
     const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}/current_app`)
       .reply(200, httpMock);
 
@@ -324,7 +323,7 @@ describe("Library tests", function() {
     };
     const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}/current_app`)
       .reply(200, httpMock);
 
@@ -349,7 +348,7 @@ describe("Library tests", function() {
     };
     const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}`)
       .reply(200, httpMock);
 
@@ -370,7 +369,7 @@ describe("Library tests", function() {
       responseValue: responseValue.value
     });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}/player`)
       .reply(200, httpMock);
 
@@ -389,7 +388,7 @@ describe("Library tests", function() {
     let responseValue = mockData.verifyPlaybackIsStarted;
     const { httpMock } = buildMockResponse({ responseValue: responseValue });
 
-    nock(BASE_URL)
+    nock(libraryDriver.driver.baseURL)
       .get(`/session/${sessionId}/player`)
       .reply(200, httpMock);
 

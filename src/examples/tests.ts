@@ -2,21 +2,18 @@ import { buttons, Library } from "../modules/library";
 import assert = require("assert");
 import { start, stop } from "../utils/server";
 import * as data from "../utils/elementData";
-import * as plugin from "../modules/plugin";
+import { Plugin } from "../modules/plugin";
 
 let driver: Library;
 
 describe("Other tests", function() {
   //Setting the Mocha timeout to non-existant
   this.timeout(0);
+  const plugin = new Plugin("0.0.0.0", "username", "password");
 
   before(async function() {
     //ensure the channel is sideloaded
-    await plugin.installChannel({
-      rokuIP: "0.0.0.0",
-      channelLocation: "./main.zip",
-      username: "rokudev"
-    });
+    await plugin.installChannel("./main.zip");
     //before all tests, start the WebDriverServer
     await start();
   });
@@ -38,16 +35,12 @@ describe("Other tests", function() {
     //after all tests, stop the WebDriverServer
     await stop();
     //remove the sideloaded channel
-    await plugin.deleteChannel({
-      rokuIP: "0.0.0.0",
-      channelLocation: "./main.zip",
-      username: "rokudev"
-    });
+    await plugin.deleteChannel("./main.zip");
   });
 
   it("Should Verify That The Channel Is Loaded", async function() {
     //verify the currently displayed channel is "dev"
-    const response = await driver.verifyIsChannelLoaded("dev");
+    const response = await driver.verifyIsChannelLoaded({ id: "dev" });
 
     //assert that the response value is true
     assert.deepEqual(response, true, "Channel is not loaded successfully.");
@@ -75,13 +68,6 @@ describe("Other tests", function() {
     //find the appropriate element data
     const response = await driver.getElement(elementData);
 
-    //format the values from `response` that we want to compare
-    const values = {
-      index: response.index,
-      text: response.text,
-      color: response.color
-    };
-
     //create the expected values
     const expectedValues = {
       index: "0",
@@ -89,8 +75,25 @@ describe("Other tests", function() {
       color: "#ddddddff"
     };
 
+    let isAllMatchesFound: boolean = false;
+
+    for (let i = 0; i < Object.keys(expectedValues).length; i++) {
+      let key = Object.keys(expectedValues).keys()[i];
+      if (expectedValues[key] === response.Attrs[key]) isAllMatchesFound = true;
+      else {
+        isAllMatchesFound = false;
+        break;
+      }
+    }
+
     //assert that the values match
-    assert.deepEqual(values, expectedValues, "Expected Values don't match!");
+    assert.deepEqual(
+      isAllMatchesFound,
+      true,
+      `Expected Values don't match! Expected: ${JSON.stringify(
+        expectedValues
+      )} \n but found: ${JSON.stringify(response.Attrs)}`
+    );
   });
 
   it("Should Verify That Channel 'dev' Exists", async function() {

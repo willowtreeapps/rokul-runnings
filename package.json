@@ -2,7 +2,7 @@
   "name": "roku-automation-javascript",
   "version": "0.1.0",
   "description": "Library to send automated commands to a Roku",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "mocha -r ts-node/register **/test/*.ts"
   },
@@ -14,10 +14,12 @@
   "contributors": [],
   "license": "ISC",
   "dependencies": {
+    "@types/assert": "^1.4.3",
     "@types/axios": "^0.14.0",
     "@types/form-data": "^2.5.0",
     "@types/md5": "^2.1.33",
     "@types/mocha": "^5.2.7",
+    "@types/nock": "^11.1.0",
     "@types/node": "^13.1.0",
     "assert": "^2.0.0",
     "axios": "^0.19.0",
