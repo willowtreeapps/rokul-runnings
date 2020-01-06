@@ -129,12 +129,19 @@ export class WebDriver {
     return response;
   }
 
-  /** Launches the specified channel. Most likely this will be 'dev'. */
-  async sendLaunchChannel(channelCode = "dev") {
+  /** Launches the specified channel. Most likely this will be 'dev'.
+   * Note: this command often executes much faster than the actual channel appearing
+   * To avoid timing issues, consider using the `sleepsAfterLaunch` and `sleepTimeInMillis` parameters.
+   */
+  async sendLaunchChannel(
+    channelCode = "dev",
+    sleepsAfterLaunch = false,
+    sleepTimeInMillis = 2000
+  ) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
     const url = await this.buildURL("/launch");
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
-    await sleep.sleep(2000);
+    if (sleepsAfterLaunch) await sleep.sleep(sleepTimeInMillis);
     return response;
   }
 
