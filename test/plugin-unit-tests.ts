@@ -8,14 +8,14 @@ import { sideloadResponse } from "./resources/sideload-response";
 
 describe("Plugin tests", function() {
   this.timeout(0);
-  const rokuIP: string = "0.0.0.0";
-  const baseURL: string = `http://${rokuIP}`;
-  const username: string = "rokudev";
-  const password: string = "password";
-  const channelLocation: string = "./test/resources/main.zip";
-  const directoryPath: string = `${__dirname}/resources`;
-  const directory: string = "images";
-  const fileName: string = "screenshot-test";
+  const rokuIP = "0.0.0.0";
+  const baseURL = `http://${rokuIP}`;
+  const username = "rokudev";
+  const password = "password";
+  const channelLocation = "./test/resources/main.zip";
+  const directoryPath = `${__dirname}/resources`;
+  const directory = "images";
+  const fileName = "screenshot-test";
   let plugin: Plugin;
   const authenticateHeader = {
     "www-authenticate": `Digest qop="auth", realm="rokudev", nonce="123456"`

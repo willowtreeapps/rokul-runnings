@@ -10,8 +10,8 @@ import {
 import * as mockData from "./resources/webdriver-mock-data";
 
 let libraryDriver: Library;
-const sessionId: string = "123456";
-const defaultData: elementDataObject = elementData.text("test");
+const sessionId = "123456";
+const defaultData = elementData.text("test");
 const defaultResponses = { responsesStatus: 0, responseValue: null };
 
 function buildMockResponse({

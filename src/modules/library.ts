@@ -26,12 +26,11 @@ export enum buttons {
 }
 
 export class Library {
-  driver: WebDriver;
   constructor(
     rokuIPAddress: string,
-    timeoutInMillis: number = 0,
-    pressDelayInMillis: number = 0,
-    driver: WebDriver = new WebDriver(
+    timeoutInMillis = 0,
+    pressDelayInMillis = 0,
+    public driver: WebDriver = new WebDriver(
       rokuIPAddress,
       timeoutInMillis,
       pressDelayInMillis
@@ -64,8 +63,8 @@ export class Library {
   /** Verify that the screen is loaded based on the provided element data. */
   async verifyIsScreenLoaded(
     data: elementDataObject,
-    maxRetries: number = 10,
-    delayInMillis: number = 1000
+    maxRetries = 10,
+    delayInMillis = 1000
   ) {
     let retries = 0;
     while (retries < maxRetries) {
@@ -78,13 +77,13 @@ export class Library {
   }
 
   /** Simulates the press and release of the specified key. */
-  async pressBtn(keyPress: string, delayInMillis: number = 2000) {
+  async pressBtn(keyPress: string, delayInMillis = 2000) {
     await sleep(delayInMillis);
     return await this.driver.sendKeypress(keyPress);
   }
 
   /** Simulates the press and release of each letter in a word. */
-  async sendWord(word: string, delayInMillis: number = 2000) {
+  async sendWord(word: string, delayInMillis = 2000) {
     await sleep(delayInMillis);
     let wordResponse: { [key: string]: nullValueResponse }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
@@ -97,13 +96,13 @@ export class Library {
   }
 
   /** Simulates the sequence of keypresses and releases. */
-  async sendButtonSequence(sequence: buttons[], delayInMillis: number = 2000) {
+  async sendButtonSequence(sequence: buttons[], delayInMillis = 2000) {
     await sleep(delayInMillis);
     return await this.driver.sendSequence(sequence);
   }
 
   /** Searches for an element on the page based on the specified locator starting from the screen root. Returns information on the first matching element. */
-  async getElement(data: elementDataObject, delayInMillis: number = 1000) {
+  async getElement(data: elementDataObject, delayInMillis = 1000) {
     await sleep(delayInMillis);
     const response = await this.driver.getUIElement(data);
     const [attributes] = await this.getAllAttributes([response.value]);
@@ -111,7 +110,7 @@ export class Library {
   }
 
   /** Searches for elements on the page based on the specified locators starting from the screen root. Returns information on the matching elements. */
-  async getElements(data: elementDataObject, delayInMillis: number = 1000) {
+  async getElements(data: elementDataObject, delayInMillis = 1000) {
     await sleep(delayInMillis);
     const response = await this.driver.getUIElements(data);
     const attributes = await this.getAllAttributes(response);
@@ -126,7 +125,7 @@ export class Library {
   }
 
   /** Verifies that the Focused Element returned from {@link getFocusedElement} is a RenderableNode */
-  async verifyFocusedElementIsRenderableNode(maxRetries: number = 10) {
+  async verifyFocusedElementIsRenderableNode(maxRetries = 10) {
     let retries = 0;
     let element: elementValueParsed;
     while (element.XMLName !== "RenderableNode" && retries < maxRetries) {
@@ -147,7 +146,7 @@ export class Library {
     maxRetries?: number;
     delayInMillis?: number;
   }) {
-    let retries: number = 0;
+    let retries = 0;
     while (retries < maxRetries) {
       const response = await this.driver.getCurrentApp();
       if (response.ID != id) retries++;
@@ -181,10 +180,7 @@ export class Library {
   }
 
   /** Verify playback has started on the Roku media player. */
-  async verifyIsPlaybackStarted(
-    maxRetries: number = 10,
-    delayInMillis: number = 1000
-  ) {
+  async verifyIsPlaybackStarted(maxRetries = 10, delayInMillis = 1000) {
     let retries = 0;
     while (retries < maxRetries) {
       const response = await this.driver.getPlayerInfoError();

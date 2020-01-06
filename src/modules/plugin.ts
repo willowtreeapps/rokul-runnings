@@ -4,12 +4,14 @@ import path = require("path");
 import axios from "axios";
 import md5 = require("md5");
 import { IncomingHttpHeaders } from "http";
+import { action, method } from "../types/plugin";
 
 export class Plugin {
-  rokuIPAddress: string;
-  username: string;
-  password: string;
-  constructor(rokuIPAddress: string, username: string, password: string) {
+  constructor(
+    public rokuIPAddress: string,
+    public username: string,
+    public password: string
+  ) {
     this.rokuIPAddress = rokuIPAddress;
     this.username = username;
     this.password = password;
@@ -47,7 +49,7 @@ export class Plugin {
   }
 
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
-  async generateScreenshot(formData: FormData) {
+  private async generateScreenshot(formData: FormData) {
     /** define variables */
     let endpoint: string = "/plugin_inspect";
     let authorization: string;
@@ -61,20 +63,16 @@ export class Plugin {
     /** Execute the POST command */
     formData.submit(
       {
-        host: `${this.rokuIPAddress}`,
+        host: this.rokuIPAddress,
         path: "/plugin_inspect",
         headers: {
-          Authorization: `${authorization}`
+          Authorization: authorization
         }
       },
       function(error, res) {
         if (error) {
           console.error(error);
         } else {
-          const chunks = [];
-          res.on("data", function(chunk) {
-            chunks.push(chunk);
-          });
           res.on("end", function() {
             return res;
           });
@@ -84,7 +82,7 @@ export class Plugin {
   }
 
   /** Function that saves the screenshot, using a `GET` request to `/pkgs/dev.jpg`. */
-  async saveScreenshot({
+  private async saveScreenshot({
     directoryPath,
     directory,
     fileName,
@@ -100,7 +98,7 @@ export class Plugin {
     let authorization: string;
     /** Generate a Digest Authentication string */
     authorization = await this.generateDigestAuth({
-      endpoint: `${endpoint}`,
+      endpoint: endpoint,
       method: "GET"
     });
 
@@ -149,7 +147,7 @@ export class Plugin {
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async deleteChannel(channelLocation: string = "") {
+  async deleteChannel(channelLocation = "") {
     return await this.sideload({
       action: "Delete",
       channelLocation: channelLocation
@@ -161,7 +159,7 @@ export class Plugin {
     action,
     channelLocation
   }: {
-    action: string;
+    action: action;
     channelLocation: string;
   }) {
     /** Define variables */
@@ -182,10 +180,10 @@ export class Plugin {
     /** Execute POST */
     formData.submit(
       {
-        host: `${this.rokuIPAddress}`,
-        path: `${endpoint}`,
+        host: this.rokuIPAddress,
+        path: endpoint,
         headers: {
-          Authorization: `${authorization}`
+          Authorization: authorization
         }
       },
       function(error, res) {
@@ -208,7 +206,7 @@ export class Plugin {
     endpoint: string;
     realm?: string;
     formData?: FormData;
-    method: string;
+    method: method;
   }) {
     /** Retrieve headers */
     let headers: any = await this.generateHeaders({
@@ -247,13 +245,13 @@ export class Plugin {
     endpoint,
     formData
   }: {
-    method: string;
+    method: method;
     endpoint: string;
     formData?: FormData;
   }): Promise<any> {
     return new Promise(async (resolve, reject) => {
       /** Declare variable */
-      let headers: any = {};
+      let headers = {};
       /** If executing a GET */
       if (method === "GET") {
         headers = await this.generateGetHeaders(
@@ -321,7 +319,7 @@ export class Plugin {
     action,
     channelLocation
   }: {
-    action: string;
+    action: action;
     channelLocation?: string;
   }): Promise<FormData> {
     return new Promise(resolve => {

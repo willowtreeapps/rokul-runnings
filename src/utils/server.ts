@@ -3,7 +3,7 @@ const { spawn } = require("child_process");
 let startServer;
 
 /** Function to start up the WebDriverServer */
-export async function start(print: boolean = false) {
+export async function start(print = false) {
   startServer = spawn("./WebDriverServer");
   startServer.stdout.on("data", data => {
     console.log(`stdout: ${data}`);

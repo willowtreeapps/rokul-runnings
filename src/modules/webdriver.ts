@@ -1,6 +1,5 @@
 import http = require("../utils/http");
 import sleep = require("../utils/sleep");
-import { isArray } from "util";
 import {
   getCurrentAppResponse,
   getElementResponse,
@@ -18,17 +17,12 @@ import {
 } from "../types/webdriver";
 
 export class WebDriver {
-  rokuIPAddress: string;
-  timeoutInMillis: number;
-  pressDelayInMillis: number;
-  sessionId: string;
-  baseURL: string;
   constructor(
-    rokuIPAddress: string,
-    timeoutInMillis: number = 20000,
-    pressDelayInMillis: number = 2000,
-    sessionId: string = "",
-    baseURL: string = "http://localhost:9000/v1"
+    public rokuIPAddress: string,
+    public timeoutInMillis = 20000,
+    public pressDelayInMillis = 2000,
+    public sessionId = "",
+    public baseURL = "http://localhost:9000/v1"
   ) {
     this.rokuIPAddress = rokuIPAddress;
     this.timeoutInMillis = timeoutInMillis;
@@ -38,7 +32,7 @@ export class WebDriver {
   }
 
   /** Creates a standard request body to be used in requests */
-  buildRequestBody(additionalParams: object = {}) {
+  buildRequestBody(additionalParams = {}) {
     return {
       ip: this.rokuIPAddress,
       timeout: this.timeoutInMillis,
@@ -47,13 +41,15 @@ export class WebDriver {
     };
   }
 
-  /** Creates the URL to which the request will be sent */
-  async buildURL(command: string): Promise<string> {
+  /** Creates the URL to which the request will be sent
+   * Note: the WebDriverServer interprets `baseURL/session/{sessionId}` as distinct from `baseURL/session/{sessionId}/`
+   * Because of this, we allow a string of one whitespace character to be passed in.
+   * Interestingly enough, WebDriverServer does not interpret `baseURL/session/{sessionId}` as distinct from `baseURL/session/{sessionId} `
+   */
+  async buildURL(command = ""): Promise<string> {
     if (!command) return `${this.baseURL}/session`;
-    else {
-      if (!this.sessionId) {
-        this.sessionId = await this.createNewSession();
-      }
+    else if (!this.sessionId) {
+      this.sessionId = await this.createNewSession();
     }
     return Promise.resolve(
       `${this.baseURL}/session/${this.sessionId}${command}`
@@ -65,7 +61,7 @@ export class WebDriver {
    * If a session already exists for a specified IP address, that sessionId is used
    */
   async createNewSession() {
-    const url = await this.buildURL("");
+    const url = await this.buildURL();
     const sessionsResponse = await this.getAllSessions();
     if (sessionsResponse !== null) {
       for (let i = 0; i < sessionsResponse.length; i++) {
@@ -82,7 +78,7 @@ export class WebDriver {
 
   /** Returns all active sessions from the WebDriverServer */
   async getAllSessions() {
-    let url = await this.buildURL("");
+    let url = await this.buildURL();
     url = `${url}s`;
     const response = await http.baseGET<getAllSessionsResponse>(url);
     return response.body;
@@ -107,7 +103,7 @@ export class WebDriver {
     const url = await this.buildURL("/player");
     const response = await http.baseGET<getPlayerInfoResponse | errorResponse>(
       url,
-      true
+      /* errror allowed =*/ true
     );
     return response;
   }
@@ -134,7 +130,7 @@ export class WebDriver {
   }
 
   /** Launches the specified channel. Most likely this will be 'dev'. */
-  async sendLaunchChannel(channelCode: string = "dev") {
+  async sendLaunchChannel(channelCode = "dev") {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
     const url = await this.buildURL("/launch");
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
