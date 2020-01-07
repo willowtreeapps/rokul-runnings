@@ -4,7 +4,7 @@ import path = require("path");
 import axios from "axios";
 import md5 = require("md5");
 import { IncomingHttpHeaders } from "http";
-import { action, method } from "../types/plugin";
+import { Action, Method } from "../types/plugin";
 
 export class Plugin {
   constructor(
@@ -159,7 +159,7 @@ export class Plugin {
     action,
     channelLocation
   }: {
-    action: action;
+    action: Action;
     channelLocation: string;
   }) {
     /** Define variables */
@@ -206,7 +206,7 @@ export class Plugin {
     endpoint: string;
     realm?: string;
     formData?: FormData;
-    method: method;
+    method: Method;
   }) {
     /** Retrieve headers */
     let headers: any = await this.generateHeaders({
@@ -245,7 +245,7 @@ export class Plugin {
     endpoint,
     formData
   }: {
-    method: method;
+    method: Method;
     endpoint: string;
     formData?: FormData;
   }): Promise<any> {
@@ -319,7 +319,7 @@ export class Plugin {
     action,
     channelLocation
   }: {
-    action: action;
+    action: Action;
     channelLocation?: string;
   }): Promise<FormData> {
     return new Promise(resolve => {

@@ -1,2 +1,2 @@
-export type action = "Install" | "Replace" | "Delete" | "Screenshot";
-export type method = "GET" | "POST";
+export type Action = "Install" | "Replace" | "Delete" | "Screenshot";
+export type Method = "GET" | "POST";
