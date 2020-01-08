@@ -59,7 +59,7 @@ export type getAllAppsResponse = {
   value: appResponse[];
 };
 
-export type getScreenSrouceResponse = {
+export type getScreenSourceResponse = {
   sessionId: string;
   status: string;
   value: string;

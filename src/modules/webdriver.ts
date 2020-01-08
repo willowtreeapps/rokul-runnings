@@ -1,5 +1,4 @@
-import http = require("../utils/http");
-import sleep = require("../utils/sleep");
+/* eslint-disable no-unused-vars */
 import {
   getCurrentAppResponse,
   getElementResponse,
@@ -9,20 +8,22 @@ import {
   sessionsResponse,
   getPlayerInfoResponse,
   getAllAppsResponse,
-  getScreenSrouceResponse,
+  getScreenSourceResponse,
   nullValueResponse,
   elementDataObject,
   getFocusedElementResponse,
-  errorResponse
-} from "../types/webdriver";
+  errorResponse,
+} from '../types/webdriver';
+import http = require('../utils/http');
+import sleep = require('../utils/sleep');
 
 export class WebDriver {
   constructor(
     public rokuIPAddress: string,
     public timeoutInMillis = 20000,
     public pressDelayInMillis = 2000,
-    public sessionId = "",
-    public baseURL = "http://localhost:9000/v1"
+    public sessionId = '',
+    public baseURL = 'http://localhost:9000/v1',
   ) {
     this.rokuIPAddress = rokuIPAddress;
     this.timeoutInMillis = timeoutInMillis;
@@ -37,7 +38,7 @@ export class WebDriver {
       ip: this.rokuIPAddress,
       timeout: this.timeoutInMillis,
       pressDelay: this.pressDelayInMillis,
-      ...additionalParams
+      ...additionalParams,
     };
   }
 
@@ -46,14 +47,12 @@ export class WebDriver {
    * Because of this, we allow a string of one whitespace character to be passed in.
    * Interestingly enough, WebDriverServer does not interpret `baseURL/session/{sessionId}` as distinct from `baseURL/session/{sessionId} `
    */
-  async buildURL(command = ""): Promise<string> {
+  async buildURL(command = ''): Promise<string> {
     if (!command) return `${this.baseURL}/session`;
     else if (!this.sessionId) {
       this.sessionId = await this.createNewSession();
     }
-    return Promise.resolve(
-      `${this.baseURL}/session/${this.sessionId}${command}`
-    );
+    return Promise.resolve(`${this.baseURL}/session/${this.sessionId}${command}`);
   }
 
   /**
@@ -86,46 +85,43 @@ export class WebDriver {
 
   /** Retrieves information about the specified session. */
   async getDeviceInfo() {
-    const url = await this.buildURL(" ");
+    const url = await this.buildURL(' ');
     const response = await http.baseGET<sessionsResponse>(url);
     return response.body.value;
   }
 
   /** Retrieves information about the Roku media player. */
   async getPlayerInfo() {
-    const url = await this.buildURL("/player");
+    const url = await this.buildURL('/player');
     const response = await http.baseGET<getPlayerInfoResponse>(url);
     return response.body.value;
   }
 
   /** Retrieves information about the Roku media player, allowing for non-200 responses */
   async getPlayerInfoError() {
-    const url = await this.buildURL("/player");
-    const response = await http.baseGET<getPlayerInfoResponse | errorResponse>(
-      url,
-      /* errror allowed =*/ true
-    );
+    const url = await this.buildURL('/player');
+    const response = await http.baseGET<getPlayerInfoResponse | errorResponse>(url, /* errror allowed = */ true);
     return response;
   }
 
   /** Returns a list of channels installed on the device. */
   async getApps() {
-    const url = await this.buildURL("/apps");
+    const url = await this.buildURL('/apps');
     const response = await http.baseGET<getAllAppsResponse>(url);
     return response.body;
   }
 
   /** Returns information about the channel currently loaded on the device. */
   async getCurrentApp() {
-    const url = await this.buildURL("/current_app");
+    const url = await this.buildURL('/current_app');
     const response = await http.baseGET<getCurrentAppResponse>(url);
     return response.body.value;
   }
 
   /** Gets the current screen source. */
   async getScreenSource() {
-    const url = await this.buildURL("/source");
-    const response = await http.baseGET<getScreenSrouceResponse>(url);
+    const url = await this.buildURL('/source');
+    const response = await http.baseGET<getScreenSourceResponse>(url);
     return response;
   }
 
@@ -133,13 +129,9 @@ export class WebDriver {
    * Note: this command often executes much faster than the actual channel appearing
    * To avoid timing issues, consider using the `sleepsAfterLaunch` and `sleepTimeInMillis` parameters.
    */
-  async sendLaunchChannel(
-    channelCode = "dev",
-    sleepsAfterLaunch = false,
-    sleepTimeInMillis = 2000
-  ) {
+  async sendLaunchChannel(channelCode = 'dev', sleepsAfterLaunch = false, sleepTimeInMillis = 2000) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
-    const url = await this.buildURL("/launch");
+    const url = await this.buildURL('/launch');
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
     if (sleepsAfterLaunch) await sleep.sleep(sleepTimeInMillis);
     return response;
@@ -151,7 +143,7 @@ export class WebDriver {
    */
   async sendInstallChannel(channelCode: string) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
-    const url = await this.buildURL("/install");
+    const url = await this.buildURL('/install');
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
     return response;
   }
@@ -159,7 +151,7 @@ export class WebDriver {
   /** Sends a sequence of keys to be input by the device */
   async sendSequence(sequence: string[]) {
     const requestBody = this.buildRequestBody({ button_sequence: sequence });
-    const url = await this.buildURL("/press");
+    const url = await this.buildURL('/press');
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
     return response;
   }
@@ -167,7 +159,7 @@ export class WebDriver {
   /** Searches for an element on the page, starting from the screen root. The first located element will be returned as a WebElement JSON object. */
   async getUIElement(data: elementDataObject) {
     const requestBody = this.buildRequestBody({ elementData: [data] });
-    const url = await this.buildURL("/element");
+    const url = await this.buildURL('/element');
     const response = await http.basePOST<getElementResponse>(url, requestBody);
     return response.body;
   }
@@ -178,12 +170,8 @@ export class WebDriver {
    */
   async getUIElementError(data: elementDataObject) {
     const requestBody = this.buildRequestBody({ elementData: [data] });
-    const url = await this.buildURL("/element");
-    const response = await http.basePOST<getElementResponse | errorResponse>(
-      url,
-      requestBody,
-      true
-    );
+    const url = await this.buildURL('/element');
+    const response = await http.basePOST<getElementResponse | errorResponse>(url, requestBody, true);
     return response;
   }
 
@@ -191,9 +179,9 @@ export class WebDriver {
   async setTimeouts(timeoutType: string, delayInMillis: number) {
     const requestBody = this.buildRequestBody({
       type: timeoutType,
-      ms: delayInMillis
+      ms: delayInMillis,
     });
-    const url = await this.buildURL("/timeouts");
+    const url = await this.buildURL('/timeouts');
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
     return response;
   }
@@ -201,7 +189,7 @@ export class WebDriver {
   /** Searches for elements on the page matching the search criteria, starting from the screen root. All the matching elements will be returned in a WebElement JSON object. */
   async getUIElements(data: elementDataObject) {
     const requestBody = this.buildRequestBody({ elementData: [data] });
-    const url = await this.buildURL("/elements");
+    const url = await this.buildURL('/elements');
     const response = await http.basePOST<getElementsResponse>(url, requestBody);
     return response.body.value;
   }
@@ -209,21 +197,21 @@ export class WebDriver {
   /** Simulates the press and release of the specified key. */
   async sendKeypress(keyPress: string) {
     const requestBody = this.buildRequestBody({ button: keyPress });
-    const url = await this.buildURL("/press");
+    const url = await this.buildURL('/press');
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
     return response.body;
   }
 
   /** Retrieves the element on the page that currently has focus. */
   async getActiveElement() {
-    const url = await this.buildURL("/element/active");
+    const url = await this.buildURL('/element/active');
     const response = await http.basePOST<getFocusedElementResponse>(url, {});
     return response.body;
   }
 
   /** Deletes the session specified in the URL path. */
   async quiet() {
-    const url = await this.buildURL(" ");
+    const url = await this.buildURL(' ');
     const response = await http.baseDELETE<deleteSessionResponse>(url);
     return response;
   }

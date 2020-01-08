@@ -1,17 +1,13 @@
-import FormData = require("form-data");
-import fs = require("fs");
-import path = require("path");
-import axios from "axios";
-import md5 = require("md5");
-import { IncomingHttpHeaders } from "http";
-import { Action, Method } from "../types/plugin";
+import { Action, Method } from '../types/plugin';
+import axios from 'axios';
+import * as FormData from 'form-data';
+import { IncomingHttpHeaders } from 'http';
+import fs = require('fs');
+import path = require('path');
+import md5 = require('md5');
 
 export class Plugin {
-  constructor(
-    public rokuIPAddress: string,
-    public username: string,
-    public password: string
-  ) {
+  constructor(public rokuIPAddress: string, public username: string, public password: string) {
     this.rokuIPAddress = rokuIPAddress;
     this.username = username;
     this.password = password;
@@ -21,13 +17,13 @@ export class Plugin {
   async getScreenshot({
     channelLocation,
     directoryPath = path.resolve(__dirname),
-    directory = "images",
-    fileName = new Date(new Date().toString().split("GMT")[0] + " UTC")
+    directory = 'images',
+    fileName = new Date(new Date().toString().split('GMT')[0] + ' UTC')
       .toISOString()
-      .split(".")[0]
-      .replace(/:/g, "-")
-      .replace("T", "_"),
-    print = false
+      .split('.')[0]
+      .replace(/:/g, '-')
+      .replace('T', '_'),
+    print = false,
   }: {
     channelLocation?: string;
     directoryPath?: string;
@@ -36,9 +32,9 @@ export class Plugin {
     print?: boolean;
   }) {
     /** generate FormData for POST */
-    let formData = await this.populateFormData({
-      action: "Screenshot",
-      channelLocation: channelLocation
+    const formData = await this.populateFormData({
+      action: 'Screenshot',
+      channelLocation: channelLocation,
     });
 
     /** Generate the screenshot from the provided FormData */
@@ -51,33 +47,32 @@ export class Plugin {
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
   private async generateScreenshot(formData: FormData) {
     /** define variables */
-    let endpoint: string = "/plugin_inspect";
-    let authorization: string;
+    const endpoint: string = '/plugin_inspect';
     /** Generate a Digest Authentication string */
-    authorization = await this.generateDigestAuth({
+    const authorization = await this.generateDigestAuth({
       endpoint: endpoint,
       formData: formData,
-      method: "POST"
+      method: 'POST',
     });
 
     /** Execute the POST command */
     formData.submit(
       {
         host: this.rokuIPAddress,
-        path: "/plugin_inspect",
+        path: '/plugin_inspect',
         headers: {
-          Authorization: authorization
-        }
+          Authorization: authorization,
+        },
       },
-      function (error, res) {
+      function(error, res) {
         if (error) {
           console.error(error);
         } else {
-          res.on("end", function () {
+          res.on('end', function() {
             return res;
           });
         }
-      }
+      },
     );
   }
 
@@ -86,7 +81,7 @@ export class Plugin {
     directoryPath,
     directory,
     fileName,
-    print = false
+    print = false,
   }: {
     directoryPath: string;
     directory: string;
@@ -94,12 +89,11 @@ export class Plugin {
     print: boolean;
   }) {
     /** Define variables */
-    let endpoint: string = "/pkgs/dev.jpg";
-    let authorization: string;
+    const endpoint: string = '/pkgs/dev.jpg';
     /** Generate a Digest Authentication string */
-    authorization = await this.generateDigestAuth({
+    const authorization = await this.generateDigestAuth({
       endpoint: endpoint,
-      method: "GET"
+      method: 'GET',
     });
 
     /** Define file path variables */
@@ -107,71 +101,60 @@ export class Plugin {
     const writer = fs.createWriteStream(filePath);
 
     /** Execute the GET command */
-    const response = await axios.get(
-      `http://${this.rokuIPAddress}${endpoint}`,
-      {
-        headers: { Authorization: authorization },
-        responseType: "stream"
-      }
-    );
+    const response = await axios.get(`http://${this.rokuIPAddress}${endpoint}`, {
+      headers: { Authorization: authorization },
+      responseType: 'stream',
+    });
 
     /** Write the response to a file */
     response.data.pipe(writer);
 
     /** Close the writer */
     return new Promise((resolve, reject) => {
-      writer.on("finish", function () {
+      writer.on('finish', function() {
         writer.end();
-        if (print)
-          console.log(`Saved at ${directoryPath}/${directory}/${fileName}.jpg`);
+        if (print) console.log(`Saved at ${directoryPath}/${directory}/${fileName}.jpg`);
         resolve();
       });
-      writer.on("error", reject);
+      writer.on('error', reject);
     });
   }
 
-  /** Function to install a channel, by submitting a `POST` to `/plugin_install`*/
+  /** Function to install a channel, by submitting a `POST` to `/plugin_install` */
   async installChannel(channelLocation: string) {
-    return await this.sideload({
-      action: "Install",
-      channelLocation: channelLocation
-    });
-  }
-
-  /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install`*/
-  async replaceChannel(channelLocation: string) {
-    return await this.sideload({
-      action: "Replace",
-      channelLocation: channelLocation
+    return this.sideload({
+      action: 'Install',
+      channelLocation: channelLocation,
     });
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async deleteChannel(channelLocation = "") {
-    return await this.sideload({
-      action: "Delete",
-      channelLocation: channelLocation
+  async replaceChannel(channelLocation: string) {
+    return this.sideload({
+      action: 'Replace',
+      channelLocation: channelLocation,
+    });
+  }
+
+  /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
+  async deleteChannel(channelLocation = '') {
+    return this.sideload({
+      action: 'Delete',
+      channelLocation: channelLocation,
     });
   }
 
   /** Function to communicate with the Roku device, by submitting a `POST` to `/plugin_install` */
-  async sideload({
-    action,
-    channelLocation
-  }: {
-    action: Action;
-    channelLocation: string;
-  }) {
+  async sideload({ action, channelLocation }: { action: Action; channelLocation: string }) {
     /** Define variables */
-    let authorization: string;
-    let endpoint: string = "/plugin_install";
+    const endpoint: string = '/plugin_install';
     /** Generate FormData */
     let formData = await this.populateFormData({ action, channelLocation });
     /** Generate a Digest Authentication string */
-    authorization = await this.generateDigestAuth({
+    const authorization = await this.generateDigestAuth({
       endpoint: endpoint,
-      method: "POST",
-      formData: formData
+      method: 'POST',
+      formData: formData,
     });
 
     /** Regenerate FormData */
@@ -183,25 +166,25 @@ export class Plugin {
         host: this.rokuIPAddress,
         path: endpoint,
         headers: {
-          Authorization: authorization
-        }
+          Authorization: authorization,
+        },
       },
-      function (error, res) {
+      function(error, res) {
         if (error) {
           console.error(error);
         } else {
           return res;
         }
-      }
+      },
     );
   }
 
   /** Function to generate the Digest authentication string */
   async generateDigestAuth({
     endpoint,
-    realm = "rokudev",
+    realm = 'rokudev',
     formData,
-    method
+    method,
   }: {
     endpoint: string;
     realm?: string;
@@ -209,17 +192,17 @@ export class Plugin {
     method: Method;
   }) {
     /** Retrieve headers */
-    let headers: any = await this.generateHeaders({
+    const headers: any = await this.generateHeaders({
       method,
       endpoint,
-      formData
+      formData,
     });
     /** Define variable */
     let nonce: string, qop: string;
     /** Manipulate returned headers into variables */
     try {
       if (headers) {
-        let authenticate = headers["www-authenticate"];
+        const authenticate = headers['www-authenticate'];
         [, nonce] = authenticate.match(/nonce="([^"]+)"/);
         [, qop] = authenticate.match(/qop="([^"]+)"/);
       }
@@ -228,8 +211,8 @@ export class Plugin {
     }
 
     /** Define variables */
-    const nc = "00000000";
-    const cnonce = "";
+    const nc = '00000000';
+    const cnonce = '';
     /** Generate hash strings based off of Digest authentication specifications */
     const h1 = md5(`${this.username}:${realm}:${this.password}`);
     const h2 = md5(`${method}:${endpoint}`);
@@ -243,27 +226,25 @@ export class Plugin {
   generateHeaders({
     method,
     endpoint,
-    formData
+    formData,
   }: {
     method: Method;
     endpoint: string;
     formData?: FormData;
   }): Promise<any> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       /** Declare variable */
       let headers = {};
       /** If executing a GET */
-      if (method === "GET") {
-        headers = await this.generateGetHeaders(
-          `http://${this.rokuIPAddress}${endpoint}`
-        );
+      if (method === 'GET') {
+        headers = this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
         resolve(headers);
       } else {
         /** If executing a POST */
         try {
-          headers = await this.generatePostHeaders({
+          headers = this.generatePostHeaders({
             endpoint: endpoint,
-            formData: formData
+            formData: formData,
           });
           resolve(headers);
         } catch (e) {
@@ -292,7 +273,7 @@ export class Plugin {
   /** Function to return headers for a POST request */
   async generatePostHeaders({
     endpoint,
-    formData
+    formData,
   }: {
     endpoint: string;
     formData: FormData;
@@ -300,7 +281,7 @@ export class Plugin {
     return new Promise((resolve, reject) => {
       axios
         .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
-          headers: formData.getHeaders()
+          headers: formData.getHeaders(),
         })
         .then(result => {
           resolve(result.headers);
@@ -315,28 +296,22 @@ export class Plugin {
   }
 
   /** Function to create FormData */
-  populateFormData({
-    action,
-    channelLocation
-  }: {
-    action: Action;
-    channelLocation?: string;
-  }): Promise<FormData> {
+  populateFormData({ action, channelLocation }: { action: Action; channelLocation?: string }): Promise<FormData> {
     return new Promise(resolve => {
       /** Declare variable */
-      let formData = new FormData();
+      const formData = new FormData();
       /** Append data for `mysubmit` */
-      formData.append("mysubmit", action);
+      formData.append('mysubmit', action);
       /** Append data depending on `mysubmit` value */
-      if (action === "Install" || action === "Replace") {
-        let file = fs.createReadStream(channelLocation, { emitClose: true });
-        let fileNameArray = channelLocation.split("/");
-        let fileName = fileNameArray[fileNameArray.length - 1];
-        formData.append("archive", file, {
-          contentType: "application/zip",
-          filename: fileName
+      if (action === 'Install' || action === 'Replace') {
+        const file = fs.createReadStream(channelLocation, { emitClose: true });
+        const fileNameArray = channelLocation.split('/');
+        const fileName = fileNameArray[fileNameArray.length - 1];
+        formData.append('archive', file, {
+          contentType: 'application/zip',
+          filename: fileName,
         });
-      } else formData.append("archive", "");
+      } else formData.append('archive', '');
 
       /** Return the FormData */
       resolve(formData);

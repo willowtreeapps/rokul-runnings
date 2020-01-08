@@ -10,6 +10,8 @@ node_modules
 test
 
 ### Other ###
-built
+.github
+.eslintrc.json
+.prettierrc
 src/modules/images
 src/images
