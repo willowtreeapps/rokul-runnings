@@ -2,7 +2,8 @@ const { spawn } = require("child_process");
 
 let startServer;
 
-async function start() {
+/** Function to start up the WebDriverServer */
+export async function start(print = false) {
   startServer = spawn("./WebDriverServer");
   startServer.stdout.on("data", data => {
     console.log(`stdout: ${data}`);
@@ -11,15 +12,11 @@ async function start() {
     console.error(`stderr: ${data}`);
   });
   startServer.on("close", code => {
-    console.log("Successfully terminated WebDriverServer");
+    if (print) console.log("Successfully terminated WebDriverServer");
   });
 }
 
-async function stop() {
+/** Function to stop the WebDriverServer */
+export async function stop() {
   startServer.kill("SIGTERM");
 }
-
-module.exports = {
-  start,
-  stop
-};

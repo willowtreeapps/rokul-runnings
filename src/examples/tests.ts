@@ -1,22 +1,19 @@
-const { buttons, Library } = require("../modules/library");
-const assert = require("assert");
-const { start, stop } = require("../utils/server");
-const data = require("../utils/data");
-const channel = require("../modules/channel-installer");
+import { buttons, Library } from "../modules/library";
+import assert = require("assert");
+import { start, stop } from "../utils/server";
+import * as data from "../utils/elementData";
+import { Plugin } from "../modules/plugin";
 
-let driver;
+let driver: Library;
 
 describe("Other tests", function() {
   //Setting the Mocha timeout to non-existant
   this.timeout(0);
+  const plugin = new Plugin("0.0.0.0", "username", "password");
 
   before(async function() {
     //ensure the channel is sideloaded
-    await channel.installChannel({
-      rokuIP: "0.0.0.0",
-      fileLocation: "./main.zip",
-      username: "rokudev"
-    });
+    await plugin.installChannel("./main.zip");
     //before all tests, start the WebDriverServer
     await start();
   });
@@ -38,16 +35,12 @@ describe("Other tests", function() {
     //after all tests, stop the WebDriverServer
     await stop();
     //remove the sideloaded channel
-    await channel.deleteChannel({
-      rokuIP: "0.0.0.0",
-      fileLocation: "./main.zip",
-      username: "rokudev"
-    });
+    await plugin.deleteChannel("./main.zip");
   });
 
   it("Should Verify That The Channel Is Loaded", async function() {
     //verify the currently displayed channel is "dev"
-    const response = await driver.verifyIsChannelLoaded("dev");
+    const response = await driver.verifyIsChannelLoaded({ id: "dev" });
 
     //assert that the response value is true
     assert.deepEqual(response, true, "Channel is not loaded successfully.");
@@ -58,7 +51,7 @@ describe("Other tests", function() {
     await driver.launchTheChannel("dev");
 
     //create a data element with the text of ArcInterpolator
-    const arcInterpolator = await data.elementDataText("ArcInterpolator");
+    const arcInterpolator = data.text("ArcInterpolator");
 
     //verify that the screen is loaded, by finding the arcInterpolator element
     await driver.verifyIsScreenLoaded(arcInterpolator);
@@ -70,17 +63,10 @@ describe("Other tests", function() {
     await driver.sendButtonSequence(buttonSequence);
 
     //define the element data that we want to find
-    const elementData = await data.elementDataText("Item 2");
+    const elementData = data.text("Item 2");
 
     //find the appropriate element data
     const response = await driver.getElement(elementData);
-
-    //format the values from `response` that we want to compare
-    const values = {
-      index: response.index,
-      text: response.text,
-      color: response.color
-    };
 
     //create the expected values
     const expectedValues = {
@@ -89,14 +75,31 @@ describe("Other tests", function() {
       color: "#ddddddff"
     };
 
+    let isAllMatchesFound: boolean = false;
+
+    for (let i = 0; i < Object.keys(expectedValues).length; i++) {
+      let key = Object.keys(expectedValues).keys()[i];
+      if (expectedValues[key] === response.Attrs[key]) isAllMatchesFound = true;
+      else {
+        isAllMatchesFound = false;
+        break;
+      }
+    }
+
     //assert that the values match
-    assert.deepEqual(values, expectedValues, "Expected Values don't match!");
+    assert.deepEqual(
+      isAllMatchesFound,
+      true,
+      `Expected Values don't match! Expected: ${JSON.stringify(
+        expectedValues
+      )} \n but found: ${JSON.stringify(response.Attrs)}`
+    );
   });
 
   it("Should Verify That Channel 'dev' Exists", async function() {
     //assert that the channel "dev" exists, based on the list of channels from `getApps()`
     assert.deepEqual(
-      await driver.verifyIsChannelExist(await driver.getApps(), "dev"),
+      driver.verifyIsChannelExist(await driver.getApps(), "dev"),
       true,
       "Expected channel is not in the list of currently installed channels."
     );

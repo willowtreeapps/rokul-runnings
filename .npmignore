@@ -1,0 +1,15 @@
+### If updating this file, did you consider if the new ignored file(s) need to be added to the .gitignore? ###
+
+### Node Modules ###
+node_modules
+
+### VSCode ###
+.vscode
+
+### Tests ###
+test
+
+### Other ###
+built
+src/modules/images
+src/images
