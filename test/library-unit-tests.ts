@@ -1,4 +1,3 @@
-import { start, stop } from '../src/utils/server';
 import * as elementData from '../src/utils/elementData';
 import * as mockData from './resources/webdriver-mock-data';
 import { buttons, Library } from '../src/modules/library';
@@ -32,10 +31,6 @@ function buildMockResponse({
 describe('Library tests', function() {
   this.timeout(0);
 
-  before(async function() {
-    await start();
-  });
-
   beforeEach(async function() {
     libraryDriver = new Library('123.456.789.012');
     nock(libraryDriver.driver.baseURL)
@@ -65,10 +60,6 @@ describe('Library tests', function() {
 
     await libraryDriver.close();
     nock.cleanAll();
-  });
-
-  after(async function() {
-    await stop();
   });
 
   it('Should Launch the Channel', async function() {

@@ -39,6 +39,8 @@ describe('Other tests', function() {
   });
 
   it('Should Verify That The Channel Is Loaded', async function() {
+    // launch the channel
+    await driver.launchTheChannel('dev');
     // verify the currently displayed channel is "dev"
     const response = await driver.verifyIsChannelLoaded({ id: 'dev' });
 
@@ -77,6 +79,7 @@ describe('Other tests', function() {
 
     let isAllMatchesFound: boolean = false;
 
+    // iterate over the keys in expectedValues and see if they have a matching key in response.Attrs
     for (let i = 0; i < Object.keys(expectedValues).length; i++) {
       const key = Object.keys(expectedValues).keys()[i];
       if (expectedValues[key] === response.Attrs[key]) isAllMatchesFound = true;

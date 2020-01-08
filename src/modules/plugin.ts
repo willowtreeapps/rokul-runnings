@@ -1,10 +1,10 @@
 import { Action, Method } from '../types/plugin';
 import axios from 'axios';
+import * as indigestion from 'indigestion';
 import * as FormData from 'form-data';
 import { IncomingHttpHeaders } from 'http';
 import fs = require('fs');
 import path = require('path');
-import md5 = require('md5');
 
 export class Plugin {
   constructor(public rokuIPAddress: string, public username: string, public password: string) {
@@ -15,7 +15,6 @@ export class Plugin {
 
   /** Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location. */
   async getScreenshot({
-    channelLocation,
     directoryPath = path.resolve(__dirname),
     directory = 'images',
     fileName = new Date(new Date().toString().split('GMT')[0] + ' UTC')
@@ -25,7 +24,6 @@ export class Plugin {
       .replace('T', '_'),
     print = false,
   }: {
-    channelLocation?: string;
     directoryPath?: string;
     directory?: string;
     fileName?: string;
@@ -34,7 +32,6 @@ export class Plugin {
     /** generate FormData for POST */
     const formData = await this.populateFormData({
       action: 'Screenshot',
-      channelLocation: channelLocation,
     });
 
     /** Generate the screenshot from the provided FormData */
@@ -47,12 +44,20 @@ export class Plugin {
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
   private async generateScreenshot(formData: FormData) {
     /** define variables */
-    const endpoint: string = '/plugin_inspect';
-    /** Generate a Digest Authentication string */
-    const authorization = await this.generateDigestAuth({
-      endpoint: endpoint,
-      formData: formData,
-      method: 'POST',
+    const endpoint = '/plugin_inspect';
+    const method = 'POST';
+    const headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData,
+    });
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method,
     });
 
     /** Execute the POST command */
@@ -90,10 +95,15 @@ export class Plugin {
   }) {
     /** Define variables */
     const endpoint: string = '/pkgs/dev.jpg';
-    /** Generate a Digest Authentication string */
-    const authorization = await this.generateDigestAuth({
-      endpoint: endpoint,
-      method: 'GET',
+    const method = 'GET';
+    const headers = await this.generateHeaders({ method, endpoint });
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method,
     });
 
     /** Define file path variables */
@@ -147,14 +157,23 @@ export class Plugin {
   /** Function to communicate with the Roku device, by submitting a `POST` to `/plugin_install` */
   async sideload({ action, channelLocation }: { action: Action; channelLocation: string }) {
     /** Define variables */
-    const endpoint: string = '/plugin_install';
+    const endpoint = '/plugin_install';
+    const method = 'POST';
     /** Generate FormData */
     let formData = await this.populateFormData({ action, channelLocation });
     /** Generate a Digest Authentication string */
-    const authorization = await this.generateDigestAuth({
-      endpoint: endpoint,
-      method: 'POST',
-      formData: formData,
+    const headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData,
+    });
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method,
     });
 
     /** Regenerate FormData */
@@ -177,49 +196,6 @@ export class Plugin {
         }
       },
     );
-  }
-
-  /** Function to generate the Digest authentication string */
-  async generateDigestAuth({
-    endpoint,
-    realm = 'rokudev',
-    formData,
-    method,
-  }: {
-    endpoint: string;
-    realm?: string;
-    formData?: FormData;
-    method: Method;
-  }) {
-    /** Retrieve headers */
-    const headers: any = await this.generateHeaders({
-      method,
-      endpoint,
-      formData,
-    });
-    /** Define variable */
-    let nonce: string, qop: string;
-    /** Manipulate returned headers into variables */
-    try {
-      if (headers) {
-        const authenticate = headers['www-authenticate'];
-        [, nonce] = authenticate.match(/nonce="([^"]+)"/);
-        [, qop] = authenticate.match(/qop="([^"]+)"/);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
-    /** Define variables */
-    const nc = '00000000';
-    const cnonce = '';
-    /** Generate hash strings based off of Digest authentication specifications */
-    const h1 = md5(`${this.username}:${realm}:${this.password}`);
-    const h2 = md5(`${method}:${endpoint}`);
-    const response = md5(`${h1}:${nonce}:${nc}:${cnonce}:${qop}:${h2}`);
-
-    /** Return composed Digest auth string, to be used in header */
-    return `Digest username="${this.username}", realm="${realm}", nonce="${nonce}", uri="${endpoint}", algorithm="MD5", qop="${qop}", nc=${nc}, cnonce="${cnonce}", response="${response}"`;
   }
 
   /** Function to generate auth headers */
