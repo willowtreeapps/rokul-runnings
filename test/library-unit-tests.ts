@@ -3,10 +3,7 @@ import assert = require("assert");
 import nock = require("nock");
 import { start, stop } from "../src/utils/server";
 import * as elementData from "../src/utils/elementData";
-import {
-  elementDataObject,
-  getPlayerInfoResponse
-} from "../src/types/webdriver";
+import { getPlayerInfoResponse } from "../src/types/webdriver";
 import * as mockData from "./resources/webdriver-mock-data";
 
 let libraryDriver: Library;
@@ -35,10 +32,6 @@ function buildMockResponse({
 
 describe("Library tests", function() {
   this.timeout(0);
-
-  before(async function() {
-    await start();
-  });
 
   beforeEach(async function() {
     libraryDriver = new Library("123.456.789.012");
@@ -69,10 +62,6 @@ describe("Library tests", function() {
 
     await libraryDriver.close();
     nock.cleanAll();
-  });
-
-  after(async function() {
-    await stop();
   });
 
   it("Should Launch the Channel", async function() {
