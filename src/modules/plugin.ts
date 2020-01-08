@@ -2,10 +2,9 @@ import FormData = require("form-data");
 import fs = require("fs");
 import path = require("path");
 import axios from "axios";
-import md5 = require("md5");
+import indigestion = require("indigestion");
 import { IncomingHttpHeaders } from "http";
 import { Action, Method } from "../types/plugin";
-import indigestion = require("indigestion");
 
 export class Plugin {
   constructor(
@@ -211,49 +210,6 @@ export class Plugin {
         }
       }
     );
-  }
-
-  /** Function to generate the Digest authentication string */
-  async generateDigestAuth({
-    endpoint,
-    realm = "rokudev",
-    formData,
-    method
-  }: {
-    endpoint: string;
-    realm?: string;
-    formData?: FormData;
-    method: Method;
-  }) {
-    /** Retrieve headers */
-    let headers: any = await this.generateHeaders({
-      method,
-      endpoint,
-      formData
-    });
-    /** Define variable */
-    let nonce: string, qop: string;
-    /** Manipulate returned headers into variables */
-    try {
-      if (headers) {
-        let authenticate = headers["www-authenticate"];
-        [, nonce] = authenticate.match(/nonce="([^"]+)"/);
-        [, qop] = authenticate.match(/qop="([^"]+)"/);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
-    /** Define variables */
-    const nc = "00000000";
-    const cnonce = "";
-    /** Generate hash strings based off of Digest authentication specifications */
-    const h1 = md5(`${this.username}:${realm}:${this.password}`);
-    const h2 = md5(`${method}:${endpoint}`);
-    const response = md5(`${h1}:${nonce}:${nc}:${cnonce}:${qop}:${h2}`);
-
-    /** Return composed Digest auth string, to be used in header */
-    return `Digest username="${this.username}", realm="${realm}", nonce="${nonce}", uri="${endpoint}", algorithm="MD5", qop="${qop}", nc=${nc}, cnonce="${cnonce}", response="${response}"`;
   }
 
   /** Function to generate auth headers */
