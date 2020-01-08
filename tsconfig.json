@@ -6,5 +6,5 @@
     "module": "CommonJS",
     "sourceMap": true
   },
-  "include": ["./src/**/*", "./test**/*"]
+  "include": ["./src/**/*", "test/library-unit-tests.ts"]
 }

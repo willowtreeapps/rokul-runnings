@@ -5,6 +5,7 @@ import axios from "axios";
 import md5 = require("md5");
 import { IncomingHttpHeaders } from "http";
 import { Action, Method } from "../types/plugin";
+import indigestion = require("indigestion");
 
 export class Plugin {
   constructor(
@@ -19,7 +20,6 @@ export class Plugin {
 
   /** Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location. */
   async getScreenshot({
-    channelLocation,
     directoryPath = path.resolve(__dirname),
     directory = "images",
     fileName = new Date(new Date().toString().split("GMT")[0] + " UTC")
@@ -29,7 +29,6 @@ export class Plugin {
       .replace("T", "_"),
     print = false
   }: {
-    channelLocation?: string;
     directoryPath?: string;
     directory?: string;
     fileName?: string;
@@ -37,8 +36,7 @@ export class Plugin {
   }) {
     /** generate FormData for POST */
     let formData = await this.populateFormData({
-      action: "Screenshot",
-      channelLocation: channelLocation
+      action: "Screenshot"
     });
 
     /** Generate the screenshot from the provided FormData */
@@ -51,13 +49,20 @@ export class Plugin {
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
   private async generateScreenshot(formData: FormData) {
     /** define variables */
-    let endpoint: string = "/plugin_inspect";
-    let authorization: string;
-    /** Generate a Digest Authentication string */
-    authorization = await this.generateDigestAuth({
-      endpoint: endpoint,
-      formData: formData,
-      method: "POST"
+    const endpoint = "/plugin_inspect";
+    const method = "POST";
+    const headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData
+    });
+    const authenticateHeader = headers["www-authenticate"];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method
     });
 
     /** Execute the POST command */
@@ -95,11 +100,15 @@ export class Plugin {
   }) {
     /** Define variables */
     let endpoint: string = "/pkgs/dev.jpg";
-    let authorization: string;
-    /** Generate a Digest Authentication string */
-    authorization = await this.generateDigestAuth({
-      endpoint: endpoint,
-      method: "GET"
+    const method = "GET";
+    const headers = await this.generateHeaders({ method, endpoint });
+    const authenticateHeader = headers["www-authenticate"];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method
     });
 
     /** Define file path variables */
@@ -163,15 +172,23 @@ export class Plugin {
     channelLocation: string;
   }) {
     /** Define variables */
-    let authorization: string;
-    let endpoint: string = "/plugin_install";
+    const endpoint = "/plugin_install";
+    const method = "POST";
     /** Generate FormData */
     let formData = await this.populateFormData({ action, channelLocation });
     /** Generate a Digest Authentication string */
-    authorization = await this.generateDigestAuth({
-      endpoint: endpoint,
-      method: "POST",
-      formData: formData
+    let headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData
+    });
+    let authenticateHeader = headers["www-authenticate"];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method
     });
 
     /** Regenerate FormData */

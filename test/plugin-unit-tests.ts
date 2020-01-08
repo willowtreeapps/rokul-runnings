@@ -8,10 +8,10 @@ import { sideloadResponse } from "./resources/sideload-response";
 
 describe("Plugin tests", function() {
   this.timeout(0);
-  const rokuIP = "0.0.0.0";
+  const rokuIP = "192.168.128.145";
   const baseURL = `http://${rokuIP}`;
   const username = "rokudev";
-  const password = "password";
+  const password = "Pass123";
   const channelLocation = "./test/resources/main.zip";
   const directoryPath = `${__dirname}/resources`;
   const directory = "images";

@@ -10,6 +10,5 @@ node_modules
 test
 
 ### Other ###
-built
 src/modules/images
 src/images
