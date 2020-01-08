@@ -69,11 +69,11 @@ export class Plugin {
           Authorization: authorization
         }
       },
-      function(error, res) {
+      function (error, res) {
         if (error) {
           console.error(error);
         } else {
-          res.on("end", function() {
+          res.on("end", function () {
             return res;
           });
         }
@@ -120,7 +120,7 @@ export class Plugin {
 
     /** Close the writer */
     return new Promise((resolve, reject) => {
-      writer.on("finish", function() {
+      writer.on("finish", function () {
         writer.end();
         if (print)
           console.log(`Saved at ${directoryPath}/${directory}/${fileName}.jpg`);
@@ -186,7 +186,7 @@ export class Plugin {
           Authorization: authorization
         }
       },
-      function(error, res) {
+      function (error, res) {
         if (error) {
           console.error(error);
         } else {
