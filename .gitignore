@@ -7,7 +7,7 @@ node_modules
 .vscode
 
 ### Other ###
-built
+dist
 src/modules/images
 src/images
 test/resources/images/screenshot-test.jpg

@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
 
 export async function baseGET<T>(
   url: string,
-  errorAllowed?: boolean
+  errorAllowed?: boolean,
 ): Promise<{
   status: number;
   body: T;
@@ -11,7 +11,7 @@ export async function baseGET<T>(
     const response = await axios.get(url);
     return Promise.resolve({
       status: response.status,
-      body: response.data
+      body: response.data,
     });
   } catch (error) {
     if (error.response.status === 400) {
@@ -34,7 +34,7 @@ export async function baseGET<T>(
 export async function basePOST<T>(
   url: string,
   requestBody: Object,
-  errorAllowed?: boolean
+  errorAllowed?: boolean,
 ): Promise<{
   status: number;
   body: T;
@@ -43,7 +43,7 @@ export async function basePOST<T>(
     const response = await axios.post(url, requestBody);
     return Promise.resolve({
       status: response.status,
-      body: response.data
+      body: response.data,
     });
   } catch (error) {
     if (error.response.status === 400) {
@@ -63,23 +63,18 @@ export async function basePOST<T>(
   }
 }
 
-export async function baseDELETE<T>(
-  url: string
-): Promise<{ status: number; body: T }> {
+export async function baseDELETE<T>(url: string): Promise<{ status: number; body: T }> {
   try {
     const response = await axios.delete(url);
     return {
       status: response.status,
-      body: response.data
+      body: response.data,
     };
   } catch (error) {
-    if (
-      (error.response.status === 500 || error.response.status === 400) &&
-      error.response.data.status
-    ) {
+    if ((error.response.status === 500 || error.response.status === 400) && error.response.data.status) {
       return {
         status: error.response.status,
-        body: error.response.data
+        body: error.response.data,
       };
     } else {
       console.log(error);

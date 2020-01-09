@@ -1,273 +1,276 @@
+import { getPlayerInfoResponse } from '../../src/types/webdriver';
+
 export const verifyChannelExists = [
   {
-    Title: "YouTube TV",
-    ID: "195316",
-    Type: "appl",
-    Version: "1.0.80000001",
-    Subtype: "ndka"
+    Title: 'YouTube TV',
+    ID: '195316',
+    Type: 'appl',
+    Version: '1.0.80000001',
+    Subtype: 'ndka',
   },
   {
-    Title: "rocute",
-    ID: "dev",
-    Type: "appl",
-    Version: "1.0.1",
-    Subtype: "rsga"
-  }
+    Title: 'rocute',
+    ID: 'dev',
+    Type: 'appl',
+    Version: '1.0.1',
+    Subtype: 'rsga',
+  },
 ];
 
 export const getElement = {
   XMLName: {
-    Space: "",
-    Local: "Label"
+    Space: '',
+    Local: 'Label',
   },
   Attrs: [
     {
       Name: {
-        Space: "",
-        Local: "bounds"
+        Space: '',
+        Local: 'bounds',
       },
-      Value: "{0, 11, 340, 48}"
+      Value: '{0, 11, 340, 48}',
     },
     {
       Name: {
-        Space: "",
-        Local: "color"
+        Space: '',
+        Local: 'color',
       },
-      Value: "#ddddddff"
+      Value: '#ddddddff',
     },
     {
       Name: {
-        Space: "",
-        Local: "index"
+        Space: '',
+        Local: 'index',
       },
-      Value: "0"
+      Value: '0',
     },
     {
       Name: {
-        Space: "",
-        Local: "text"
+        Space: '',
+        Local: 'text',
       },
-      Value: "Item 1"
-    }
+      Value: 'Item 1',
+    },
   ],
-  Nodes: null
+  Nodes: null,
 };
 
 export const getElements = [
   {
     XMLName: {
-      Space: "",
-      Local: "Label"
+      Space: '',
+      Local: 'Label',
     },
     Attrs: [
       {
         Name: {
-          Space: "",
-          Local: "bounds"
+          Space: '',
+          Local: 'bounds',
         },
-        Value: "{0, 11, 340, 48}"
+        Value: '{0, 11, 340, 48}',
       },
       {
         Name: {
-          Space: "",
-          Local: "color"
+          Space: '',
+          Local: 'color',
         },
-        Value: "#ddddddff"
+        Value: '#ddddddff',
       },
       {
         Name: {
-          Space: "",
-          Local: "index"
+          Space: '',
+          Local: 'index',
         },
-        Value: "0"
+        Value: '0',
       },
       {
         Name: {
-          Space: "",
-          Local: "text"
+          Space: '',
+          Local: 'text',
         },
-        Value: "HOME"
-      }
+        Value: 'HOME',
+      },
     ],
-    Nodes: null
+    Nodes: null,
   },
   {
     XMLName: {
-      Space: "",
-      Local: "Label"
+      Space: '',
+      Local: 'Label',
     },
     Attrs: [
       {
         Name: {
-          Space: "",
-          Local: "color"
+          Space: '',
+          Local: 'color',
         },
-        Value: "#ddddddff"
+        Value: '#ddddddff',
       },
       {
         Name: {
-          Space: "",
-          Local: "index"
+          Space: '',
+          Local: 'index',
         },
-        Value: "0"
+        Value: '0',
       },
       {
         Name: {
-          Space: "",
-          Local: "opacity"
+          Space: '',
+          Local: 'opacity',
         },
-        Value: "0"
+        Value: '0',
       },
       {
         Name: {
-          Space: "",
-          Local: "text"
+          Space: '',
+          Local: 'text',
         },
-        Value: "HOME"
+        Value: 'HOME',
       },
       {
         Name: {
-          Space: "",
-          Local: "visible"
+          Space: '',
+          Local: 'visible',
         },
-        Value: "false"
-      }
+        Value: 'false',
+      },
     ],
-    Nodes: null
-  }
+    Nodes: null,
+  },
 ];
 
 export const getElementsMockResponse = [
   {
     Attrs: {
-      bounds: "{0, 11, 340, 48}",
-      color: "#ddddddff",
-      index: "0",
-      text: "HOME"
+      bounds: '{0, 11, 340, 48}',
+      color: '#ddddddff',
+      index: '0',
+      text: 'HOME',
     },
-    XMLName: "Label"
+    XMLName: 'Label',
   },
   {
     Attrs: {
-      color: "#ddddddff",
-      index: "0",
-      opacity: "0",
-      text: "HOME",
-      visible: "false"
+      color: '#ddddddff',
+      index: '0',
+      opacity: '0',
+      text: 'HOME',
+      visible: 'false',
     },
-    XMLName: "Label"
-  }
+    XMLName: 'Label',
+  },
 ];
 
 export const getFocusedElement = {
   XMLName: {
-    Space: "",
-    Local: "RenderableNode"
+    Space: '',
+    Local: 'RenderableNode',
   },
   Attrs: [
     {
       Name: {
-        Space: "",
-        Local: "bounds"
+        Space: '',
+        Local: 'bounds',
       },
-      Value: "{0, 0, 340, 48}"
+      Value: '{0, 0, 340, 48}',
     },
     {
       Name: {
-        Space: "",
-        Local: "children"
+        Space: '',
+        Local: 'children',
       },
-      Value: "1"
+      Value: '1',
     },
     {
       Name: {
-        Space: "",
-        Local: "focusable"
+        Space: '',
+        Local: 'focusable',
       },
-      Value: "true"
+      Value: 'true',
     },
     {
       Name: {
-        Space: "",
-        Local: "focused"
+        Space: '',
+        Local: 'focused',
       },
-      Value: "true"
+      Value: 'true',
     },
     {
       Name: {
-        Space: "",
-        Local: "index"
+        Space: '',
+        Local: 'index',
       },
-      Value: "0"
-    }
+      Value: '0',
+    },
   ],
-  Nodes: null
+  Nodes: null,
 };
 
 export function getPlayerInfo(sessionId: string) {
-  return {
+  const response: getPlayerInfoResponse = {
     sessionId: sessionId,
     status: 0,
     value: {
-      Error: "false",
-      State: "play",
+      Error: 'false',
+      State: 'play',
       Format: {
-        Audio: "aac_adts",
-        Captions: "none",
-        Container: "",
-        Drm: "none",
-        Video: "mpeg4_10b",
-        VideoRes: ""
+        Audio: 'aac_adts',
+        Captions: 'none',
+        Container: '',
+        Drm: 'none',
+        Video: 'mpeg4_10b',
+        VideoRes: '',
       },
       Buffering: {
-        Current: "",
-        Max: "",
-        Target: ""
+        Current: '',
+        Max: '',
+        Target: '',
       },
       NewStream: {
-        Speed: ""
+        Speed: '',
       },
-      Position: "8500 ms",
-      Duration: "5000 ms",
-      IsLive: "false",
-      Runtime: "",
+      Position: '8500 ms',
+      Duration: '5000 ms',
+      IsLive: 'false',
+      Runtime: '',
       StreamSegment: {
-        Bitrate: "",
-        MediaSequence: "",
-        SegmentType: "",
-        Time: ""
-      }
-    }
+        Bitrate: '',
+        MediaSequence: '',
+        SegmentType: '',
+        Time: '',
+      },
+    },
   };
+  return response;
 }
 
 export const verifyPlaybackIsStarted = {
-  Error: "false",
-  State: "play",
+  Error: 'false',
+  State: 'play',
   Format: {
-    Audio: "aac_adts",
-    Captions: "none",
-    Container: "",
-    Drm: "none",
-    Video: "mpeg4_10b",
-    VideoRes: ""
+    Audio: 'aac_adts',
+    Captions: 'none',
+    Container: '',
+    Drm: 'none',
+    Video: 'mpeg4_10b',
+    VideoRes: '',
   },
   Buffering: {
-    Current: "",
-    Max: "",
-    Target: ""
+    Current: '',
+    Max: '',
+    Target: '',
   },
   NewStream: {
-    Speed: ""
+    Speed: '',
   },
-  Position: "8500 ms",
-  Duration: "5000 ms",
-  IsLive: "false",
-  Runtime: "",
+  Position: '8500 ms',
+  Duration: '5000 ms',
+  IsLive: 'false',
+  Runtime: '',
   StreamSegment: {
-    Bitrate: "",
-    MediaSequence: "",
-    SegmentType: "",
-    Time: ""
-  }
+    Bitrate: '',
+    MediaSequence: '',
+    SegmentType: '',
+    Time: '',
+  },
 };
