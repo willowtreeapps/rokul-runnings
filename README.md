@@ -1,5 +1,11 @@
 # Rokul Runnings
 
+This library is used to automate a Roku device.
+
+![npm version](https://img.shields.io/npm/v/@willowtreeapps/rokul-runnings.svg?style=plastic)](https://www.npmjs.org/package/@willowtreeapps/rokul-runnings)
+[![node version](https://img.shields.io/node/v/@willowtreeapps/rokul-runnings?style=plastic&color=blue)](https://www.npmjs.org/package/@willowtreeapps/rokul-runnings)
+[![CircleCI](https://circleci.com/gh/willowtreeapps/rokul-runnings.svg?style=svg)](https://circleci.com/gh/willowtreeapps/rokul-runnings)
+
 ## Setup
 
 - In your project, install via `npm install @willowtreeapps/rokul-runnings`
