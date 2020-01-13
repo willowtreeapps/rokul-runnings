@@ -3,7 +3,7 @@ import { start, stop } from '../utils/server';
 import * as data from '../utils/elementData';
 import { Plugin } from '../modules/plugin';
 import * as assert from 'assert';
-import { sleep } from '../../dist/src/utils/sleep';
+import { sleep } from '../utils/sleep';
 
 let driver: Library;
 
