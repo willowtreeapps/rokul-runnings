@@ -110,7 +110,7 @@ const isChannelExist = await library.verifyIsChannelExist({id: 'dev'});
 
 ## verifyIsScreenLoaded(), verifyIsElementOnScreen()
 
-These functions are identical. `verifyIsScreenLoaded()` contains the logic, and the name is exactly the same as the similar function in the original Roku Robot Framework. `verifyIsElementOnScreen()` is a name more in line with the inteded use of the function.
+These functions are identical. `verifyIsScreenLoaded()` contains the logic, and the name is exactly the same as the similar function in the original Roku Robot Framework. `verifyIsElementOnScreen()` is a name more in line with the intended use of the function.
 
 | Parameter     | Type              | Description                                                                                                                                     |
 | ------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -260,7 +260,7 @@ These functions return information about the specified elements. `getElement()` 
 }
 ```
 
-`elementValueParsed[]` is an array of objects that resembles the same object as it exists in. So a response could theoretically look like:
+`elementValueParsed[]` is an array of objects that have the same structure as the object above. So a response could theoretically look like:
 
 ```
 {
@@ -318,7 +318,7 @@ This function returns an object:
 }
 ```
 
-`elementValueParsed[]` is an array of objects that resembles the same object as it exists in.
+`elementValueParsed[]` is an array of objects that have the same structure as the object above.
 
 ### Examples
 
