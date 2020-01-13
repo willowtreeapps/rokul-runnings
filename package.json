@@ -1,6 +1,6 @@
 {
   "name": "@willowtreeapps/rokul-runnings",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Library to send automated commands to a Roku",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,6 +42,9 @@
   "dependencies": {
     "axios": "^0.19.0",
     "form-data": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   },
   "devDependencies": {
     "@types/assert": "^1.4.3",
