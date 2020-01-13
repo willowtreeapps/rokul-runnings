@@ -67,7 +67,7 @@ describe('Plugin tests', function() {
 
     const response = await plugin.installChannel(channelLocation);
 
-    assert.deepEqual(response, sideloadResponse, 'Expected response does not match actual response!');
+    assert.deepEqual(response, 200, 'Expected response status code does not match actual response status code!');
   });
 
   it('Should Replace The Channel', async function() {
@@ -81,7 +81,7 @@ describe('Plugin tests', function() {
 
     const response = await plugin.replaceChannel(channelLocation);
 
-    assert.deepEqual(response, sideloadResponse, 'Expected response does not match actual response!');
+    assert.deepEqual(response, 200, 'Expected response status code does not match actual response status code!');
   });
 
   it('Should Delete The Channel', async function() {
@@ -95,6 +95,6 @@ describe('Plugin tests', function() {
 
     const response = await plugin.deleteChannel();
 
-    assert.deepEqual(response, sideloadResponse, 'Expected response does not match actual response!');
+    assert.deepEqual(response, 200, 'Expected response status code does not match actual response status code!');
   });
 });

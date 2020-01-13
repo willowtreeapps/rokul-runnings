@@ -128,7 +128,7 @@ These functions are identical. `verifyIsScreenLoaded()` contains the logic, and 
 
 `attribute` is only used if the `using` value is `'attr'`.
 
-### Returns
+### Return
 
 This function returns a boolean value, with `true` meaning that the element was found and `false` meaning that the element was not found.
 
@@ -151,7 +151,7 @@ This function simulates the pressing of a specific key.
 | keyPress      | string | The key to be pressed. This can be any of the values from the `buttons` enum                                        |
 | delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000` |
 
-### Returns
+### Return
 
 This function returns the response from the `WebDriverServer`. The `status` refers to the specific JSON Wire Protocol response. More information about the posible JSON Wire Protocol responses are available [here](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/web-driver.md#command-responses).
 
@@ -178,7 +178,7 @@ This function sends a word to be entered as part of a keyboard entry screen (say
 | word          | string | The word to be entered                                                                                              |
 | delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000` |
 
-### Returns
+### Return
 
 This function returns an array of objects with the key being the letter passed in, and the values as objects resembling the following:
 
@@ -207,7 +207,7 @@ This function sends an array of key presses to the Roku.
 | sequence      | buttons array | The sequence of key presses to be sent. It must be an array of button enums.                                        |
 | delayInMillis | number        | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000` |
 
-### Returns
+### Return
 
 This function returns the response from the `WebDriverServer`. The `status` refers to the specific JSON Wire Protocol response. More information about the posible JSON Wire Protocol responses are available [here](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/web-driver.md#command-responses).
 
@@ -248,7 +248,7 @@ The differ only in responses. `getElement()` returns information for the first e
 
 `attribute` is only used if the `using` value is `'attr'`.
 
-### Returns
+### Return
 
 These functions return information about the specified elements. `getElement()` returns a singular object, where `getElements()` returns an array of objects:
 
@@ -306,7 +306,7 @@ const allElements = await library.getElements(data);
 
 This function returns the information about the currently focused element.
 
-### Returns
+### Return
 
 This function returns an object:
 
@@ -335,7 +335,7 @@ This function verifies if the response from `getFocusedElement()` is of a certai
 | tag        | string | The tag or XMLName expected to be found                                                                           |
 | maxRetries | number | _Optional_: The maximum amount of times to retry finding the correct element. If not specified, defaults to `10`. |
 
-### Returns
+### Return
 
 This function returns a boolean value, with `true` meaning the focused element is of the correct XMLName, and `false` meaning it is not.
 
@@ -355,7 +355,7 @@ This function verifies if the current channel is the specified channel. Note: th
 | maxRetries    | number | _Optional_: The maximum amount of times that the function should attempt to find the element. Defaults to `10`.                             |
 | delayInMillis | number | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                                                 |
 
-### Returns
+### Return
 
 This function returns a boolean value, where `true` means that the current channel is the specified channel, and `false` means that the current channel is not the specified channel
 
@@ -369,7 +369,7 @@ const isChannelLoaded = await library.verifyIsChannelLoaded({id: 'dev'});
 
 This function returns information about the currently launched channel
 
-### Returns
+### Return
 
 This function returns information about the currently launched channel as an object:
 
@@ -393,7 +393,7 @@ const channelInfo = await library.getCurrentChannelInfo();
 
 This function returns information about the Roku device
 
-### Returns
+### Return
 
 This function returns information about the Roku device as an object:
 
@@ -423,7 +423,7 @@ const deviceInfo = await library.getDeviceInfo();
 
 This function returns information about the media player.
 
-### Returns
+### Return
 
 This function returns information about the media player as an object:
 
@@ -477,7 +477,7 @@ This function verifies if playback has been started on the device
 | maxRetries    | number | _Optional_: The maximum amount of times that the function should attempt to find the element. Defaults to `10`. |
 | delayInMillis | number | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                     |
 
-### Returns
+### Return
 
 This function returns a boolean value, where `true` means playback has started, and `false` means it has not.
 
@@ -495,7 +495,7 @@ This function sets the timeout for the `WebDriverServer` requests.
 | --------------- | ------ | ----------------------------------- |
 | timeoutInMillis | number | The timeout length, in milliseconds |
 
-### Returns
+### Return
 
 This function returns void.
 
@@ -513,7 +513,7 @@ This function sets the delay between key presses for the `WebDriverServer`.
 | ------------- | ------ | --------------------------------- |
 | delayInMillis | number | The delay length, in milliseconds |
 
-### Returns
+### Return
 
 This function returns void.
 

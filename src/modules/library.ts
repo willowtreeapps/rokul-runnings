@@ -90,7 +90,7 @@ export class Library {
       await sleep(500);
       const key = word.charAt(charIndex);
       const value = await this.driver.sendKeypress('LIT_' + key);
-      wordResponse.push({ key: value });
+      wordResponse[charIndex] = { [key]: value };
     }
     return wordResponse;
   }

@@ -176,22 +176,24 @@ export class Plugin {
     formData = await this.populateFormData({ action, channelLocation });
 
     /** Execute POST */
-    formData.submit(
-      {
-        host: this.rokuIPAddress,
-        path: endpoint,
-        headers: {
-          Authorization: authorization,
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: endpoint,
+          headers: {
+            Authorization: authorization,
+          },
         },
-      },
-      function(error, res) {
-        if (error) {
-          console.error(error);
-        } else {
-          return res;
-        }
-      },
-    );
+        function(error, res) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(res.statusCode);
+          }
+        },
+      );
+    });
   }
 
   /** Function to generate auth headers */
