@@ -13,8 +13,7 @@ describe('Plugin tests', function() {
   const username = 'rokudev';
   const password = 'password';
   const channelLocation = './test/resources/main.zip';
-  const directoryPath = `${__dirname}/resources`;
-  const directory = 'images';
+  const directoryPath = `${__dirname}/resources/images`;
   const fileName = 'screenshot-test';
   let plugin: Plugin;
   const authenticateHeader = {
@@ -49,11 +48,10 @@ describe('Plugin tests', function() {
 
     await plugin.getScreenshot({
       directoryPath,
-      directory,
       fileName,
     });
 
-    const fileExists = fs.existsSync(path.resolve(directoryPath, directory, `${fileName}.jpg`));
+    const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.jpg`));
 
     assert.deepEqual(fileExists, true, 'Unable to find created screenshot.');
   });
@@ -67,8 +65,9 @@ describe('Plugin tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    await plugin.installChannel(channelLocation);
-    // No error indicates the channel was installed successfully.
+    const response = await plugin.installChannel(channelLocation);
+
+    assert.deepEqual(response, sideloadResponse, 'Expected response does not match actual response!');
   });
 
   it('Should Replace The Channel', async function() {
@@ -80,8 +79,9 @@ describe('Plugin tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    await plugin.replaceChannel(channelLocation);
-    // No error indicates the channel was replaced successfully.
+    const response = await plugin.replaceChannel(channelLocation);
+
+    assert.deepEqual(response, sideloadResponse, 'Expected response does not match actual response!');
   });
 
   it('Should Delete The Channel', async function() {
@@ -93,7 +93,8 @@ describe('Plugin tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    await plugin.deleteChannel(channelLocation);
-    // No error indicates the channel was deleted successfully.
+    const response = await plugin.deleteChannel();
+
+    assert.deepEqual(response, sideloadResponse, 'Expected response does not match actual response!');
   });
 });

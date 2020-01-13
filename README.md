@@ -2,45 +2,15 @@
 
 ## Setup
 
-- In your project, install via `npm install rokul-runnings`
+- In your project, install via `npm install @willowtreeapps/rokul-runnings`
 
 ### WebDriverServer
 
-- Import `/src/utils/server`, specifically the `start()` and `stop()` functions.
-- In your test setup, be sure to include `start()`.
-- In your test teardown, be sure to include `stop()`.
-- Mocha example:
-
-```
-import { start, stop } from "./server";
-
-before(async function() {
-    await start();
-})
-
-after(async function() {
-    await stop();
-})
-```
+See [Server section of the Utils doc](./docs/utils.md#Server) for information on starting and stopping `WebDriverServer` automatically.
 
 ### Library
 
-- Import `/src/modules/library`, specifically the `Library` class.
-- Before the tests begin running, you'll also need to instantiate the `Library` class
-- After your test has finished, you'll want to close the existing session, through the `Library.close()` function.
-- Mocha Example:
-
-```
-import Library from "./library";
-
-beforeEach(async function() {
-    const driver = new Library('0.0.0.0');
-})
-
-afterEach(async function() {
-    await library.close();
-})
-```
+See [Library](./docs/library.md#Instantiating) docs file for more information.
 
 ## WebDriverServer
 
@@ -52,40 +22,7 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
 
 Both pieces of core functionality in the `plugin` class are unstable. They will execute, however they have been known to have a stream that continues after all functions have completed. They currently do not throw errors (although debugging for all exceptions may yield some results), but do not be surprised if you use these functions if they cause your tests to continue to "run" for a minute or more after completion.
 
-### Sideloading
-
-You can sideload a new channel, replace the existing sideloaded channel, or remove the currently sidedloaded channel. This can be done through the exported functions from `plugin`.
-
-```
-import { Plugin } from "./plugin";
-
-const plugin = new Plugin("0.0.0.0", "username", "password");
-
-await plugin.installChannel({
-    channelLocation: "./channel.zip",
-});
-```
-
-All of the functions require the IP address of the roku, the location of the channel (as a .zip file), and the username used to log in to the Development Application Installer. You do not need the WebDriverServer active to sideload a channel, as the command goes directly from client to Roku device.
-
-### Screenshots
-
-You can screenshot what is currently displayed on the screen. This can be done through the `getScreenshot()` function in `plugin`
-
-```
-import { Plugin } from "./plugin";
-
-const plugin = new Plugin("0.0.0.0", "username", "password");
-
-await plugin.getScreenshot({
-    channelLocation: "./channel.zip";
-    directoryPath: "/Users/my-user/Code/WillowTreeApps/js-roku-automation/", //path to the directory, optional
-    directory: "images" //directory name, optional
-    fileName: "" //custom file name, optional
-});
-```
-
-The above would take a screenshot on the Roku device found at `0.0.0.0` and would save the screenshot to `/Users/my-user/Code/WillowTreeApps/js-roku-automation/images/` as a .jpg.
+For more information, look at the [Plugin documentation](./docs/plugin.md).
 
 ## FAQ
 
@@ -105,10 +42,4 @@ The above would take a screenshot on the Roku device found at `0.0.0.0` and woul
 
 ## Documentation
 
-Most of the documentation provided in the JSDocs information was provided from the Roku documentation for the [Roku Robot Framework Library](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/robot-framework-library.md) and [Roku WebDriver](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/web-driver.md).
-
-## Todo
-
-- Update references to files within the project to what they would look like to someone using the project as a dependency
-- dev dependencies for shipping
-- release strategy
+Most of the documentation provided in the inline comments was provided from the Roku documentation for the [Roku Robot Framework Library](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/robot-framework-library.md) and [Roku WebDriver](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/web-driver.md).
