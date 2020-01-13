@@ -10,6 +10,7 @@ node_modules
 test
 
 ### Other ###
+.circleci
 .github
 .eslintrc.json
 .prettierrc

@@ -52,7 +52,10 @@ export class Library {
   }
 
   /** Verifies the specified channel is installed on the device. */
-  verifyIsChannelExist(apps: appResponse[], id: string) {
+  async verifyIsChannelExist({ apps, id }: { apps?: appResponse[]; id: string }) {
+    if (!apps) {
+      apps = await this.getApps();
+    }
     return !!apps.find(app => app.ID === id);
   }
 
@@ -66,6 +69,11 @@ export class Library {
       await sleep(delayInMillis);
     }
     return false;
+  }
+
+  /** Alias for verifyIsScreenLoaded with a more intuitive name */
+  async verifyIsElementOnScreen(data: elementDataObject, maxRetries = 10, delayInMillis = 1000) {
+    return this.verifyIsScreenLoaded(data, maxRetries, delayInMillis);
   }
 
   /** Simulates the press and release of the specified key. */
@@ -82,7 +90,7 @@ export class Library {
       await sleep(500);
       const key = word.charAt(charIndex);
       const value = await this.driver.sendKeypress('LIT_' + key);
-      wordResponse.push({ key: value });
+      wordResponse[charIndex] = { [key]: value };
     }
     return wordResponse;
   }
@@ -93,7 +101,8 @@ export class Library {
     return this.driver.sendSequence(sequence);
   }
 
-  /** Searches for an element on the page based on the specified locator starting from the screen root. Returns information on the first matching element. */
+  /** Searches for an element on the page based on the specified locator starting from the screen root.
+   * Returns information on the first matching element. */
   async getElement(data: elementDataObject, delayInMillis = 1000) {
     await sleep(delayInMillis);
     const response = await this.driver.getUIElement(data);
@@ -101,7 +110,8 @@ export class Library {
     return attributes;
   }
 
-  /** Searches for elements on the page based on the specified locators starting from the screen root. Returns information on the matching elements. */
+  /** Searches for elements on the page based on the specified locators starting from the screen root.
+   * Returns information on all matching elements. */
   async getElements(data: elementDataObject, delayInMillis = 1000) {
     await sleep(delayInMillis);
     const response = await this.driver.getUIElements(data);
@@ -116,16 +126,16 @@ export class Library {
     return element;
   }
 
-  /** Verifies that the Focused Element returned from {@link getFocusedElement} is a RenderableNode */
-  async verifyFocusedElementIsRenderableNode(maxRetries = 10) {
+  /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
+  async verifyFocusedElementIsOfCertainTag(tag: string, maxRetries = 10) {
     let retries = 0;
     let element: elementValueParsed;
-    while (element.XMLName !== 'RenderableNode' && retries < maxRetries) {
+    while (element.XMLName !== tag && retries < maxRetries) {
       const response = await this.driver.getActiveElement();
       [element] = await this.getAllAttributes([response.value]);
       retries++;
     }
-    return element.XMLName === 'RenderableNode';
+    return element.XMLName === tag;
   }
 
   /** Verify that the specified channel has been launched. */
@@ -200,7 +210,7 @@ export class Library {
   }
 
   /** Returns all elements in an array, with their attributes in Name.Local:Value pairs, and their child nodes in an array. */
-  async getAllAttributes(elements: elementValueRaw[]) {
+  private async getAllAttributes(elements: elementValueRaw[]) {
     const allElements: elementValueParsed[] = [];
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i].Attrs;
@@ -215,7 +225,7 @@ export class Library {
   }
 
   /** Parses the given JSON object and returns it as an object with Name.Local:Value pairs. */
-  async parseAttributes(element: elementValueRawAttrs) {
+  private async parseAttributes(element: elementValueRawAttrs) {
     const parsedElement: elementValueParsed = { XMLName: '', Attrs: {} };
     for (let i = 0; i < element.length; i++) {
       const key = element[i].Name.Local;
@@ -225,7 +235,7 @@ export class Library {
   }
 
   /** Resursive function to parse all child nodes of the parent element */
-  async parseAttributeNodes(node: elementValueRaw[]) {
+  private async parseAttributeNodes(node: elementValueRaw[]) {
     const allAttributesForElement = [];
     for (let i = 0; i < node.length; i++) {
       allAttributesForElement[i] = await this.parseAttributes(node[i].Attrs);

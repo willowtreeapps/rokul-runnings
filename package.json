@@ -1,11 +1,11 @@
 {
-  "name": "rokul-runnings",
+  "name": "@willowtreeapps/rokul-runnings",
   "version": "0.1.0",
   "description": "Library to send automated commands to a Roku",
-  "main": "built/index.js",
-  "types": "built/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "mocha -r ts-node/register **/test/*.ts",
+    "test": "mocha -r ts-node/register test/*.ts",
     "build": "tsc --build --clean && tsc",
     "lint": "eslint src/**/*.ts test/**/*.ts",
     "prepare": "npm run build",
@@ -25,10 +25,19 @@
     "willowtree"
   ],
   "author": {
-    "name": "Aaron Goff",
-    "email": "aaron@willowtreeapps.com"
+    "name": "WillowTree, LLC",
+    "email": "opensource@willowtreeapps.com"
   },
-  "contributors": [],
+  "contributors": [
+    {
+      "name": "Aaron Goff",
+      "email": "aaron@willowtreeapps.com"
+    },
+    {
+      "name": "Hunter McMillen",
+      "email": "hunter.mcmillen@willowtreeapps.com"
+    }
+  ],
   "license": "MIT",
   "dependencies": {
     "axios": "^0.19.0",
@@ -63,7 +72,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && npm run lint"
+      "pre-commit": "lint-staged && npm run lint && npm test"
     }
   },
   "lint-staged": {

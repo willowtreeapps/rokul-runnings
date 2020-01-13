@@ -15,8 +15,7 @@ export class Plugin {
 
   /** Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location. */
   async getScreenshot({
-    directoryPath = path.resolve(__dirname),
-    directory = 'images',
+    directoryPath = `${path.resolve(__dirname)}/images`,
     fileName = new Date(new Date().toString().split('GMT')[0] + ' UTC')
       .toISOString()
       .split('.')[0]
@@ -25,7 +24,6 @@ export class Plugin {
     print = false,
   }: {
     directoryPath?: string;
-    directory?: string;
     fileName?: string;
     print?: boolean;
   }) {
@@ -38,7 +36,7 @@ export class Plugin {
     await this.generateScreenshot(formData);
 
     /** Save screenshot from Roku to local */
-    await this.saveScreenshot({ directoryPath, directory, fileName, print });
+    await this.saveScreenshot({ directoryPath, fileName, print });
   }
 
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
@@ -84,12 +82,10 @@ export class Plugin {
   /** Function that saves the screenshot, using a `GET` request to `/pkgs/dev.jpg`. */
   private async saveScreenshot({
     directoryPath,
-    directory,
     fileName,
     print = false,
   }: {
     directoryPath: string;
-    directory: string;
     fileName: string;
     print: boolean;
   }) {
@@ -107,7 +103,7 @@ export class Plugin {
     });
 
     /** Define file path variables */
-    const filePath = path.resolve(directoryPath, directory, `${fileName}.jpg`);
+    const filePath = path.resolve(directoryPath, `${fileName}.jpg`);
     const writer = fs.createWriteStream(filePath);
 
     /** Execute the GET command */
@@ -123,7 +119,7 @@ export class Plugin {
     return new Promise((resolve, reject) => {
       writer.on('finish', function() {
         writer.end();
-        if (print) console.log(`Saved at ${directoryPath}/${directory}/${fileName}.jpg`);
+        if (print) console.log(`Saved at ${directoryPath}/${fileName}.jpg`);
         resolve();
       });
       writer.on('error', reject);
@@ -147,10 +143,10 @@ export class Plugin {
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async deleteChannel(channelLocation = '') {
+  async deleteChannel() {
     return this.sideload({
       action: 'Delete',
-      channelLocation: channelLocation,
+      channelLocation: '',
     });
   }
 
@@ -180,22 +176,24 @@ export class Plugin {
     formData = await this.populateFormData({ action, channelLocation });
 
     /** Execute POST */
-    formData.submit(
-      {
-        host: this.rokuIPAddress,
-        path: endpoint,
-        headers: {
-          Authorization: authorization,
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: endpoint,
+          headers: {
+            Authorization: authorization,
+          },
         },
-      },
-      function(error, res) {
-        if (error) {
-          console.error(error);
-        } else {
-          return res;
-        }
-      },
-    );
+        function(error, res) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(res.statusCode);
+          }
+        },
+      );
+    });
   }
 
   /** Function to generate auth headers */

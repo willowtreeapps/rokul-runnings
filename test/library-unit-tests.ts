@@ -117,10 +117,8 @@ describe('Library tests', function() {
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
 
-    const response = await libraryDriver.getApps();
-
     assert.deepEqual(
-      libraryDriver.verifyIsChannelExist(response, 'dev'),
+      await libraryDriver.verifyIsChannelExist({ id: 'dev' }),
       true,
       'Unable to find channel from list of chanels provided.',
     );
