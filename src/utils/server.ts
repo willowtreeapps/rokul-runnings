@@ -1,10 +1,15 @@
+import { sleep } from '../../dist/src/utils/sleep';
+
 const { spawn } = require('child_process');
+const path = require('path');
 
 let startServer;
 
 /** Function to start up the WebDriverServer */
 export async function start(print = false) {
-  startServer = spawn('./redist/WebDriverServer');
+  const fileLocation = path.resolve(__dirname, '../../redist/WebDriverServer');
+  startServer = spawn(fileLocation);
+  sleep(1250);
   startServer.stdout.on('data', data => {
     console.log(`stdout: ${data}`);
   });

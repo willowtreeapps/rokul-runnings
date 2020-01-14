@@ -14,6 +14,7 @@ export async function baseGET<T>(
       body: response.data,
     });
   } catch (error) {
+    console.log(error);
     if (error.response.status === 400) {
       console.log(error.response.data);
       throw error.response.data;
@@ -71,6 +72,7 @@ export async function baseDELETE<T>(url: string): Promise<{ status: number; body
       body: response.data,
     };
   } catch (error) {
+    console.log(error);
     if ((error.response.status === 500 || error.response.status === 400) && error.response.data.status) {
       return {
         status: error.response.status,

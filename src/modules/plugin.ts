@@ -72,6 +72,7 @@ export class Plugin {
           console.error(error);
         } else {
           res.on('end', function() {
+            formData.destroy();
             return res;
           });
         }
@@ -187,8 +188,10 @@ export class Plugin {
         },
         function(error, res) {
           if (error) {
+            formData.destroy();
             reject(error);
           } else {
+            formData.destroy();
             resolve(res.statusCode);
           }
         },
@@ -258,9 +261,11 @@ export class Plugin {
           headers: formData.getHeaders(),
         })
         .then(result => {
+          formData.destroy();
           resolve(result.headers);
         })
         .catch(error => {
+          formData.destroy();
           if (error.response.status !== 401) reject(error);
           else {
             resolve(error.response.headers);
@@ -279,6 +284,10 @@ export class Plugin {
       /** Append data depending on `mysubmit` value */
       if (action === 'Install' || action === 'Replace') {
         const file = fs.createReadStream(channelLocation, { emitClose: true });
+        file.on('close', () => {
+          file.pause();
+          if (file.isPaused) file.destroy();
+        });
         const fileNameArray = channelLocation.split('/');
         const fileName = fileNameArray[fileNameArray.length - 1];
         formData.append('archive', file, {
