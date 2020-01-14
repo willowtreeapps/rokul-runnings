@@ -1,8 +1,9 @@
 import { Action, Method } from '../types/plugin';
-import axios from 'axios';
 import * as indigestion from 'indigestion';
 import * as FormData from 'form-data';
 import { IncomingHttpHeaders } from 'http';
+import { Readable } from 'stream';
+const axios = require('axios');
 import fs = require('fs');
 import path = require('path');
 
@@ -72,7 +73,6 @@ export class Plugin {
           console.error(error);
         } else {
           res.on('end', function() {
-            formData.destroy();
             return res;
           });
         }
@@ -128,7 +128,7 @@ export class Plugin {
   }
 
   /** Function to install a channel, by submitting a `POST` to `/plugin_install` */
-  async installChannel(channelLocation: string) {
+  installChannel(channelLocation: string) {
     return this.sideload({
       action: 'Install',
       channelLocation: channelLocation,
@@ -136,7 +136,7 @@ export class Plugin {
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async replaceChannel(channelLocation: string) {
+  replaceChannel(channelLocation: string) {
     return this.sideload({
       action: 'Replace',
       channelLocation: channelLocation,
@@ -144,7 +144,7 @@ export class Plugin {
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async deleteChannel() {
+  deleteChannel() {
     return this.sideload({
       action: 'Delete',
       channelLocation: '',
@@ -159,11 +159,16 @@ export class Plugin {
     /** Generate FormData */
     let formData = await this.populateFormData({ action, channelLocation });
     /** Generate a Digest Authentication string */
-    const headers = await this.generateHeaders({
-      method,
-      endpoint,
-      formData,
-    });
+    let headers: IncomingHttpHeaders;
+    try {
+      headers = await this.generateHeaders({
+        method,
+        endpoint,
+        formData,
+      });
+    } catch (e) {
+      console.log(e);
+    }
     const authenticateHeader = headers['www-authenticate'];
     const authorization = indigestion.generateDigestAuth({
       authenticateHeader,
@@ -188,10 +193,8 @@ export class Plugin {
         },
         function(error, res) {
           if (error) {
-            formData.destroy();
             reject(error);
           } else {
-            formData.destroy();
             resolve(res.statusCode);
           }
         },
@@ -208,24 +211,25 @@ export class Plugin {
     method: Method;
     endpoint: string;
     formData?: FormData;
-  }): Promise<any> {
-    return new Promise((resolve, reject) => {
+  }): Promise<IncomingHttpHeaders> {
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise(async (resolve, reject) => {
       /** Declare variable */
       let headers = {};
       /** If executing a GET */
       if (method === 'GET') {
-        headers = this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
+        headers = await this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
         resolve(headers);
       } else {
         /** If executing a POST */
         try {
-          headers = this.generatePostHeaders({
+          headers = await this.generatePostHeaders({
             endpoint: endpoint,
             formData: formData,
           });
           resolve(headers);
         } catch (e) {
-          console.error(e);
+          console.log(e);
           reject(e);
         }
       }
@@ -233,45 +237,33 @@ export class Plugin {
   }
 
   /** Function to return headers for a GET request */
-  async generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
-    return new Promise((resolve, reject) => {
-      axios
-        .get(url)
-        .then(result => {
-          resolve(result.headers);
-        })
-        .catch(error => {
-          if (error.response.status !== 401) reject(error);
-          else resolve(error.response.headers);
-        });
-    });
+  generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
+    return axios
+      .get(url)
+      .then(result => {
+        return result.headers;
+      })
+      .catch(error => {
+        if (error.response.status !== 401) console.error(error);
+        else return error.response.headers;
+      });
   }
 
   /** Function to return headers for a POST request */
-  async generatePostHeaders({
-    endpoint,
-    formData,
-  }: {
-    endpoint: string;
-    formData: FormData;
-  }): Promise<IncomingHttpHeaders> {
-    return new Promise((resolve, reject) => {
-      axios
-        .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
-          headers: formData.getHeaders(),
-        })
-        .then(result => {
-          formData.destroy();
-          resolve(result.headers);
-        })
-        .catch(error => {
-          formData.destroy();
-          if (error.response.status !== 401) reject(error);
-          else {
-            resolve(error.response.headers);
-          }
-        });
-    });
+  generatePostHeaders({ endpoint, formData }: { endpoint: string; formData: FormData }): Promise<IncomingHttpHeaders> {
+    return axios
+      .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
+        headers: formData.getHeaders(),
+      })
+      .then(result => {
+        return result.headers;
+      })
+      .catch(error => {
+        if (error.response.status !== 401) console.error(error);
+        else {
+          return error.response.headers;
+        }
+      });
   }
 
   /** Function to create FormData */
@@ -283,11 +275,7 @@ export class Plugin {
       formData.append('mysubmit', action);
       /** Append data depending on `mysubmit` value */
       if (action === 'Install' || action === 'Replace') {
-        const file = fs.createReadStream(channelLocation, { emitClose: true });
-        file.on('close', () => {
-          file.pause();
-          if (file.isPaused) file.destroy();
-        });
+        const file = fs.readFileSync(channelLocation);
         const fileNameArray = channelLocation.split('/');
         const fileName = fileNameArray[fileNameArray.length - 1];
         formData.append('archive', file, {

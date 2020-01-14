@@ -1,4 +1,4 @@
-import axios from 'axios';
+import Axios from 'Axios';
 
 export async function baseGET<T>(
   url: string,
@@ -8,7 +8,7 @@ export async function baseGET<T>(
   body: T;
 }> {
   try {
-    const response = await axios.get(url);
+    const response = await Axios.get(url);
     return Promise.resolve({
       status: response.status,
       body: response.data,
@@ -41,7 +41,7 @@ export async function basePOST<T>(
   body: T;
 }> {
   try {
-    const response = await axios.post(url, requestBody);
+    const response = await Axios.post(url, requestBody);
     return Promise.resolve({
       status: response.status,
       body: response.data,
@@ -66,7 +66,7 @@ export async function basePOST<T>(
 
 export async function baseDELETE<T>(url: string): Promise<{ status: number; body: T }> {
   try {
-    const response = await axios.delete(url);
+    const response = await Axios.delete(url);
     return {
       status: response.status,
       body: response.data,

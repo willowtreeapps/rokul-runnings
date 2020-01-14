@@ -29,32 +29,32 @@ describe('Plugin tests', function() {
     nock.cleanAll();
   });
 
-  it('Should Get The Screenshot', async function() {
-    nock(baseURL, headerMatcher)
-      .post('/plugin_inspect')
-      .reply(200, screenshotResponse);
+  // it('Should Get The Screenshot', async function() {
+  //   nock(baseURL, headerMatcher)
+  //     .post('/plugin_inspect')
+  //     .reply(200, screenshotResponse);
 
-    nock(baseURL)
-      .post('/plugin_inspect')
-      .reply(401, '', authenticateHeader);
+  //   nock(baseURL)
+  //     .post('/plugin_inspect')
+  //     .reply(401, '', authenticateHeader);
 
-    nock(baseURL, headerMatcher)
-      .get('/pkgs/dev.jpg')
-      .replyWithFile(200, `${__dirname}/resources/images/response.jpg`);
+  //   nock(baseURL, headerMatcher)
+  //     .get('/pkgs/dev.jpg')
+  //     .replyWithFile(200, `${__dirname}/resources/images/response.jpg`);
 
-    nock(baseURL)
-      .get('/pkgs/dev.jpg')
-      .reply(401, '', authenticateHeader);
+  //   nock(baseURL)
+  //     .get('/pkgs/dev.jpg')
+  //     .reply(401, '', authenticateHeader);
 
-    await plugin.getScreenshot({
-      directoryPath,
-      fileName,
-    });
+  //   await plugin.getScreenshot({
+  //     directoryPath,
+  //     fileName,
+  //   });
 
-    const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.jpg`));
+  //   const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.jpg`));
 
-    assert.deepEqual(fileExists, true, 'Unable to find created screenshot.');
-  });
+  //   assert.deepEqual(fileExists, true, 'Unable to find created screenshot.');
+  // });
 
   it('Should Install The Channel', async function() {
     nock(baseURL, headerMatcher)
