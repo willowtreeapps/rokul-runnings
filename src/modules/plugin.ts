@@ -240,8 +240,10 @@ export class Plugin {
         return result.headers;
       })
       .catch(error => {
-        if (error.response.status !== 401) console.error(error);
-        else return error.response.headers;
+        if (error.response) {
+          if (error.response.status !== 401) console.error(error);
+          else return error.response.headers;
+        }
       });
   }
 
@@ -255,9 +257,11 @@ export class Plugin {
         return result.headers;
       })
       .catch(error => {
-        if (error.response.status !== 401) throw error;
-        else {
-          return error.response.headers;
+        if (error.response) {
+          if (error.response.status !== 401) throw error;
+          else {
+            return error.response.headers;
+          }
         }
       });
   }

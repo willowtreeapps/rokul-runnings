@@ -1,6 +1,6 @@
 import * as elementData from '../src/utils/elementData';
 import * as mockData from './resources/webdriver-mock-data';
-import { buttons, Library } from '../src/modules/library';
+import { Buttons, Library } from '../src/modules/library';
 import assert = require('assert');
 import nock = require('nock');
 
@@ -145,7 +145,7 @@ describe('Library tests', function() {
       .reply(200, httpMock);
 
     assert.deepEqual(
-      await libraryDriver.pressBtn(buttons.up),
+      await libraryDriver.pressBtn(Buttons.up),
       httpMock,
       'Incorrect response when attempting to send a button to the device.',
     );
@@ -179,7 +179,7 @@ describe('Library tests', function() {
       .reply(200, httpMock)
       .persist();
 
-    const buttonSequence = [buttons.up, buttons.up, buttons.down];
+    const buttonSequence = [Buttons.up, Buttons.up, Buttons.down];
 
     const response = await libraryDriver.sendButtonSequence(buttonSequence);
 

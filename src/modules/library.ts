@@ -9,7 +9,7 @@ import {
   elementValueRawAttrs,
 } from '../types/webdriver';
 
-export enum buttons {
+export enum Buttons {
   up = 'up',
   down = 'down',
   right = 'right',
@@ -96,7 +96,7 @@ export class Library {
   }
 
   /** Simulates the sequence of keypresses and releases. */
-  async sendButtonSequence(sequence: buttons[], delayInMillis = 2000) {
+  async sendButtonSequence(sequence: Buttons[], delayInMillis = 2000) {
     await sleep(delayInMillis);
     return this.driver.sendSequence(sequence);
   }

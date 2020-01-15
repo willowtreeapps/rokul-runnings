@@ -2,7 +2,7 @@ import * as path from 'path';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { sleep } from '../utils/sleep';
 export class Server {
-  private static serverBinaryLocation = path.resolve(__dirname, '../../redist/WebDriverServer');
+  private static serverBinaryLocation = path.resolve(__dirname, '../../../redist/WebDriverServer');
   private static server: ChildProcessWithoutNullStreams;
   /** Function to start up the WebDriverServer */
   public static start(print = false) {
