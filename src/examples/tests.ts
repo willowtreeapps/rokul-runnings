@@ -1,5 +1,5 @@
 import { buttons, Library } from '../modules/library';
-import { start, stop } from '../utils/server';
+import { Server } from '../utils/server';
 import * as data from '../utils/elementData';
 import { Plugin } from '../modules/plugin';
 import * as assert from 'assert';
@@ -17,7 +17,7 @@ describe('Other tests', function() {
     // ensure the channel is sideloaded
     await plugin.installChannel('./main.zip');
     // before all tests, start the WebDriverServer
-    await start();
+    Server.start();
   });
 
   beforeEach(async function() {
@@ -35,7 +35,7 @@ describe('Other tests', function() {
 
   after(async function() {
     // after all tests, stop the WebDriverServer
-    await stop();
+    Server.stop();
     // remove the sideloaded channel
     await plugin.deleteChannel();
   });

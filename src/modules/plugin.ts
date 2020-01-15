@@ -2,8 +2,7 @@ import { Action, Method } from '../types/plugin';
 import * as indigestion from 'indigestion';
 import * as FormData from 'form-data';
 import { IncomingHttpHeaders } from 'http';
-import { Readable } from 'stream';
-const axios = require('axios');
+import axios from 'axios';
 import fs = require('fs');
 import path = require('path');
 
@@ -72,6 +71,9 @@ export class Plugin {
         if (error) {
           console.error(error);
         } else {
+          res.on('data', function() {
+            res.resume();
+          });
           res.on('end', function() {
             return res;
           });
@@ -159,16 +161,11 @@ export class Plugin {
     /** Generate FormData */
     let formData = await this.populateFormData({ action, channelLocation });
     /** Generate a Digest Authentication string */
-    let headers: IncomingHttpHeaders;
-    try {
-      headers = await this.generateHeaders({
-        method,
-        endpoint,
-        formData,
-      });
-    } catch (e) {
-      console.log(e);
-    }
+    const headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData,
+    });
     const authenticateHeader = headers['www-authenticate'];
     const authorization = indigestion.generateDigestAuth({
       authenticateHeader,
@@ -195,7 +192,18 @@ export class Plugin {
           if (error) {
             reject(error);
           } else {
-            resolve(res.statusCode);
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
           }
         },
       );
@@ -212,28 +220,16 @@ export class Plugin {
     endpoint: string;
     formData?: FormData;
   }): Promise<IncomingHttpHeaders> {
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
-      /** Declare variable */
-      let headers = {};
-      /** If executing a GET */
-      if (method === 'GET') {
-        headers = await this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
-        resolve(headers);
-      } else {
-        /** If executing a POST */
-        try {
-          headers = await this.generatePostHeaders({
-            endpoint: endpoint,
-            formData: formData,
-          });
-          resolve(headers);
-        } catch (e) {
-          console.log(e);
-          reject(e);
-        }
-      }
-    });
+    /** If executing a GET */
+    if (method === 'GET') {
+      return this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
+    } else {
+      /** If executing a POST */
+      return this.generatePostHeaders({
+        endpoint: endpoint,
+        formData: formData,
+      });
+    }
   }
 
   /** Function to return headers for a GET request */
@@ -259,7 +255,7 @@ export class Plugin {
         return result.headers;
       })
       .catch(error => {
-        if (error.response.status !== 401) console.error(error);
+        if (error.response.status !== 401) throw error;
         else {
           return error.response.headers;
         }
@@ -275,7 +271,7 @@ export class Plugin {
       formData.append('mysubmit', action);
       /** Append data depending on `mysubmit` value */
       if (action === 'Install' || action === 'Replace') {
-        const file = fs.readFileSync(channelLocation);
+        const file = fs.createReadStream(channelLocation);
         const fileNameArray = channelLocation.split('/');
         const fileName = fileNameArray[fileNameArray.length - 1];
         formData.append('archive', file, {

@@ -1,27 +1,28 @@
-import { sleep } from '../../dist/src/utils/sleep';
+import * as path from 'path';
+import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+import { sleep } from '../utils/sleep';
+export class Server {
+  private static serverBinaryLocation = path.resolve(__dirname, '../../redist/WebDriverServer');
+  private static server: ChildProcessWithoutNullStreams;
+  /** Function to start up the WebDriverServer */
+  public static start(print = false) {
+    this.server = spawn(Server.serverBinaryLocation);
+    sleep(1250);
+    this.server.stdout.on('data', data => {
+      console.log(`[STDOUT]: ${data}`);
+    });
+    this.server.stderr.on('data', data => {
+      console.error(`[STDERR]: ${data}`);
+    });
+    this.server.on('close', (code, signal) => {
+      if (print) {
+        console.log('Successfully terminated WebDriverServer');
+      }
+    });
+  }
 
-const { spawn } = require('child_process');
-const path = require('path');
-
-let startServer;
-
-/** Function to start up the WebDriverServer */
-export async function start(print = false) {
-  const fileLocation = path.resolve(__dirname, '../../redist/WebDriverServer');
-  startServer = spawn(fileLocation);
-  sleep(1250);
-  startServer.stdout.on('data', data => {
-    console.log(`stdout: ${data}`);
-  });
-  startServer.stderr.on('data', data => {
-    console.error(`stderr: ${data}`);
-  });
-  startServer.on('close', code => {
-    if (print) console.log('Successfully terminated WebDriverServer');
-  });
-}
-
-/** Function to stop the WebDriverServer */
-export async function stop() {
-  startServer.kill('SIGTERM');
+  /** Function to stop the WebDriverServer */
+  public static stop() {
+    this.server.kill('SIGTERM');
+  }
 }
