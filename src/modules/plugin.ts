@@ -186,12 +186,17 @@ export class Plugin {
           path: endpoint,
           headers: {
             Authorization: authorization,
+            Connection: 'Close',
           },
         },
         function(error, res) {
+          const chunks = [];
           if (error) {
             reject(error);
           } else {
+            res.on('data', data => {
+              chunks.push(data);
+            });
             res.on('end', () => {
               // eslint-disable-next-line dot-notation
               if (res.socket['_httpMessage']) {

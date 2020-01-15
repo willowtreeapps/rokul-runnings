@@ -1,6 +1,7 @@
 import { Plugin } from '../src/modules/plugin';
 import { screenshotResponse } from './resources/screenshot-response';
 import { sideloadResponse } from './resources/sideload-response';
+import { sleep } from '../src/utils/sleep';
 import nock = require('nock');
 import assert = require('assert');
 import fs = require('fs');
@@ -21,7 +22,7 @@ describe('Plugin tests', function() {
   };
   const headerMatcher = { reqheaders: { authorization: /".*"/ } };
 
-  this.beforeEach(function() {
+  beforeEach(function() {
     plugin = new Plugin(rokuIP, username, password);
   });
 
