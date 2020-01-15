@@ -1,4 +1,4 @@
-import Axios from 'Axios';
+import Axios from 'axios';
 
 export async function baseGET<T>(
   url: string,

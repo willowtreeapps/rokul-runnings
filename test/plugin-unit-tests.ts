@@ -1,7 +1,6 @@
 import { Plugin } from '../src/modules/plugin';
 import { screenshotResponse } from './resources/screenshot-response';
 import { sideloadResponse } from './resources/sideload-response';
-import { sleep } from '../src/utils/sleep';
 import nock = require('nock');
 import assert = require('assert');
 import fs = require('fs');
