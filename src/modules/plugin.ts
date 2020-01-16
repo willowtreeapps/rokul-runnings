@@ -27,23 +27,19 @@ export class Plugin {
     fileName?: string;
     print?: boolean;
   }) {
-    /** generate FormData for POST */
-    const formData = await this.populateFormData({
-      action: 'Screenshot',
-    });
-
     /** Generate the screenshot from the provided FormData */
-    await this.generateScreenshot(formData);
+    await this.generateScreenshot();
 
     /** Save screenshot from Roku to local */
     await this.saveScreenshot({ directoryPath, fileName, print });
   }
 
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
-  private async generateScreenshot(formData: FormData) {
+  private async generateScreenshot() {
     /** define variables */
     const endpoint = '/plugin_inspect';
     const method = 'POST';
+    let formData = await this.populateFormData({ action: 'Screenshot' });
     const headers = await this.generateHeaders({
       method,
       endpoint,
@@ -58,28 +54,42 @@ export class Plugin {
       method,
     });
 
+    formData = await this.populateFormData({ action: 'Screenshot' });
+
     /** Execute the POST command */
-    formData.submit(
-      {
-        host: this.rokuIPAddress,
-        path: '/plugin_inspect',
-        headers: {
-          Authorization: authorization,
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: '/plugin_inspect',
+          headers: {
+            Authorization: authorization,
+          },
         },
-      },
-      function(error, res) {
-        if (error) {
-          console.error(error);
-        } else {
-          res.on('data', function() {
-            res.resume();
-          });
-          res.on('end', function() {
-            return res;
-          });
-        }
-      },
-    );
+        function(error, res) {
+          const chunks = [];
+          if (error) {
+            reject(error);
+          } else {
+            res.on('data', data => {
+              chunks.push(data);
+            });
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
+          }
+        },
+      );
+    });
   }
 
   /** Function that saves the screenshot, using a `GET` request to `/pkgs/dev.jpg`. */
