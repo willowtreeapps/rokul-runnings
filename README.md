@@ -92,7 +92,3 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
 ## Documentation
 
 Most of the documentation provided in the inline comments was provided from the Roku documentation for the [Roku Robot Framework Library](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/robot-framework-library.md) and [Roku WebDriver](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/web-driver.md).
-
-```
-
-```
