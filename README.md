@@ -49,6 +49,7 @@ describe('Tests for the X screen', () = >{
         await plugin.deleteChannel();
     }
 })
+```
 
 As can be seen, there is a corresponding `close()` function for the `Library` class. This does not destroy the Library, but instead closes the session that has been established with the WebDriverServer. This does not _have_ to be executed, but is in best practice to not let sessions hang around. Each Roku device can only have one concurrent session between the WebDriverServer and itself. The `buildURL()` and `createNewSession()` functions in `webdriver.ts` handle all of the logic for determining if a session currently exists (in which case, we just use that session), and if one does not, creating a session.
 
@@ -91,4 +92,3 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
 ## Documentation
 
 Most of the documentation provided in the inline comments was provided from the Roku documentation for the [Roku Robot Framework Library](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/robot-framework-library.md) and [Roku WebDriver](https://developer.roku.com/en-ca/docs/developer-program/dev-tools/automated-channel-testing/web-driver.md).
-```
