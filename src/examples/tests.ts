@@ -1,5 +1,5 @@
-import { buttons, Library } from '../modules/library';
-import { start, stop } from '../utils/server';
+import { Buttons, Library } from '../modules/library';
+import { Server } from '../utils/server';
 import * as data from '../utils/elementData';
 import { Plugin } from '../modules/plugin';
 import * as assert from 'assert';
@@ -17,7 +17,7 @@ describe('Other tests', function() {
     // ensure the channel is sideloaded
     await plugin.installChannel('./main.zip');
     // before all tests, start the WebDriverServer
-    await start();
+    Server.start();
   });
 
   beforeEach(async function() {
@@ -28,14 +28,14 @@ describe('Other tests', function() {
 
   afterEach(async function() {
     // after each test, return to the Roku home screen
-    await driver.pressBtn(buttons.home);
+    await driver.pressBtn(Buttons.home);
     // after each test, end the session
     await driver.close();
   });
 
   after(async function() {
     // after all tests, stop the WebDriverServer
-    await stop();
+    Server.stop();
     // remove the sideloaded channel
     await plugin.deleteChannel();
   });
@@ -61,7 +61,7 @@ describe('Other tests', function() {
     await driver.verifyIsScreenLoaded(arcInterpolator);
 
     // define button sequence
-    const buttonSequence = [buttons.up, buttons.up, buttons.up, buttons.right];
+    const buttonSequence = [Buttons.up, Buttons.up, Buttons.up, Buttons.right];
 
     // send the button sequence
     await driver.sendButtonSequence(buttonSequence);
@@ -139,7 +139,7 @@ describe('Other tests', function() {
     await driver.launchTheChannel('dev');
 
     // define button sequence
-    const buttonSequence = [buttons.home, buttons.up, buttons.up, buttons.up, buttons.select];
+    const buttonSequence = [Buttons.home, Buttons.up, Buttons.up, Buttons.up, Buttons.select];
 
     // navigate according to the button sequence
     await driver.sendButtonSequence(buttonSequence);

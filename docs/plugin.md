@@ -9,6 +9,7 @@ It is named as such because all network calls are directed to `/plugin_{someEndp
 To instantiate the Plugin class, simply create a new plugin object
 
 ```
+import { Plugin } from 'rokul-runnings';
 
 const plugin = new Plugin('0.0.0.0', 'username', 'password');
 

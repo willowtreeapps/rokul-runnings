@@ -21,7 +21,7 @@ describe('Plugin tests', function() {
   };
   const headerMatcher = { reqheaders: { authorization: /".*"/ } };
 
-  this.beforeEach(function() {
+  beforeEach(function() {
     plugin = new Plugin(rokuIP, username, password);
   });
 

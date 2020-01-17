@@ -1,8 +1,8 @@
 import { Action, Method } from '../types/plugin';
-import axios from 'axios';
 import * as indigestion from 'indigestion';
 import * as FormData from 'form-data';
 import { IncomingHttpHeaders } from 'http';
+import axios from 'axios';
 import fs = require('fs');
 import path = require('path');
 
@@ -27,23 +27,19 @@ export class Plugin {
     fileName?: string;
     print?: boolean;
   }) {
-    /** generate FormData for POST */
-    const formData = await this.populateFormData({
-      action: 'Screenshot',
-    });
-
     /** Generate the screenshot from the provided FormData */
-    await this.generateScreenshot(formData);
+    await this.generateScreenshot();
 
     /** Save screenshot from Roku to local */
     await this.saveScreenshot({ directoryPath, fileName, print });
   }
 
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
-  private async generateScreenshot(formData: FormData) {
+  private async generateScreenshot() {
     /** define variables */
     const endpoint = '/plugin_inspect';
     const method = 'POST';
+    let formData = await this.populateFormData({ action: 'Screenshot' });
     const headers = await this.generateHeaders({
       method,
       endpoint,
@@ -58,25 +54,42 @@ export class Plugin {
       method,
     });
 
+    formData = await this.populateFormData({ action: 'Screenshot' });
+
     /** Execute the POST command */
-    formData.submit(
-      {
-        host: this.rokuIPAddress,
-        path: '/plugin_inspect',
-        headers: {
-          Authorization: authorization,
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: '/plugin_inspect',
+          headers: {
+            Authorization: authorization,
+          },
         },
-      },
-      function(error, res) {
-        if (error) {
-          console.error(error);
-        } else {
-          res.on('end', function() {
-            return res;
-          });
-        }
-      },
-    );
+        function(error, res) {
+          const chunks = [];
+          if (error) {
+            reject(error);
+          } else {
+            res.on('data', data => {
+              chunks.push(data);
+            });
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
+          }
+        },
+      );
+    });
   }
 
   /** Function that saves the screenshot, using a `GET` request to `/pkgs/dev.jpg`. */
@@ -127,7 +140,7 @@ export class Plugin {
   }
 
   /** Function to install a channel, by submitting a `POST` to `/plugin_install` */
-  async installChannel(channelLocation: string) {
+  installChannel(channelLocation: string) {
     return this.sideload({
       action: 'Install',
       channelLocation: channelLocation,
@@ -135,7 +148,7 @@ export class Plugin {
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async replaceChannel(channelLocation: string) {
+  replaceChannel(channelLocation: string) {
     return this.sideload({
       action: 'Replace',
       channelLocation: channelLocation,
@@ -143,7 +156,7 @@ export class Plugin {
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
-  async deleteChannel() {
+  deleteChannel() {
     return this.sideload({
       action: 'Delete',
       channelLocation: '',
@@ -183,13 +196,29 @@ export class Plugin {
           path: endpoint,
           headers: {
             Authorization: authorization,
+            Connection: 'Close',
           },
         },
         function(error, res) {
+          const chunks = [];
           if (error) {
             reject(error);
           } else {
-            resolve(res.statusCode);
+            res.on('data', data => {
+              chunks.push(data);
+            });
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
           }
         },
       );
@@ -205,68 +234,51 @@ export class Plugin {
     method: Method;
     endpoint: string;
     formData?: FormData;
-  }): Promise<any> {
-    return new Promise((resolve, reject) => {
-      /** Declare variable */
-      let headers = {};
-      /** If executing a GET */
-      if (method === 'GET') {
-        headers = this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
-        resolve(headers);
-      } else {
-        /** If executing a POST */
-        try {
-          headers = this.generatePostHeaders({
-            endpoint: endpoint,
-            formData: formData,
-          });
-          resolve(headers);
-        } catch (e) {
-          console.error(e);
-          reject(e);
-        }
-      }
-    });
+  }): Promise<IncomingHttpHeaders> {
+    /** If executing a GET */
+    if (method === 'GET') {
+      return this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
+    } else {
+      /** If executing a POST */
+      return this.generatePostHeaders({
+        endpoint: endpoint,
+        formData: formData,
+      });
+    }
   }
 
   /** Function to return headers for a GET request */
-  async generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
-    return new Promise((resolve, reject) => {
-      axios
-        .get(url)
-        .then(result => {
-          resolve(result.headers);
-        })
-        .catch(error => {
-          if (error.response.status !== 401) reject(error);
-          else resolve(error.response.headers);
-        });
-    });
+  generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
+    return axios
+      .get(url)
+      .then(result => {
+        return result.headers;
+      })
+      .catch(error => {
+        if (error.response) {
+          if (error.response.status !== 401) console.error(error);
+          else return error.response.headers;
+        }
+      });
   }
 
   /** Function to return headers for a POST request */
-  async generatePostHeaders({
-    endpoint,
-    formData,
-  }: {
-    endpoint: string;
-    formData: FormData;
-  }): Promise<IncomingHttpHeaders> {
-    return new Promise((resolve, reject) => {
-      axios
-        .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
-          headers: formData.getHeaders(),
-        })
-        .then(result => {
-          resolve(result.headers);
-        })
-        .catch(error => {
-          if (error.response.status !== 401) reject(error);
+  generatePostHeaders({ endpoint, formData }: { endpoint: string; formData: FormData }): Promise<IncomingHttpHeaders> {
+    return axios
+      .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
+        headers: formData.getHeaders(),
+      })
+      .then(result => {
+        return result.headers;
+      })
+      .catch(error => {
+        if (error.response) {
+          if (error.response.status !== 401) throw error;
           else {
-            resolve(error.response.headers);
+            return error.response.headers;
           }
-        });
-    });
+        }
+      });
   }
 
   /** Function to create FormData */
@@ -278,7 +290,7 @@ export class Plugin {
       formData.append('mysubmit', action);
       /** Append data depending on `mysubmit` value */
       if (action === 'Install' || action === 'Replace') {
-        const file = fs.createReadStream(channelLocation, { emitClose: true });
+        const file = fs.createReadStream(channelLocation);
         const fileNameArray = channelLocation.split('/');
         const fileName = fileNameArray[fileNameArray.length - 1];
         formData.append('archive', file, {

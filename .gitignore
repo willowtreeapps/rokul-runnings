@@ -11,3 +11,4 @@ dist
 src/modules/images
 src/images
 test/resources/images/screenshot-test.jpg
+*.tgz

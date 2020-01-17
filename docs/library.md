@@ -7,6 +7,8 @@ The `library` class interacts with the `WebDriverServer`, sending commands from 
 To instantiate the Library class, simply create a new library object:
 
 ```
+import { Library } from 'rokul-runnings';
+
 const library = new Library('0.0.0.0');
 ```
 
