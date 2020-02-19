@@ -129,7 +129,7 @@ export class Library {
   /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
   async verifyFocusedElementIsOfCertainTag(tag: string, maxRetries = 10) {
     let retries = 0;
-    let element: elementValueParsed;
+    let element: elementValueParsed = { XMLName: undefined, Attrs: {} };
     while (element.XMLName !== tag && retries < maxRetries) {
       const response = await this.driver.getActiveElement();
       [element] = await this.getAllAttributes([response.value]);

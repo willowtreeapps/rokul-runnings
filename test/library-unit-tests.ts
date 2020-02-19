@@ -344,6 +344,19 @@ describe('Library tests', function() {
     assert.deepEqual(response, true, 'Playback is started returned false, when true was expected.');
   });
 
+  it('Should Verify Focused Element Is Of Certain Tag', async function() {
+    const responseValue = mockData.getFocusedElement;
+
+    const { httpMock } = buildMockResponse({ responseValue: responseValue });
+
+    nock(libraryDriver.driver.baseURL)
+      .post(`/session/${sessionId}/element/active`)
+      .reply(200, httpMock);
+
+    const result = await libraryDriver.verifyFocusedElementIsOfCertainTag('RenderableNode');
+    assert.equal(result, true);
+  });
+
   it('Should Set Implicit Timeout', async function() {
     // To Do -- unable to see anywhere that the Timeout is actually set
     // will use libraryDriver.setTimeout()
