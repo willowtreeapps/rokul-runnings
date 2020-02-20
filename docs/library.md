@@ -41,6 +41,7 @@ This function launches the specified channel.
 | Parameter   | Type   | Description                                                                                                                                    |
 | ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | channelCode | string | ID of the channel to be launched. Released Roku channels have a specific `id`, which is a number. Sideloaded channels have the `id` of `'dev'` |
+| retries     | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                      |
 
 ### Return
 
@@ -58,10 +59,14 @@ body: {
 ### Example
 
 ```
-const response = await library.launchTheChannel('dev');
+const response = await library.launchTheChannel({channelCode: 'dev'});
 ```
 
 ## getApps()
+
+| Parameter | Type   | Description                                                                                                               |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 This function returns the list of all apps (channels) currently installed on the device.
 
@@ -99,6 +104,7 @@ The parameters in this function are passed in as a JSON object.
 | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | apps      | array  | _Optional_: An array of the apps installed. This should be the response from `getApps()`. If this is not specified, the array will be the response from `getApps()`. |
 | id        | string | The ID of the app to be found. Released Roku channels have a specific `id`, which is a number. Sideloaded channels have the `id` of `'dev'`                          |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                                            |
 
 ### Return
 
@@ -119,6 +125,7 @@ These functions are identical. `verifyIsScreenLoaded()` contains the logic, and 
 | data          | elementDataObject | Element to be found on the screen. elementDataObject can easily be created by importing the `elementData` module and using one of the functions |
 | maxRetries    | number            | _Optional_: The maximum amount of times that the function should attempt to find the element. Defaults to `10`.                                 |
 | delayInMillis | number            | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                                                     |
+| retries       | number            | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                       |
 
 ```
 {
@@ -141,17 +148,18 @@ This function returns a boolean value, with `true` meaning that the element was 
 const data = elementData.text('textOnElement');
 
 // Verify if element is found on screen
-const isElementOnScreen = await library.verifyIsElementOnScreen(data);
+const isElementOnScreen = await library.verifyIsElementOnScreen({data});
 ```
 
 ## pressBtn()
 
-This function simulates the pressing of a specific key.
+This function simulates the pressing of a specific key. It is highly suggested that you import the `Buttons` enum to know the possible button strings.
 
-| Parameter     | Type   | Description                                                                                                         |
-| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------- |
-| keyPress      | string | The key to be pressed. This can be any of the values from the `buttons` enum                                        |
-| delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000` |
+| Parameter     | Type   | Description                                                                                                               |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| keyPress      | string | The key to be pressed. This can be any of the values from the `buttons` enum                                              |
+| delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000`       |
+| retries       | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -168,17 +176,18 @@ This function returns the response from the `WebDriverServer`. The `status` refe
 ### Examples
 
 ```
-const response = await library.pressBtn(buttons.up);
+const response = await library.pressBtn({keyPress: Buttons.up});
 ```
 
 ## sendWord()
 
 This function sends a word to be entered as part of a keyboard entry screen (say for searching for something). It accomplishes this by iterating over each letter in the provided word and sending each letter as part of a separate request body as `LIT_{letter}`.
 
-| Parameter     | Type   | Description                                                                                                         |
-| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------- |
-| word          | string | The word to be entered                                                                                              |
-| delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000` |
+| Parameter     | Type   | Description                                                                                                               |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| word          | string | The word to be entered                                                                                                    |
+| delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000`       |
+| retries       | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -197,17 +206,18 @@ The `status` refers to the specific JSON Wire Protocol response. More informatio
 ### Examples
 
 ```
-const response = await library.sendWord('Roku');
+const response = await library.sendWord({word: 'Roku'});
 ```
 
 ## sendButtonSequence()
 
 This function sends an array of key presses to the Roku.
 
-| Parameter     | Type          | Description                                                                                                         |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
-| sequence      | buttons array | The sequence of key presses to be sent. It must be an array of button enums.                                        |
-| delayInMillis | number        | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000` |
+| Parameter     | Type          | Description                                                                                                               |
+| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| sequence      | buttons array | The sequence of key presses to be sent. It must be an array of button enums.                                              |
+| delayInMillis | number        | _Optional_: The delay before sending the key press, in milliseconds. If no value is provided, it defaults to `2000`       |
+| retries       | number        | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -226,7 +236,7 @@ This function returns the response from the `WebDriverServer`. The `status` refe
 ```
 const buttonSequence = [ buttons.up, buttons.up, buttons.select ]
 
-const response = await library.sendButtonSequence(buttonSequence);
+const response = await library.sendButtonSequence({sequence: buttonSequence});
 ```
 
 ## getElement(), getElements()
@@ -239,6 +249,7 @@ The differ only in responses. `getElement()` returns information for the first e
 | ------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | data          | elementDataObject | Element to be found. elementDataObject can easily be created by importing the `elementData` module and using one of the functions |
 | delayInMillis | number            | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                                       |
+| retries       | number            | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.         |
 
 ```
 {
@@ -299,14 +310,18 @@ These functions return information about the specified elements. `getElement()` 
 ```
 const data = elementData.tag('RenderableNode');
 
-const firstElement = await library.getElement(data);
+const firstElement = await library.getElement({data});
 
-const allElements = await library.getElements(data);
+const allElements = await library.getElements({data});
 ```
 
 ## getFocusedElement()
 
 This function returns the information about the currently focused element.
+
+| Parameter | Type   | Description                                                                                                               |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -332,10 +347,11 @@ const element = await library.getFocusedElement();
 
 This function verifies if the response from `getFocusedElement()` is of a certain tag or XMLName.
 
-| Parameter  | Type   | Description                                                                                                       |
-| ---------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
-| tag        | string | The tag or XMLName expected to be found                                                                           |
-| maxRetries | number | _Optional_: The maximum amount of times to retry finding the correct element. If not specified, defaults to `10`. |
+| Parameter  | Type   | Description                                                                                                               |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| tag        | string | The tag or XMLName expected to be found                                                                                   |
+| maxRetries | number | _Optional_: The maximum amount of times to retry finding the correct element. If not specified, defaults to `10`.         |
+| retries    | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -344,7 +360,7 @@ This function returns a boolean value, with `true` meaning the focused element i
 ### Example
 
 ```
-const isElementRenderableNode = await library.verifyFocusedelementIsOfCertainTag('RenderableNode');
+const isElementRenderableNode = await library.verifyFocusedelementIsOfCertainTag({tag: 'RenderableNode'});
 ```
 
 ## verifyIsChannelLoaded()
@@ -356,6 +372,7 @@ This function verifies if the current channel is the specified channel. Note: th
 | id            | string | The ID of the app to be found. Released Roku channels have a specific `id`, which is a number. Sideloaded channels have the `id` of `'dev'` |
 | maxRetries    | number | _Optional_: The maximum amount of times that the function should attempt to find the element. Defaults to `10`.                             |
 | delayInMillis | number | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                                                 |
+| retries       | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                   |
 
 ### Return
 
@@ -370,6 +387,10 @@ const isChannelLoaded = await library.verifyIsChannelLoaded({id: 'dev'});
 ## getCurrentChannelInfo()
 
 This function returns information about the currently launched channel
+
+| Parameter | Type   | Description                                                                                                               |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -392,6 +413,10 @@ const channelInfo = await library.getCurrentChannelInfo();
 ```
 
 ## getDeviceInfo()
+
+| Parameter | Type   | Description                                                                                                               |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 This function returns information about the Roku device
 
@@ -422,6 +447,10 @@ const deviceInfo = await library.getDeviceInfo();
 ```
 
 ## getPlayerInfo()
+
+| Parameter | Type   | Description                                                                                                               |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 This function returns information about the media player.
 
@@ -474,10 +503,11 @@ const playerInfo = await library.getPlayerInfo();
 
 This function verifies if playback has been started on the device
 
-| Parameter     | Type   | Description                                                                                                     |
-| ------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| maxRetries    | number | _Optional_: The maximum amount of times that the function should attempt to find the element. Defaults to `10`. |
-| delayInMillis | number | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                     |
+| Parameter     | Type   | Description                                                                                                               |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| maxRetries    | number | _Optional_: The maximum amount of times that the function should attempt to find the element. Defaults to `10`.           |
+| delayInMillis | number | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to `1000`                               |
+| retries       | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -493,9 +523,10 @@ const isPlaybackStarted = await library.verifyIsPlaybackStarted();
 
 This function sets the timeout for the `WebDriverServer` requests.
 
-| Parameter       | Type   | Description                         |
-| --------------- | ------ | ----------------------------------- |
-| timeoutInMillis | number | The timeout length, in milliseconds |
+| Parameter       | Type   | Description                                                                                                               |
+| --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| timeoutInMillis | number | The timeout length, in milliseconds                                                                                       |
+| retries         | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -504,16 +535,17 @@ This function returns void.
 ### Examples
 
 ```
-await library.setTimeout(1000);
+await library.setTimeout({timeoutInMillis: 1000});
 ```
 
 ## setDelay()
 
 This function sets the delay between key presses for the `WebDriverServer`.
 
-| Parameter     | Type   | Description                       |
-| ------------- | ------ | --------------------------------- |
-| delayInMillis | number | The delay length, in milliseconds |
+| Parameter     | Type   | Description                                                                                                               |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| delayInMillis | number | The delay length, in milliseconds                                                                                         |
+| retries       | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3. |
 
 ### Return
 
@@ -522,5 +554,5 @@ This function returns void.
 ### Examples
 
 ```
-await library.setDelay(1000);
+await library.setDelay({delayInMIllis: 1000});
 ```

@@ -41,30 +41,40 @@ export class Library {
   }
 
   /** Launches the channel corresponding to the specified channel ID. */
-  async launchTheChannel(channelCode: string) {
-    return this.driver.sendLaunchChannel(channelCode);
+  async launchTheChannel({ channelCode, retries = 3 }: { channelCode: string; retries?: number }) {
+    return this.driver.sendLaunchChannel({ channelCode, retries });
   }
 
   /** Returns a list of installed channels as an array of objects */
-  async getApps() {
-    const response = await this.driver.getApps();
+  async getApps(retries = 3) {
+    const response = await this.driver.getApps(retries);
     return response.value;
   }
 
   /** Verifies the specified channel is installed on the device. */
-  async verifyIsChannelExist({ apps, id }: { apps?: appResponse[]; id: string }) {
+  async verifyIsChannelExist({ apps, id, retries = 3 }: { apps?: appResponse[]; id: string; retries?: number }) {
     if (!apps) {
-      apps = await this.getApps();
+      apps = await this.getApps(retries);
     }
     return !!apps.find(app => app.ID === id);
   }
 
   /** Verify that the screen is loaded based on the provided element data. */
-  async verifyIsScreenLoaded(data: elementDataObject, maxRetries = 10, delayInMillis = 1000) {
-    let retries = 0;
-    while (retries < maxRetries) {
-      const uiLayoutResponse = await this.driver.getUIElementError(data);
-      if (uiLayoutResponse.status !== 200) retries++;
+  async verifyIsScreenLoaded({
+    data,
+    maxRetries = 10,
+    delayInMillis = 1000,
+    postRetries = 3,
+  }: {
+    data: elementDataObject;
+    maxRetries?: number;
+    delayInMillis?: number;
+    postRetries?: number;
+  }) {
+    let functionRetries = 0;
+    while (functionRetries < maxRetries) {
+      const uiLayoutResponse = await this.driver.getUIElementError({ data, retries: postRetries });
+      if (uiLayoutResponse.status !== 200) functionRetries++;
       else return true;
       await sleep(delayInMillis);
     }
@@ -72,69 +82,126 @@ export class Library {
   }
 
   /** Alias for verifyIsScreenLoaded with a more intuitive name */
-  async verifyIsElementOnScreen(data: elementDataObject, maxRetries = 10, delayInMillis = 1000) {
-    return this.verifyIsScreenLoaded(data, maxRetries, delayInMillis);
+  async verifyIsElementOnScreen({
+    data,
+    maxRetries = 10,
+    delayInMillis = 1000,
+    postRetries = 3,
+  }: {
+    data: elementDataObject;
+    maxRetries?: number;
+    delayInMillis?: number;
+    postRetries?: number;
+  }) {
+    return this.verifyIsScreenLoaded({ data, maxRetries, delayInMillis, postRetries });
   }
 
   /** Simulates the press and release of the specified key. */
-  async pressBtn(keyPress: string, delayInMillis = 2000) {
+  async pressBtn({
+    keyPress,
+    delayInMillis = 2000,
+    retries = 3,
+  }: {
+    keyPress: string;
+    delayInMillis?: number;
+    retries?: 3;
+  }) {
     await sleep(delayInMillis);
-    return this.driver.sendKeypress(keyPress);
+    return this.driver.sendKeypress({ keyPress, retries });
   }
 
   /** Simulates the press and release of each letter in a word. */
-  async sendWord(word: string, delayInMillis = 2000) {
+  async sendWord({
+    word,
+    delayInMillis = 2000,
+    retries = 3,
+  }: {
+    word: string;
+    delayInMillis?: number;
+    retries?: number;
+  }) {
     await sleep(delayInMillis);
     const wordResponse: { [key: string]: nullValueResponse }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       await sleep(500);
       const key = word.charAt(charIndex);
-      const value = await this.driver.sendKeypress('LIT_' + key);
+      const value = await this.driver.sendKeypress({ keyPress: 'LIT_' + key, retries });
       wordResponse[charIndex] = { [key]: value };
     }
     return wordResponse;
   }
 
   /** Simulates the sequence of keypresses and releases. */
-  async sendButtonSequence(sequence: Buttons[], delayInMillis = 2000) {
+  async sendButtonSequence({
+    sequence,
+    delayInMillis = 2000,
+    retries = 3,
+  }: {
+    sequence: Buttons[];
+    delayInMillis?: number;
+    retries?: number;
+  }) {
     await sleep(delayInMillis);
-    return this.driver.sendSequence(sequence);
+    return this.driver.sendSequence({ sequence, retries });
   }
 
   /** Searches for an element on the page based on the specified locator starting from the screen root.
    * Returns information on the first matching element. */
-  async getElement(data: elementDataObject, delayInMillis = 1000) {
+  async getElement({
+    data,
+    delayInMillis = 1000,
+    retries = 3,
+  }: {
+    data: elementDataObject;
+    delayInMillis?: number;
+    retries?: number;
+  }) {
     await sleep(delayInMillis);
-    const response = await this.driver.getUIElement(data);
+    const response = await this.driver.getUIElement({ data, retries });
     const [attributes] = await this.getAllAttributes([response.value]);
     return attributes;
   }
 
   /** Searches for elements on the page based on the specified locators starting from the screen root.
    * Returns information on all matching elements. */
-  async getElements(data: elementDataObject, delayInMillis = 1000) {
+  async getElements({
+    data,
+    delayInMillis = 1000,
+    retries = 3,
+  }: {
+    data: elementDataObject;
+    delayInMillis?: number;
+    retries?: number;
+  }) {
     await sleep(delayInMillis);
-    const response = await this.driver.getUIElements(data);
+    const response = await this.driver.getUIElements({ data, retries });
     const attributes = await this.getAllAttributes(response);
     return attributes;
   }
 
   /** Return the element on the screen that currently has focus. */
-  async getFocusedElement() {
-    const response = await this.driver.getActiveElement();
+  async getFocusedElement(retries = 3) {
+    const response = await this.driver.getActiveElement(retries);
     const [element] = await this.getAllAttributes([response.value]);
     return element;
   }
 
   /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
-  async verifyFocusedElementIsOfCertainTag(tag: string, maxRetries = 10) {
-    let retries = 0;
+  async verifyFocusedElementIsOfCertainTag({
+    tag,
+    maxRetries = 10,
+    postRetries = 3,
+  }: {
+    tag: string;
+    maxRetries?: number;
+    postRetries?: number;
+  }) {
+    let functionRetries = 0;
     let element: elementValueParsed;
-    // eslint-disable-next-line no-unmodified-loop-condition
-    while (element?.XMLName !== tag && retries < maxRetries) {
-      const response = await this.driver.getActiveElement();
+    while (element.XMLName !== tag && functionRetries < maxRetries) {
+      const response = await this.driver.getActiveElement(postRetries);
       [element] = await this.getAllAttributes([response.value]);
-      retries++;
+      functionRetries++;
     }
     return element.XMLName === tag;
   }
@@ -144,15 +211,17 @@ export class Library {
     id,
     maxRetries = 10,
     delayInMillis = 1000,
+    getRetries = 3,
   }: {
     id: string;
     maxRetries?: number;
     delayInMillis?: number;
+    getRetries?: number;
   }) {
-    let retries = 0;
-    while (retries < maxRetries) {
-      const response = await this.driver.getCurrentApp();
-      if (response.ID !== id) retries++;
+    let functionRetries = 0;
+    while (functionRetries < maxRetries) {
+      const response = await this.driver.getCurrentApp(getRetries);
+      if (response.ID !== id) functionRetries++;
       else return true;
       await sleep(delayInMillis);
     }
@@ -160,19 +229,19 @@ export class Library {
   }
 
   /** Returns an object containing information about the channel currently loaded. */
-  async getCurrentChannelInfo() {
-    const response = await this.driver.getCurrentApp();
+  async getCurrentChannelInfo(retries = 3) {
+    const response = await this.driver.getCurrentApp(retries);
     return response;
   }
 
   /** Returns an object containing the information about the device. */
-  async getDeviceInfo() {
-    return this.driver.getDeviceInfo();
+  async getDeviceInfo(retries = 3) {
+    return this.driver.getDeviceInfo(retries);
   }
 
   /** Returns an object containing information about the Roku media player */
-  async getPlayerInfo() {
-    const response = await this.driver.getPlayerInfo();
+  async getPlayerInfo(retries = 3) {
+    const response = await this.driver.getPlayerInfo(retries);
     if (typeof response.Position === 'string') {
       response.Position = parseInt(response.Position.split(' ')[0]);
     }
@@ -183,16 +252,24 @@ export class Library {
   }
 
   /** Verify playback has started on the Roku media player. */
-  async verifyIsPlaybackStarted(maxRetries = 10, delayInMillis = 1000) {
-    let retries = 0;
-    while (retries < maxRetries) {
-      const response = await this.driver.getPlayerInfoError();
+  async verifyIsPlaybackStarted({
+    maxRetries = 10,
+    delayInMillis = 1000,
+    getRetries = 3,
+  }: {
+    maxRetries?: number;
+    delayInMillis?: number;
+    getRetries?: number;
+  }) {
+    let functionRetries = 0;
+    while (functionRetries < maxRetries) {
+      const response = await this.driver.getPlayerInfoError(getRetries);
       if (response.status !== 200) {
-        retries++;
+        functionRetries++;
       } else if (Object.keys(response.body.value).includes('State')) {
         // eslint-disable-next-line dot-notation
         if (response.body.value['State'] !== 'play') {
-          retries++;
+          functionRetries++;
         } else return true;
         await sleep(delayInMillis);
       }
@@ -201,13 +278,13 @@ export class Library {
   }
 
   /** Sets the timeout for Web driver client requests. */
-  async setTimeout(timeoutInMillis: number) {
-    await this.driver.setTimeouts('implicit', timeoutInMillis);
+  async setTimeout({ timeoutInMillis, retries = 3 }: { timeoutInMillis: number; retries?: number }) {
+    await this.driver.setTimeouts({ timeoutType: 'implicit', delayInMillis: timeoutInMillis, retries });
   }
 
   /** Sets the delay between key presses. */
-  async setDelay(delayInMillis) {
-    await this.driver.setTimeouts('pressDelay', delayInMillis);
+  async setDelay({ delayInMillis, retries = 3 }: { delayInMillis: number; retries?: number }) {
+    await this.driver.setTimeouts({ timeoutType: 'pressDelay', delayInMillis, retries });
   }
 
   /** Returns all elements in an array, with their attributes in Name.Local:Value pairs, and their child nodes in an array. */

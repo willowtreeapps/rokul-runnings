@@ -1,13 +1,16 @@
 import { Plugin } from '../src/modules/plugin';
 import { screenshotResponse } from './resources/screenshot-response';
 import { sideloadResponse } from './resources/sideload-response';
-import nock = require('nock');
-import assert = require('assert');
+import chai = require('chai');
 import fs = require('fs');
+import nock = require('nock');
 import path = require('path');
 
-describe('Plugin tests', function() {
+const expect = chai.expect;
+
+describe('Plugin Unit Tests', function() {
   this.timeout(0);
+
   const rokuIP = '0.0.0.0';
   const baseURL = `http://${rokuIP}`;
   const username = 'rokudev';
@@ -27,6 +30,14 @@ describe('Plugin tests', function() {
 
   afterEach(function() {
     nock.cleanAll();
+  });
+
+  after(function() {
+    fs.unlink(`${directoryPath}/${fileName}.jpg`, error => {
+      if (error) {
+        throw error;
+      }
+    });
   });
 
   it('Should Get The Screenshot', async function() {
@@ -53,7 +64,7 @@ describe('Plugin tests', function() {
 
     const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.jpg`));
 
-    assert.deepEqual(fileExists, true, 'Unable to find created screenshot.');
+    expect(fileExists).to.eql(true);
   });
 
   it('Should Install The Channel', async function() {
@@ -65,9 +76,7 @@ describe('Plugin tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    const response = await plugin.installChannel(channelLocation);
-
-    assert.deepEqual(response, 200, 'Expected response status code does not match actual response status code!');
+    expect(await plugin.installChannel(channelLocation)).to.equal(200);
   });
 
   it('Should Replace The Channel', async function() {
@@ -79,9 +88,7 @@ describe('Plugin tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    const response = await plugin.replaceChannel(channelLocation);
-
-    assert.deepEqual(response, 200, 'Expected response status code does not match actual response status code!');
+    expect(await plugin.replaceChannel(channelLocation)).to.equal(200);
   });
 
   it('Should Delete The Channel', async function() {
@@ -93,8 +100,6 @@ describe('Plugin tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    const response = await plugin.deleteChannel();
-
-    assert.deepEqual(response, 200, 'Expected response status code does not match actual response status code!');
+    expect(await plugin.deleteChannel()).to.equal(200);
   });
 });

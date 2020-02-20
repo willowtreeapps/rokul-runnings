@@ -1,14 +1,21 @@
 import Axios from 'axios';
 
-export async function baseGET<T>(
-  url: string,
-  errorAllowed?: boolean,
-): Promise<{
+export async function baseGET<T>({
+  url,
+  errorAllowed = false,
+  retries,
+}: {
+  url: string;
+  errorAllowed?: boolean;
+  retries: number;
+}): Promise<{
   status: number;
   body: T;
 }> {
+  let response: any;
+  let tries = 0;
   try {
-    const response = await Axios.get(url);
+    response = await Axios.get(url);
     return Promise.resolve({
       status: response.status,
       body: response.data,
@@ -26,22 +33,42 @@ export async function baseGET<T>(
         throw error.response.data.value.message;
       }
     } else {
+      while (tries < retries) {
+        try {
+          response = await Axios.get(url);
+          return Promise.resolve({ status: response.status, body: response.data });
+        } catch (error) {
+          if (error.response.status === 500) {
+            tries++;
+          } else {
+            throw error;
+          }
+        }
+      }
       console.log(error);
       throw error;
     }
   }
 }
 
-export async function basePOST<T>(
-  url: string,
-  requestBody: Object,
-  errorAllowed?: boolean,
-): Promise<{
+export async function basePOST<T>({
+  url,
+  requestBody,
+  errorAllowed = false,
+  retries,
+}: {
+  url: string;
+  requestBody: Object;
+  errorAllowed?: boolean;
+  retries: number;
+}): Promise<{
   status: number;
   body: T;
 }> {
+  let tries = 0;
+  let response;
   try {
-    const response = await Axios.post(url, requestBody);
+    response = await Axios.post(url, requestBody);
     return Promise.resolve({
       status: response.status,
       body: response.data,
@@ -54,6 +81,18 @@ export async function basePOST<T>(
       if (errorAllowed) {
         return { status: error.response.status, body: error.response.data };
       } else {
+        while (tries < retries) {
+          try {
+            response = await Axios.post(url, requestBody);
+            return Promise.resolve({ status: response.status, body: response.data });
+          } catch (error) {
+            if (error.response.status === 500) {
+              tries++;
+            } else {
+              throw error;
+            }
+          }
+        }
         console.log(error.response.data.value.message);
         throw error.response.data.value.message;
       }

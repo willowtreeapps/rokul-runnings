@@ -1,8 +1,10 @@
 import * as elementData from '../src/utils/elementData';
 import * as mockData from './resources/webdriver-mock-data';
 import { Buttons, Library } from '../src/modules/library';
-import assert = require('assert');
 import nock = require('nock');
+import chai = require('chai');
+
+const expect = chai.expect;
 
 let libraryDriver: Library;
 const sessionId = '123456';
@@ -28,7 +30,7 @@ function buildMockResponse({
   return { httpMock, mockResponse };
 }
 
-describe('Library tests', function() {
+describe('Library Unit tests', function() {
   this.timeout(0);
 
   beforeEach(async function() {
@@ -69,12 +71,9 @@ describe('Library tests', function() {
       .post(`/session/${sessionId}/launch`)
       .reply(200, httpMock);
 
-    const response = await libraryDriver.launchTheChannel('dev');
-    assert.deepEqual(
-      response,
-      mockResponse,
-      'Did not receive the correct response when attempting to launch the channel',
-    );
+    const response = await libraryDriver.launchTheChannel({ channelCode: 'dev' });
+
+    expect(response).to.eql(mockResponse);
   });
 
   it('Should Get a List of Channels', async function() {
@@ -104,7 +103,7 @@ describe('Library tests', function() {
 
     const response = await libraryDriver.getApps();
 
-    assert.deepEqual(response, value, 'Did not receive the correct response when attempting to retrieve all channels.');
+    expect(response).to.eql(value);
   });
 
   it('Should Verify Channel exists', async function() {
@@ -117,11 +116,9 @@ describe('Library tests', function() {
       .get(`/session/${sessionId}/apps`)
       .reply(200, httpMock);
 
-    assert.deepEqual(
-      await libraryDriver.verifyIsChannelExist({ id: 'dev' }),
-      true,
-      'Unable to find channel from list of chanels provided.',
-    );
+    const response = await libraryDriver.verifyIsChannelExist({ id: 'dev' });
+
+    expect(response).to.eql(true);
   });
 
   it('Should Verify Screen is Loaded', async function() {
@@ -130,11 +127,7 @@ describe('Library tests', function() {
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
 
-    assert.deepEqual(
-      await libraryDriver.verifyIsScreenLoaded(defaultData),
-      true,
-      'Unable to find identifying element that signals the screen as loaded',
-    );
+    expect(await libraryDriver.verifyIsScreenLoaded({ data: defaultData })).to.eql(true);
   });
 
   it('Should Verify Button is Pressed', async function() {
@@ -144,11 +137,7 @@ describe('Library tests', function() {
       .post(`/session/${sessionId}/press`)
       .reply(200, httpMock);
 
-    assert.deepEqual(
-      await libraryDriver.pressBtn(Buttons.up),
-      httpMock,
-      'Incorrect response when attempting to send a button to the device.',
-    );
+    expect(await libraryDriver.pressBtn({ keyPress: Buttons.up })).to.eql(httpMock);
   });
 
   it('Should Verify Word is Pressed', async function() {
@@ -161,14 +150,14 @@ describe('Library tests', function() {
       .reply(200, httpMock)
       .persist();
 
-    const response = await libraryDriver.sendWord(word);
+    const response = await libraryDriver.sendWord({ word });
     const finalMockResponse: { [key: string]: object }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       const key = word.charAt(charIndex);
       finalMockResponse.push({ [key]: httpMock });
     }
 
-    assert.deepEqual(response, finalMockResponse, 'Not all responses from sending a word matched.');
+    expect(response).to.eql(finalMockResponse);
   });
 
   it('Should Verify Button Sequence is Entered', async function() {
@@ -181,9 +170,9 @@ describe('Library tests', function() {
 
     const buttonSequence = [Buttons.up, Buttons.up, Buttons.down];
 
-    const response = await libraryDriver.sendButtonSequence(buttonSequence);
+    const response = await libraryDriver.sendButtonSequence({ sequence: buttonSequence });
 
-    assert.deepEqual(response, mockResponse, 'Button sequence response did not match.');
+    expect(response).to.eql(mockResponse);
   });
 
   it('Should Get The Element', async function() {
@@ -207,9 +196,9 @@ describe('Library tests', function() {
       .post(`/session/${sessionId}/element`)
       .reply(200, httpMock);
 
-    const response = await libraryDriver.getElement(defaultData);
+    const response = await libraryDriver.getElement({ data: defaultData });
 
-    assert.deepEqual(response, mockResponse, 'Element response did not match expected value.');
+    expect(response).to.eql(mockResponse);
   });
 
   it('Should Get Elements', async function() {
@@ -225,9 +214,9 @@ describe('Library tests', function() {
       .reply(200, httpMock)
       .persist();
 
-    const response = await libraryDriver.getElements(defaultData);
+    const response = await libraryDriver.getElements({ data: defaultData });
 
-    assert.deepEqual(response, mockResponse, 'Elements response did not match expected value.');
+    expect(response).to.eql(mockResponse);
   });
 
   it('Should Get Focused Element', async function() {
@@ -252,7 +241,7 @@ describe('Library tests', function() {
 
     const response = await libraryDriver.getFocusedElement();
 
-    assert.deepEqual(response, mockResponse, 'Focused element response value is not as expected.');
+    expect(response).to.eql(mockResponse);
   });
 
   it('Should Verify Channel Is Loaded', async function() {
@@ -271,7 +260,7 @@ describe('Library tests', function() {
 
     const response = await libraryDriver.verifyIsChannelLoaded({ id: 'dev' });
 
-    assert.deepEqual(response, true, 'Current App is not launched.');
+    expect(response).to.eql(true);
   });
 
   it('Should Get Current Channel Info', async function() {
@@ -290,7 +279,7 @@ describe('Library tests', function() {
 
     const response = await libraryDriver.getCurrentChannelInfo();
 
-    assert.deepEqual(response, responseValue, 'Current App value does not match expected Current App value.');
+    expect(response).to.eql(responseValue);
   });
 
   it('Should Get Device Info', async function() {
@@ -311,7 +300,7 @@ describe('Library tests', function() {
 
     const response = await libraryDriver.getDeviceInfo();
 
-    assert.deepEqual(response, responseValue, 'Device Info value does not match expected Device Info value.');
+    expect(response).to.eql(responseValue);
   });
 
   it('Should Get Player Info', async function() {
@@ -328,7 +317,7 @@ describe('Library tests', function() {
     responseValue.value.Position = 8500;
     responseValue.value.Duration = 5000;
 
-    assert.deepEqual(response, responseValue.value, 'Player Info value does not match expcted Player Info value.');
+    expect(response).to.eql(responseValue.value);
   });
 
   it('Should Verify Playback Is Started', async function() {
@@ -339,22 +328,9 @@ describe('Library tests', function() {
       .get(`/session/${sessionId}/player`)
       .reply(200, httpMock);
 
-    const response = await libraryDriver.verifyIsPlaybackStarted();
+    const response = await libraryDriver.verifyIsPlaybackStarted({});
 
-    assert.deepEqual(response, true, 'Playback is started returned false, when true was expected.');
-  });
-
-  it('Should Verify Focused Element Is Of Certain Tag', async function() {
-    const responseValue = mockData.getFocusedElement;
-
-    const { httpMock } = buildMockResponse({ responseValue: responseValue });
-
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/element/active`)
-      .reply(200, httpMock);
-
-    const result = await libraryDriver.verifyFocusedElementIsOfCertainTag('RenderableNode');
-    assert.equal(result, true);
+    expect(response).to.eql(true);
   });
 
   it('Should Set Implicit Timeout', async function() {
