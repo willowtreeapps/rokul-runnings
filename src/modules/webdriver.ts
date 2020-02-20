@@ -12,6 +12,7 @@ import {
   elementDataObject,
   getFocusedElementResponse,
   errorResponse,
+  LaunchArgs,
 } from '../types/webdriver';
 import http = require('../utils/http');
 import sleep = require('../utils/sleep');
@@ -46,12 +47,17 @@ export class WebDriver {
    * Because of this, we allow a string of one whitespace character to be passed in.
    * Interestingly enough, WebDriverServer does not interpret `baseURL/session/{sessionId}` as distinct from `baseURL/session/{sessionId} `
    */
-  async buildURL(command = ''): Promise<string> {
-    if (!command) return `${this.baseURL}/session`;
+  async buildURL(command = '', args: LaunchArgs = {}): Promise<string> {
+    const argsString = Object.keys(args).length
+      ? `?${Object.keys(args)
+          .map(k => `${k}=${args[k]}`)
+          .join('&')}`
+      : '';
+    if (!command) return `${this.baseURL}/session${argsString}`;
     else if (!this.sessionId) {
       this.sessionId = await this.createNewSession();
     }
-    return Promise.resolve(`${this.baseURL}/session/${this.sessionId}${command}`);
+    return Promise.resolve(`${this.baseURL}/session/${this.sessionId}${command}${argsString}`);
   }
 
   /**
@@ -128,9 +134,14 @@ export class WebDriver {
    * Note: this command often executes much faster than the actual channel appearing
    * To avoid timing issues, consider using the `sleepsAfterLaunch` and `sleepTimeInMillis` parameters.
    */
-  async sendLaunchChannel(channelCode = 'dev', sleepsAfterLaunch = false, sleepTimeInMillis = 2000) {
+  async sendLaunchChannel(
+    channelCode = 'dev',
+    sleepsAfterLaunch = false,
+    sleepTimeInMillis = 2000,
+    args: LaunchArgs = {},
+  ) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
-    const url = await this.buildURL('/launch');
+    const url = await this.buildURL('/launch', args);
     const response = await http.basePOST<nullValueResponse>(url, requestBody);
     if (sleepsAfterLaunch) await sleep.sleep(sleepTimeInMillis);
     return response;

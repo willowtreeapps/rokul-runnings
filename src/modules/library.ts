@@ -7,6 +7,7 @@ import {
   nullValueResponse,
   elementValueRaw,
   elementValueRawAttrs,
+  LaunchArgs,
 } from '../types/webdriver';
 
 export enum Buttons {
@@ -41,8 +42,8 @@ export class Library {
   }
 
   /** Launches the channel corresponding to the specified channel ID. */
-  async launchTheChannel(channelCode: string) {
-    return this.driver.sendLaunchChannel(channelCode);
+  async launchTheChannel(channelCode: string, args: LaunchArgs = {}) {
+    return this.driver.sendLaunchChannel(channelCode, false, 2000, args);
   }
 
   /** Returns a list of installed channels as an array of objects */

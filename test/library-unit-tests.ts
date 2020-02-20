@@ -77,6 +77,21 @@ describe('Library tests', function() {
     );
   });
 
+  it('Should Launch the Channel with Argurments', async function() {
+    const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
+
+    nock(libraryDriver.driver.baseURL)
+      .post(`/session/${sessionId}/launch?deeplink=deeplinkid&arg2=value`)
+      .reply(200, httpMock);
+
+    const response = await libraryDriver.launchTheChannel('dev', { deeplink: 'deeplinkid', arg2: 'value' });
+    assert.deepEqual(
+      response,
+      mockResponse,
+      'Did not receive the correct response when attempting to launch the channel',
+    );
+  });
+
   it('Should Get a List of Channels', async function() {
     const value = [
       {

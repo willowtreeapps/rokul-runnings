@@ -149,3 +149,7 @@ export type errorResponse = {
     message?: string;
   };
 };
+
+export interface LaunchArgs {
+  [key: string]: string;
+}
