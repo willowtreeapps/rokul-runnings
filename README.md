@@ -18,11 +18,11 @@ An example using Mocha and TypeScript:
 ```
 import { Library, Plugin, Server } from 'rokul-runnings';
 
-describe('Tests for the X screen', () = >{
+describe('Tests for the X screen', function() {
     let library: Library;
     let plugin: Plugin;
 
-    before(() => {
+    before(function() {
         // Starting the WebDriverServer before the suite runs
         Server.start();
         // Start the library before the suite runs
@@ -31,21 +31,21 @@ describe('Tests for the X screen', () = >{
         plugin = new Plugin('0.0.0.0', 'username', 'password')
     })
 
-    afterEach(async () => {
+    afterEach(async function() {
         // Close the session with the WebDriverServer
         await library.close();
     })
 
-    after(() => {
+    after(function() {
         // Stopping the WebDriverServer after the suite runs
         Server.stop();
     })
 
-    it('Should Launch The Channel', async () => {
-        await library.launchTheChannel('dev');
+    it('Should Launch The Channel', async function() {
+        await library.launchTheChannel({channelCode: 'dev'});
     })
 
-    it('Should Delete The Channel', () => {
+    it('Should Delete The Channel', function() {
         await plugin.deleteChannel();
     }
 })
@@ -84,6 +84,9 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
   - But by and large, this library does not have it's own assertion methods. We anticipate that you can use the responses from the various methods to inform your testing assertions. If you need ideas about how the data is returned or how assertions can work, the `library-unit-tests.ts` file might be a good place to start, or looking at the various responses in the [library documentation](./docs/library.md)
 - What if I have suggestions or find issues?
   - Write up any feature suggestions or issues on the Github.
+- I don't quite follow most of the names for classes. What gives?
+  - The names of the classes were taken from the original Roku Robot Framework. My best suggestion is to create your "library" instance as "driver".
+  - "Plugin" is named after the beginning of the url that all of the calls use.
 - Most of the functions provided are asynchronous. Why?
   - A majority of the functions are either HTTP requests or rely on responses from HTTP requests. In order to ensure that the requests have completed and the responses have returned, the functions were made asynchronous.
 - I need to test the requests or responses. Is there any easier way to do that than running writing automation?
