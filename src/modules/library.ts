@@ -130,7 +130,8 @@ export class Library {
   async verifyFocusedElementIsOfCertainTag(tag: string, maxRetries = 10) {
     let retries = 0;
     let element: elementValueParsed;
-    while (element.XMLName !== tag && retries < maxRetries) {
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (element?.XMLName !== tag && retries < maxRetries) {
       const response = await this.driver.getActiveElement();
       [element] = await this.getAllAttributes([response.value]);
       retries++;
