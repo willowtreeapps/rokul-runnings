@@ -1,12 +1,10 @@
 import { Plugin } from '../src/modules/plugin';
 import { screenshotResponse } from './resources/screenshot-response';
 import { sideloadResponse } from './resources/sideload-response';
-import chai = require('chai');
-import fs = require('fs');
-import nock = require('nock');
-import path = require('path');
-
-const expect = chai.expect;
+import { expect } from 'chai';
+import * as fs from 'fs';
+import * as nock from 'nock';
+import * as path from 'path';
 
 describe('Plugin Unit Tests', function() {
   this.timeout(0);

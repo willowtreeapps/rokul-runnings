@@ -1,10 +1,8 @@
 import * as elementData from '../src/utils/elementData';
 import * as mockData from './resources/webdriver-mock-data';
 import { Buttons, Library } from '../src/modules/library';
-import nock = require('nock');
-import chai = require('chai');
-
-const expect = chai.expect;
+import * as nock from 'nock';
+import { expect } from 'chai';
 
 let libraryDriver: Library;
 const sessionId = '123456';

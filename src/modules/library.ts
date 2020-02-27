@@ -36,8 +36,8 @@ export class Library {
   }
 
   /** Closes the session */
-  async close() {
-    await this.driver.quiet();
+  async close(retries = 3) {
+    await this.driver.quiet(retries);
   }
 
   /** Launches the channel corresponding to the specified channel ID. */

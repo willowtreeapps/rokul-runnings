@@ -232,9 +232,9 @@ export class WebDriver {
   }
 
   /** Deletes the session specified in the URL path. */
-  async quiet() {
+  async quiet(retries: number) {
     const url = await this.buildURL(' ');
-    const response = await http.baseDELETE<deleteSessionResponse>(url);
+    const response = await http.baseDELETE<deleteSessionResponse>({ url, retries });
     return response;
   }
 }
