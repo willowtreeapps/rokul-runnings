@@ -13,8 +13,8 @@ import {
   getFocusedElementResponse,
   errorResponse,
 } from '../types/webdriver';
-import http = require('../utils/http');
-import sleep = require('../utils/sleep');
+import * as http from '../utils/http';
+import * as sleep from '../utils/sleep';
 
 export class WebDriver {
   constructor(
@@ -49,7 +49,7 @@ export class WebDriver {
   async buildURL(command = ''): Promise<string> {
     if (!command) return `${this.baseURL}/session`;
     else if (!this.sessionId) {
-      this.sessionId = await this.createNewSession();
+      this.sessionId = await this.createNewSession(1);
     }
     return Promise.resolve(`${this.baseURL}/session/${this.sessionId}${command}`);
   }
@@ -58,9 +58,9 @@ export class WebDriver {
    * Creates a new session, returning the sessionId to create the 'base' URL for the session
    * If a session already exists for a specified IP address, that sessionId is used
    */
-  async createNewSession() {
+  async createNewSession(retries: number) {
     const url = await this.buildURL();
-    const sessionsResponse = await this.getAllSessions();
+    const sessionsResponse = await this.getAllSessions(retries);
     if (sessionsResponse !== null) {
       for (let i = 0; i < sessionsResponse.length; i++) {
         if (sessionsResponse[i].value.ip === this.rokuIPAddress) {
@@ -69,58 +69,58 @@ export class WebDriver {
       }
     } else {
       const requestBody = this.buildRequestBody();
-      const response = await http.basePOST<sessionsResponse>(url, requestBody);
+      const response = await http.basePOST<sessionsResponse>({ url, requestBody, retries });
       return response.body.sessionId;
     }
   }
 
   /** Returns all active sessions from the WebDriverServer */
-  async getAllSessions() {
+  async getAllSessions(retries: number) {
     let url = await this.buildURL();
     url = `${url}s`;
-    const response = await http.baseGET<getAllSessionsResponse>(url);
+    const response = await http.baseGET<getAllSessionsResponse>({ url, retries });
     return response.body;
   }
 
   /** Retrieves information about the specified session. */
-  async getDeviceInfo() {
+  async getDeviceInfo(retries: number) {
     const url = await this.buildURL(' ');
-    const response = await http.baseGET<sessionsResponse>(url);
+    const response = await http.baseGET<sessionsResponse>({ url, retries });
     return response.body.value;
   }
 
   /** Retrieves information about the Roku media player. */
-  async getPlayerInfo() {
+  async getPlayerInfo(retries: number) {
     const url = await this.buildURL('/player');
-    const response = await http.baseGET<getPlayerInfoResponse>(url);
+    const response = await http.baseGET<getPlayerInfoResponse>({ url, retries });
     return response.body.value;
   }
 
   /** Retrieves information about the Roku media player, allowing for non-200 responses */
-  async getPlayerInfoError() {
+  async getPlayerInfoError(retries: number) {
     const url = await this.buildURL('/player');
-    const response = await http.baseGET<getPlayerInfoResponse | errorResponse>(url, /* errror allowed = */ true);
+    const response = await http.baseGET<getPlayerInfoResponse | errorResponse>({ url, errorAllowed: true, retries });
     return response;
   }
 
   /** Returns a list of channels installed on the device. */
-  async getApps() {
+  async getApps(retries: number) {
     const url = await this.buildURL('/apps');
-    const response = await http.baseGET<getAllAppsResponse>(url);
+    const response = await http.baseGET<getAllAppsResponse>({ url, retries });
     return response.body;
   }
 
   /** Returns information about the channel currently loaded on the device. */
-  async getCurrentApp() {
+  async getCurrentApp(retries: number) {
     const url = await this.buildURL('/current_app');
-    const response = await http.baseGET<getCurrentAppResponse>(url);
+    const response = await http.baseGET<getCurrentAppResponse>({ url, retries });
     return response.body.value;
   }
 
   /** Gets the current screen source. */
-  async getScreenSource() {
+  async getScreenSource(retries: number) {
     const url = await this.buildURL('/source');
-    const response = await http.baseGET<getScreenSourceResponse>(url);
+    const response = await http.baseGET<getScreenSourceResponse>({ url, retries });
     return response;
   }
 
@@ -128,10 +128,20 @@ export class WebDriver {
    * Note: this command often executes much faster than the actual channel appearing
    * To avoid timing issues, consider using the `sleepsAfterLaunch` and `sleepTimeInMillis` parameters.
    */
-  async sendLaunchChannel(channelCode = 'dev', sleepsAfterLaunch = false, sleepTimeInMillis = 2000) {
+  async sendLaunchChannel({
+    channelCode = 'dev',
+    retries,
+    sleepsAfterLaunch = false,
+    sleepTimeInMillis = 2000,
+  }: {
+    channelCode?: string;
+    retries: number;
+    sleepsAfterLaunch?: boolean;
+    sleepTimeInMillis?: number;
+  }) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
     const url = await this.buildURL('/launch');
-    const response = await http.basePOST<nullValueResponse>(url, requestBody);
+    const response = await http.basePOST<nullValueResponse>({ url, requestBody, retries });
     if (sleepsAfterLaunch) await sleep.sleep(sleepTimeInMillis);
     return response;
   }
@@ -140,26 +150,26 @@ export class WebDriver {
    * Installs the specified channel
    * Can't be used to sideload a channel
    */
-  async sendInstallChannel(channelCode: string) {
+  async sendInstallChannel({ channelCode, retries }: { channelCode: string; retries: number }) {
     const requestBody = this.buildRequestBody({ channelId: channelCode });
     const url = await this.buildURL('/install');
-    const response = await http.basePOST<nullValueResponse>(url, requestBody);
+    const response = await http.basePOST<nullValueResponse>({ url, requestBody, retries });
     return response;
   }
 
   /** Sends a sequence of keys to be input by the device */
-  async sendSequence(sequence: string[]) {
+  async sendSequence({ sequence, retries }: { sequence: string[]; retries: number }) {
     const requestBody = this.buildRequestBody({ button_sequence: sequence });
     const url = await this.buildURL('/press');
-    const response = await http.basePOST<nullValueResponse>(url, requestBody);
+    const response = await http.basePOST<nullValueResponse>({ url, requestBody, retries });
     return response;
   }
 
   /** Searches for an element on the page, starting from the screen root. The first located element will be returned as a WebElement JSON object. */
-  async getUIElement(data: elementDataObject) {
+  async getUIElement({ data, retries }: { data: elementDataObject; retries: number }) {
     const requestBody = this.buildRequestBody({ elementData: [data] });
     const url = await this.buildURL('/element');
-    const response = await http.basePOST<getElementResponse>(url, requestBody);
+    const response = await http.basePOST<getElementResponse>({ url, requestBody, retries });
     return response.body;
   }
 
@@ -167,51 +177,64 @@ export class WebDriver {
    * Searches for an element on the page, starting from the screen root. The first located element will be returned as a WebElement JSON object.
    * Allows for returning a non-200 response
    */
-  async getUIElementError(data: elementDataObject) {
+  async getUIElementError({ data, retries }: { data: elementDataObject; retries: number }) {
     const requestBody = this.buildRequestBody({ elementData: [data] });
     const url = await this.buildURL('/element');
-    const response = await http.basePOST<getElementResponse | errorResponse>(url, requestBody, true);
+    const response = await http.basePOST<getElementResponse | errorResponse>({
+      url,
+      requestBody,
+      errorAllowed: true,
+      retries,
+    });
     return response;
   }
 
   /** Configure the amount of time that an operation can be executed before it is aborted. */
-  async setTimeouts(timeoutType: string, delayInMillis: number) {
+  async setTimeouts({
+    timeoutType,
+    delayInMillis,
+    retries,
+  }: {
+    timeoutType: string;
+    delayInMillis: number;
+    retries: number;
+  }) {
     const requestBody = this.buildRequestBody({
       type: timeoutType,
       ms: delayInMillis,
     });
     const url = await this.buildURL('/timeouts');
-    const response = await http.basePOST<nullValueResponse>(url, requestBody);
+    const response = await http.basePOST<nullValueResponse>({ url, requestBody, retries });
     return response;
   }
 
   /** Searches for elements on the page matching the search criteria, starting from the screen root. All the matching elements will be returned in a WebElement JSON object. */
-  async getUIElements(data: elementDataObject) {
+  async getUIElements({ data, retries }: { data: elementDataObject; retries: number }) {
     const requestBody = this.buildRequestBody({ elementData: [data] });
     const url = await this.buildURL('/elements');
-    const response = await http.basePOST<getElementsResponse>(url, requestBody);
+    const response = await http.basePOST<getElementsResponse>({ url, requestBody, retries });
     return response.body.value;
   }
 
   /** Simulates the press and release of the specified key. */
-  async sendKeypress(keyPress: string) {
+  async sendKeypress({ keyPress, retries }: { keyPress: string; retries: number }) {
     const requestBody = this.buildRequestBody({ button: keyPress });
     const url = await this.buildURL('/press');
-    const response = await http.basePOST<nullValueResponse>(url, requestBody);
+    const response = await http.basePOST<nullValueResponse>({ url, requestBody, retries });
     return response.body;
   }
 
   /** Retrieves the element on the page that currently has focus. */
-  async getActiveElement() {
+  async getActiveElement(retries: number) {
     const url = await this.buildURL('/element/active');
-    const response = await http.basePOST<getFocusedElementResponse>(url, {});
+    const response = await http.basePOST<getFocusedElementResponse>({ url, requestBody: {}, retries });
     return response.body;
   }
 
   /** Deletes the session specified in the URL path. */
-  async quiet() {
+  async quiet(retries: number) {
     const url = await this.buildURL(' ');
-    const response = await http.baseDELETE<deleteSessionResponse>(url);
+    const response = await http.baseDELETE<deleteSessionResponse>({ url, retries });
     return response;
   }
 }

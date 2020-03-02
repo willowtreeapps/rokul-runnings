@@ -1,8 +1,9 @@
+import axios from 'axios';
 import { Action, Method } from '../types/plugin';
-import * as indigestion from 'indigestion';
 import * as FormData from 'form-data';
 import { IncomingHttpHeaders } from 'http';
-import axios from 'axios';
+import * as indigestion from 'indigestion';
+import { sleep } from '../utils/sleep';
 import fs = require('fs');
 import path = require('path');
 
@@ -176,6 +177,10 @@ export class Plugin {
       endpoint,
       formData,
     });
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (headers === undefined) {
+      await sleep(250);
+    }
     const authenticateHeader = headers['www-authenticate'];
     const authorization = indigestion.generateDigestAuth({
       authenticateHeader,

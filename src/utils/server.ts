@@ -1,28 +1,30 @@
 import * as path from 'path';
-import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+import * as pm2 from 'pm2';
 import { sleep } from '../utils/sleep';
+
 export class Server {
   private static serverBinaryLocation = path.resolve(__dirname, '../../../redist/WebDriverServer');
-  private static server: ChildProcessWithoutNullStreams;
   /** Function to start up the WebDriverServer */
-  public static start(print = false) {
-    this.server = spawn(Server.serverBinaryLocation);
-    sleep(1250);
-    this.server.stdout.on('data', data => {
-      console.log(`[STDOUT]: ${data}`);
-    });
-    this.server.stderr.on('data', data => {
-      console.error(`[STDERR]: ${data}`);
-    });
-    this.server.on('close', (code, signal) => {
-      if (print) {
-        console.log('Successfully terminated WebDriverServer');
+  public static start() {
+    pm2.start(this.serverBinaryLocation, error => {
+      if (error) {
+        throw error;
       }
     });
+    sleep(500);
   }
 
   /** Function to stop the WebDriverServer */
   public static stop() {
-    this.server.kill('SIGTERM');
+    pm2.stop('WebDriverServer', error => {
+      if (error) {
+        throw error;
+      }
+    });
+    pm2.delete('WebDriverServer', error => {
+      if (error) {
+        throw error;
+      }
+    });
   }
 }
