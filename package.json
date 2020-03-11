@@ -1,6 +1,6 @@
 {
   "name": "@willowtreeapps/rokul-runnings",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Library to send automated commands to a Roku",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
