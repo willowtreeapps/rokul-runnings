@@ -1,6 +1,14 @@
 import { WebDriver } from './webdriver';
 import { sleep } from '../utils/sleep';
-import { elementDataObject, Apps, paramObject, elementsResponseObject, Action, Method } from '../types/webdriver';
+import {
+  ElementDataObject,
+  Apps,
+  Params,
+  AppUIResponseObject,
+  Action,
+  Method,
+  SquashedAppUIObject,
+} from '../types/webdriver';
 import * as FormData from 'form-data';
 import * as indigestion from 'indigestion';
 import axios from 'axios';
@@ -54,7 +62,7 @@ export class Library {
   }: {
     channelCode: string;
     retries?: number;
-    params?: paramObject;
+    params?: Params;
   }) {
     return this.driver.sendLaunchChannel({ channelCode, retries, params });
   }
@@ -84,7 +92,7 @@ export class Library {
     delayInMillis = this.retryDelayInMillis,
     httpRetries = this.retries,
   }: {
-    data: elementDataObject;
+    data: ElementDataObject;
     maxAttempts?: number;
     delayInMillis?: number;
     httpRetries?: number;
@@ -115,7 +123,7 @@ export class Library {
     delayInMillis = this.retryDelayInMillis,
     httpRetries = this.retries,
   }: {
-    data: elementDataObject;
+    data: ElementDataObject;
     maxAttempts?: number;
     delayInMillis?: number;
     httpRetries?: number;
@@ -133,7 +141,7 @@ export class Library {
     keyPress: string;
     delayInMillis?: number;
     retries?: number;
-    params?: paramObject;
+    params?: Params;
   }) {
     const response = this.driver.sendKeypress({ keyPress, retries, params });
     await sleep(delayInMillis);
@@ -150,7 +158,7 @@ export class Library {
     word: string;
     delayInMillis?: number;
     retries?: number;
-    params?: paramObject;
+    params?: Params;
   }) {
     const sequence: string[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
@@ -170,7 +178,7 @@ export class Library {
     sequence: Buttons[] | string[];
     delayInMillis?: number;
     retries?: number;
-    params?: paramObject;
+    params?: Params;
   }) {
     const response = await this.driver.sendSequence({ sequence, params, retries });
     await sleep(delayInMillis);
@@ -183,7 +191,7 @@ export class Library {
     data,
     retries = this.retries,
   }: {
-    data: elementDataObject;
+    data: ElementDataObject;
     delayInMillis?: number;
     retries?: number;
   }) {
@@ -197,7 +205,7 @@ export class Library {
     data,
     retries = this.retries,
   }: {
-    data: elementDataObject;
+    data: ElementDataObject;
     delayInMillis?: number;
     retries?: number;
   }) {
@@ -617,12 +625,12 @@ export class Library {
     });
   }
 
-  private squashAttributes(responseObject: elementsResponseObject[]) {
-    const elementsArray: elementsResponseObject[] = [];
+  private squashAttributes(responseObject: AppUIResponseObject[]) {
+    const elementsArray: SquashedAppUIObject[] = [];
     responseObject.forEach(element => {
       const elementName = Object.keys(element)[0];
-      const childElement = element[elementName] as elementsResponseObject;
-      elementsArray.push({ [elementName]: childElement.attributes } as elementsResponseObject);
+      const childElement = element[elementName] as AppUIResponseObject;
+      elementsArray.push({ [elementName]: childElement.attributes } as SquashedAppUIObject);
     });
     return elementsArray;
   }

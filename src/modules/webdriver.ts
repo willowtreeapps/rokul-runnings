@@ -1,4 +1,4 @@
-import { elementDataObject, Apps, attributeObject, elementsResponseObject, paramObject } from '../types/webdriver';
+import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params } from '../types/webdriver';
 import * as http from '../utils/http';
 import * as sleep from '../utils/sleep';
 import * as xmljs from 'xml-js';
@@ -121,7 +121,7 @@ export class WebDriver {
     retries: number;
     sleepsAfterLaunch?: boolean;
     sleepTimeInMillis?: number;
-    params: paramObject;
+    params: Params;
   }) {
     const url = `${this.baseURL}/launch/${channelCode}`;
     const response = await http.basePOST({ url, params, retries });
@@ -134,15 +134,7 @@ export class WebDriver {
    * Installs the specified channel
    * Can't be used to sideload a channel
    */
-  async sendInstallChannel({
-    channelCode,
-    retries,
-    params,
-  }: {
-    channelCode: string;
-    retries: number;
-    params: paramObject;
-  }) {
+  async sendInstallChannel({ channelCode, retries, params }: { channelCode: string; retries: number; params: Params }) {
     const url = `${this.baseURL}/install/${channelCode}`;
     const response = await http.basePOST({ url, params, retries });
     // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
@@ -150,7 +142,7 @@ export class WebDriver {
   }
 
   /** Simulates the press and release of the specified key. */
-  async sendKeypress({ keyPress, retries, params }: { keyPress: string; retries: number; params: paramObject }) {
+  async sendKeypress({ keyPress, retries, params }: { keyPress: string; retries: number; params: Params }) {
     const url = `${this.baseURL}/keypress/${keyPress}`;
     const response = await http.basePOST({ url, retries, params });
     // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
@@ -158,7 +150,7 @@ export class WebDriver {
   }
 
   /** Sends a sequence of keys to be input by the device */
-  async sendSequence({ sequence, retries, params }: { sequence: string[]; retries: number; params: paramObject }) {
+  async sendSequence({ sequence, retries, params }: { sequence: string[]; retries: number; params: Params }) {
     const responseArray: { [key: string]: number }[] = [];
     sequence.forEach(async press => {
       const url = `${this.baseURL}/keypress/${press}`;
@@ -170,7 +162,7 @@ export class WebDriver {
   }
 
   /** Finds all elements that match the specified search terms */
-  matchElements(searchElements: elementDataObject, actualElement: elementsResponseObject, elementName: string) {
+  matchElements(searchElements: ElementDataObject, actualElement: AppUIResponseObject, elementName: string) {
     const foundElements = [];
     // Iterate over each key in the passed in element
     for (const key of Object.keys(actualElement)) {
@@ -190,9 +182,7 @@ export class WebDriver {
             foundElements.push({ [key]: actualElement[key] });
           } else {
             // If the above conditions are not met, then the element needs to be passed through this function
-            foundElements.push(
-              ...this.matchElements(searchElements, actualElement[key] as elementsResponseObject, key),
-            );
+            foundElements.push(...this.matchElements(searchElements, actualElement[key] as AppUIResponseObject, key));
           }
         }
       }
@@ -207,8 +197,8 @@ export class WebDriver {
     actualElement = {},
     elementTag = '',
   }: {
-    searchElements: elementDataObject;
-    actualElement?: attributeObject;
+    searchElements: ElementDataObject;
+    actualElement?: XMLAttributes;
     elementTag?: string;
   }) {
     if (searchElements.using === 'text' && actualElement.text) {
@@ -223,7 +213,7 @@ export class WebDriver {
   }
 
   /** Searches for an element on the page, starting from the screen root. The first located element will be returned as a WebElement JSON object. */
-  async getUIElement({ data, retries }: { data: elementDataObject; retries: number }) {
+  async getUIElement({ data, retries }: { data: ElementDataObject; retries: number }) {
     const url = this.queryUrl('app-ui');
     const response = await http.baseGET({ url, retries });
     const jsonResponse = this.parser(response);
@@ -236,7 +226,7 @@ export class WebDriver {
   }
 
   /** Searches for elements on the page matching the search criteria, starting from the screen root. All the matching elements will be returned in a WebElement JSON object. */
-  async getUIElements({ data, retries }: { data: elementDataObject; retries: number }) {
+  async getUIElements({ data, retries }: { data: ElementDataObject; retries: number }) {
     const url = this.queryUrl('app-ui');
     const response = await http.baseGET({ url, retries });
     const jsonResponse = this.parser(response);
