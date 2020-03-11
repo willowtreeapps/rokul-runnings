@@ -39,26 +39,6 @@ export type getPlayerInfoResponse = {
   };
 };
 
-export type appResponse = {
-  Title: string;
-  ID: string;
-  Type: string;
-  Version: string;
-  Subtype: string;
-};
-
-export type getCurrentAppResponse = {
-  sessionId: string;
-  status: string;
-  value: appResponse;
-};
-
-export type getAllAppsResponse = {
-  sessionId: string;
-  status: string;
-  value: appResponse[];
-};
-
 export type getScreenSourceResponse = {
   sessionId: string;
   status: string;
@@ -136,11 +116,15 @@ export type deleteSessionResponse = {
   value: null;
 };
 
-export type elementDataObject = {
-  using: string;
-  value: string;
-  attribute?: string;
-};
+export type elementDataObject = { value: string } & (
+  | {
+      using: 'text' | 'tag';
+    }
+  | {
+      using: 'attr';
+      attribute: string;
+    }
+);
 
 export type errorResponse = {
   sessionId: string;
@@ -149,3 +133,43 @@ export type errorResponse = {
     message?: string;
   };
 };
+
+export type Apps = {
+  [key: string]: {
+    id: string;
+    subtype: string;
+    type: string;
+    version: string;
+  };
+};
+
+export type attributeObject = {
+  text?: string;
+  error?: string;
+  state?: string;
+  [key: string]: string;
+};
+
+export type paramObject = {
+  [key: string]: string | number;
+};
+
+export type playerInfoResponse = {
+  player: {
+    attributes: attributeObject;
+    duration: string | number;
+    position: string | number;
+    [key: string]: string | number | object;
+  };
+};
+
+export interface elementsResponseInterface {
+  [key: string]: elementsResponseInterface | elementsResponseInterface[];
+}
+
+export type elementsResponseObject = {
+  attributes: attributeObject;
+} & elementsResponseInterface;
+
+export declare type Action = 'Install' | 'Replace' | 'Delete' | 'Screenshot';
+export declare type Method = 'GET' | 'POST';

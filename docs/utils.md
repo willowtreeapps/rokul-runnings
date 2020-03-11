@@ -1,33 +1,5 @@
 # Utils
 
-## Server
-
-The `Server` util is used to start and stop the `WebDriverServer`.
-
-```
-import { Server } from 'rokul-runnings';
-```
-
-### start()
-
-This function starts the server by running the binary `WebDriverServer`.
-
-#### Examples
-
-```
-Server.start();
-```
-
-### stop()
-
-This function stops the server.
-
-#### Examples
-
-```
-Server.stop()
-```
-
 ## ElementData
 
 This util can be used to create an object that matches the ElementData type, to be passed in when searching for an element

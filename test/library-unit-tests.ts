@@ -1,260 +1,231 @@
 import * as elementData from '../src/utils/elementData';
-import * as mockData from './resources/webdriver-mock-data';
 import { Buttons, Library } from '../src/modules/library';
+import { screenshotResponse } from './resources/screenshot-response';
+import { sideloadResponse } from './resources/sideload-response';
 import * as nock from 'nock';
 import { expect } from 'chai';
+import * as fs from 'fs';
+import * as path from 'path';
 
 let libraryDriver: Library;
-const sessionId = '123456';
-const defaultData = elementData.text('test');
-const defaultResponses = { responsesStatus: 0, responseValue: null };
+const baseIP = '127.0.0.1';
+let baseURL: string;
+let baseURLWithoutPort: string;
+const username = 'rokudev';
+const password = 'password';
+const defaultData = elementData.text('ArcInterpolator');
+const channelLocation = './test/resources/main.zip';
+const directoryPath = `${__dirname}/resources/images`;
+const fileName = 'screenshot-test';
+const authenticateHeader = {
+  'www-authenticate': `Digest qop="auth", realm="rokudev", nonce="123456"`,
+};
+const headerMatcher = { reqheaders: { authorization: /".*"/ } };
 
-function buildMockResponse({
-  responseStatus,
-  responseValue,
-}: {
-  responseStatus?: number;
-  responseValue?: object | Array<object>;
-}) {
-  if (!responseStatus) responseStatus = 0;
-  if (!responseValue) responseValue = null;
-  const response = {
-    sessionId: sessionId,
-    status: responseStatus,
-    value: responseValue,
-  };
-  const httpMock = response;
-  const mockResponse = { body: response, status: 200 };
-  return { httpMock, mockResponse };
+function xmls(file: string) {
+  return path.join(__dirname, `./resources/unitTest-XMLs/${file}.xml`);
+}
+
+function readXml(file: string) {
+  return fs.readFileSync(xmls(file), 'utf8');
+}
+
+function jsons(file: string) {
+  return path.join(__dirname, `./resources/unitTest-JSONs/${file}.json`);
+}
+
+function readJson(file: string) {
+  return JSON.parse(fs.readFileSync(jsons(file), 'utf8'));
 }
 
 describe('Library Unit tests', function() {
   this.timeout(0);
 
-  beforeEach(async function() {
-    libraryDriver = new Library('123.456.789.012');
-    nock(libraryDriver.driver.baseURL)
-      .get('/sessions')
-      .reply(200, null);
-    nock(libraryDriver.driver.baseURL)
-      .post('/session')
-      .reply(200, {
-        sessionId: sessionId,
-        status: 0,
-        value: {
-          ip: '123.456.789.012',
-          timeout: 30000,
-          pressDelay: 1000,
-          vendorName: 'Roku',
-          modelName: 'Roku Stick',
-          language: 'en',
-          country: 'us',
-        },
-      });
+  beforeEach(function() {
+    libraryDriver = new Library(baseIP, username, password, { pressDelayInMillis: 200, retryDelayInMillis: 200 });
+
+    baseURL = libraryDriver.driver.baseURL;
+    // Development Application Installer requires the baseURL without the port attached.
+    baseURLWithoutPort = baseURL.split(':8060')[0];
   });
 
-  afterEach(async function() {
-    nock(libraryDriver.driver.baseURL)
-      .delete(`/session/${sessionId}`)
-      .reply(200, defaultData);
-
-    await libraryDriver.close();
+  afterEach(function() {
     nock.cleanAll();
   });
 
-  it('Should Launch the Channel', async function() {
-    const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
+  after(function() {
+    fs.unlink(`${directoryPath}/${fileName}.jpg`, error => {
+      if (error) {
+        throw error;
+      }
+    });
+  });
 
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/launch`)
-      .reply(200, httpMock);
+  it('Should Launch the Channel', async function() {
+    nock(baseURL)
+      .post(`/launch/dev`)
+      .reply(200);
 
     const response = await libraryDriver.launchTheChannel({ channelCode: 'dev' });
 
-    expect(response).to.eql(mockResponse);
+    expect(response).to.eql(200);
   });
 
   it('Should Get a List of Channels', async function() {
-    const value = [
-      {
-        Title: 'YouTube TV',
-        ID: '195316',
-        Type: 'appl',
-        Version: '1.0.80000001',
-        Subtype: 'ndka',
-      },
-      {
-        Title: 'rocute',
-        ID: 'dev',
-        Type: 'appl',
-        Version: '1.0.1',
-        Subtype: 'rsga',
-      },
-    ];
-    const { httpMock } = buildMockResponse({
-      responseValue: value,
-    });
+    const file = 'apps';
 
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}/apps`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/apps`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.getApps();
 
-    expect(response).to.eql(value);
+    expect(response).to.eql(readJson(file));
   });
 
   it('Should Verify Channel exists', async function() {
-    const value = mockData.verifyChannelExists;
+    const file = 'apps';
 
-    const { httpMock } = buildMockResponse({
-      responseValue: value,
-    });
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}/apps`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/apps`)
+      .reply(200, readXml(file));
 
-    const response = await libraryDriver.verifyIsChannelExist({ id: 'dev' });
+    const response = await libraryDriver.verifyIsChannelExist({ id: '552944' });
 
     expect(response).to.eql(true);
   });
 
   it('Should Verify Screen is Loaded', async function() {
-    const { httpMock } = buildMockResponse(defaultResponses);
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/element`)
-      .reply(200, httpMock);
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file));
 
     expect(await libraryDriver.verifyIsScreenLoaded({ data: defaultData })).to.eql(true);
   });
 
+  it('Should Verify Element Exists on Screen', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file));
+
+    expect(await libraryDriver.verifyIsElementOnScreen({ data: defaultData })).to.eql(true);
+  });
+
   it('Should Verify Button is Pressed', async function() {
-    const { httpMock } = buildMockResponse(defaultResponses);
+    nock(baseURL)
+      .post(`/keypress/up`)
+      .reply(200);
 
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/press`)
-      .reply(200, httpMock);
-
-    expect(await libraryDriver.pressBtn({ keyPress: Buttons.up })).to.eql(httpMock);
+    expect(await libraryDriver.pressBtn({ keyPress: Buttons.up })).to.eql(200);
   });
 
   it('Should Verify Word is Pressed', async function() {
-    const { httpMock } = buildMockResponse(defaultResponses);
+    const word = 'hello';
 
-    const word: string = 'hello';
-
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/press`)
-      .reply(200, httpMock)
+    nock(baseURL)
+      .post(/keypress\/LIT_./)
+      .reply(200)
       .persist();
 
     const response = await libraryDriver.sendWord({ word });
-    const finalMockResponse: { [key: string]: object }[] = [];
+    const expectedResponse: { [key: string]: number }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       const key = word.charAt(charIndex);
-      finalMockResponse.push({ [key]: httpMock });
+      expectedResponse.push({ ['LIT_' + key]: 200 });
     }
 
-    expect(response).to.eql(finalMockResponse);
+    expect(response).to.eql(expectedResponse);
   });
 
-  it('Should Verify Button Sequence is Entered', async function() {
-    const { httpMock, mockResponse } = buildMockResponse(defaultResponses);
-
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/press`)
-      .reply(200, httpMock)
+  it('Should Verify Button Sequence is Pressed', async function() {
+    nock(baseURL)
+      .post(/keypress\/.*/)
+      .reply(200)
       .persist();
 
     const buttonSequence = [Buttons.up, Buttons.up, Buttons.down];
+    const expectedResponse: { [key: string]: number }[] = [];
+    for (let buttonIndex = 0; buttonIndex < buttonSequence.length; buttonIndex++) {
+      const key = buttonSequence[buttonIndex];
+      expectedResponse.push({ [key]: 200 });
+    }
 
     const response = await libraryDriver.sendButtonSequence({ sequence: buttonSequence });
 
-    expect(response).to.eql(mockResponse);
+    expect(response).to.eql(expectedResponse);
   });
 
   it('Should Get The Element', async function() {
-    const responseValue = mockData.getElement;
+    const file = 'app-ui';
 
-    const { httpMock } = buildMockResponse({
-      responseValue: responseValue,
-    });
-
-    const mockResponse = {
-      Attrs: {
-        bounds: '{0, 11, 340, 48}',
-        color: '#ddddddff',
-        index: '0',
-        text: 'Item 1',
-      },
-      XMLName: 'Label',
-    };
-
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/element`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.getElement({ data: defaultData });
 
-    expect(response).to.eql(mockResponse);
+    expect(response).to.eql(readJson('getElement'));
   });
 
   it('Should Get Elements', async function() {
-    const responseValue = mockData.getElements;
-    const { httpMock } = buildMockResponse({
-      responseValue: responseValue,
-    });
+    const file = 'app-ui';
 
-    const mockResponse = mockData.getElementsMockResponse;
-
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/elements`)
-      .reply(200, httpMock)
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file))
       .persist();
 
     const response = await libraryDriver.getElements({ data: defaultData });
 
-    expect(response).to.eql(mockResponse);
+    expect(response).to.eql(readJson('getElements'));
   });
 
   it('Should Get Focused Element', async function() {
-    const responseValue = mockData.getFocusedElement;
+    const file = 'app-ui';
 
-    const mockResponse = {
-      XMLName: 'RenderableNode',
-      Attrs: {
-        bounds: '{0, 0, 340, 48}',
-        children: '1',
-        focusable: 'true',
-        focused: 'true',
-        index: '0',
-      },
-    };
-
-    const { httpMock } = buildMockResponse({ responseValue: responseValue });
-
-    nock(libraryDriver.driver.baseURL)
-      .post(`/session/${sessionId}/element/active`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.getFocusedElement();
 
-    expect(response).to.eql(mockResponse);
+    expect(response).to.eql(readJson('getActiveElement'));
+  });
+
+  it('Should Verify the Focused Element Is Of A Certain Tag', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file));
+
+    const response = await libraryDriver.verifyFocusedElementIsOfCertainTag({ tag: 'LabelList' });
+
+    expect(response).to.eql(true);
+  });
+
+  it('Should Get The Screen Source', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get(`/query/app-ui`)
+      .reply(200, readXml(file));
+
+    const response = await libraryDriver.getScreenSource();
+
+    expect(response).to.eql(readJson('app-ui'));
   });
 
   it('Should Verify Channel Is Loaded', async function() {
-    const responseValue = {
-      Title: 'rocute',
-      ID: 'dev',
-      Type: 'appl',
-      Version: '1.0.1',
-      Subtype: 'rsga',
-    };
-    const { httpMock } = buildMockResponse({ responseValue: responseValue });
+    const file = 'active-app';
 
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}/current_app`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/active-app`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.verifyIsChannelLoaded({ id: 'dev' });
 
@@ -262,82 +233,113 @@ describe('Library Unit tests', function() {
   });
 
   it('Should Get Current Channel Info', async function() {
-    const responseValue = {
-      Title: 'rocute',
-      ID: 'dev',
-      Type: 'appl',
-      Version: '1.0.1',
-      Subtype: 'rsga',
-    };
-    const { httpMock } = buildMockResponse({ responseValue: responseValue });
+    const file = 'active-app';
 
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}/current_app`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/active-app`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.getCurrentChannelInfo();
 
-    expect(response).to.eql(responseValue);
+    expect(response).to.eql(readJson(file));
   });
 
   it('Should Get Device Info', async function() {
-    const responseValue = {
-      ip: '123.456.789.012',
-      timeout: 30000,
-      pressDelay: 1000,
-      vendorName: 'Roku',
-      modelName: 'Roku Stick',
-      language: 'en',
-      country: 'US',
-    };
-    const { httpMock } = buildMockResponse({ responseValue: responseValue });
+    const file = 'device-info';
 
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/device-info`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.getDeviceInfo();
 
-    expect(response).to.eql(responseValue);
+    expect(response).to.eql(readJson(file));
   });
 
   it('Should Get Player Info', async function() {
-    const responseValue = mockData.getPlayerInfo(sessionId);
-    const { httpMock } = buildMockResponse({
-      responseValue: responseValue.value,
-    });
+    const file = 'media-player';
 
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}/player`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/media-player`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.getPlayerInfo();
-    responseValue.value.Position = 8500;
-    responseValue.value.Duration = 5000;
 
-    expect(response).to.eql(responseValue.value);
+    expect(response).to.eql(readJson(file));
   });
 
   it('Should Verify Playback Is Started', async function() {
-    const responseValue = mockData.verifyPlaybackIsStarted;
-    const { httpMock } = buildMockResponse({ responseValue: responseValue });
+    const file = 'media-player';
 
-    nock(libraryDriver.driver.baseURL)
-      .get(`/session/${sessionId}/player`)
-      .reply(200, httpMock);
+    nock(baseURL)
+      .get(`/query/media-player`)
+      .reply(200, readXml(file));
 
     const response = await libraryDriver.verifyIsPlaybackStarted({});
 
     expect(response).to.eql(true);
   });
 
-  it('Should Set Implicit Timeout', async function() {
-    // To Do -- unable to see anywhere that the Timeout is actually set
-    // will use libraryDriver.setTimeout()
+  it('Should Get The Screenshot', async function() {
+    nock(baseURLWithoutPort, headerMatcher)
+      .post('/plugin_inspect')
+      .reply(200, screenshotResponse);
+
+    nock(baseURLWithoutPort)
+      .post('/plugin_inspect')
+      .reply(401, '', authenticateHeader);
+
+    nock(baseURLWithoutPort, headerMatcher)
+      .get('/pkgs/dev.jpg')
+      .replyWithFile(200, `${__dirname}/resources/images/response.jpg`);
+
+    nock(baseURLWithoutPort)
+      .get('/pkgs/dev.jpg')
+      .reply(401, '', authenticateHeader);
+
+    await libraryDriver.getScreenshot({
+      directoryPath,
+      fileName,
+    });
+
+    const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.jpg`));
+
+    expect(fileExists).to.eql(true);
   });
 
-  it('Should Set Delay Press Timeout', async function() {
-    // To Do -- unable to see anywhere that the Timeout is actually set
-    // will use libraryDriver.setDelay()
+  it('Should Install The Channel', async function() {
+    nock(baseURLWithoutPort, headerMatcher)
+      .post('/plugin_install')
+      .reply(200, sideloadResponse);
+
+    nock(baseURLWithoutPort)
+      .post('/plugin_install')
+      .reply(401, '', authenticateHeader);
+
+    expect(await libraryDriver.installChannel(channelLocation)).to.equal(200);
+  });
+
+  it('Should Replace The Channel', async function() {
+    nock(baseURLWithoutPort, headerMatcher)
+      .post('/plugin_install')
+      .reply(200, sideloadResponse);
+
+    nock(baseURLWithoutPort)
+      .post('/plugin_install')
+      .reply(401, '', authenticateHeader);
+
+    expect(await libraryDriver.replaceChannel(channelLocation)).to.equal(200);
+  });
+
+  it('Should Delete The Channel', async function() {
+    nock(baseURLWithoutPort, headerMatcher)
+      .post('/plugin_install')
+      .reply(200, sideloadResponse);
+
+    nock(baseURLWithoutPort)
+      .post('/plugin_install')
+      .reply(401, '', authenticateHeader);
+
+    expect(await libraryDriver.deleteChannel()).to.equal(200);
   });
 });

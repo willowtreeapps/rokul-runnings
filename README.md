@@ -9,69 +9,47 @@ This library is used to automate a Roku device.
 ## Setup
 
 - In your project, install via `npm install @willowtreeapps/rokul-runnings`
-- Before using the `Library` class, you will need to start the WebDriverServer.
 - Before using the `Library` class, you will also need to start the Library.
-- Before using the `Plugin` class, you will need to start the Plugin.
 
 An example using Mocha and TypeScript:
 
 ```
-import { Library, Plugin, Server } from 'rokul-runnings';
+import { Library as Rokul } from 'rokul-runnings';
 
 describe('Tests for the X screen', function() {
-    let library: Library;
-    let plugin: Plugin;
+    let rokul: Rokul;
 
     before(function() {
-        // Starting the WebDriverServer before the suite runs
-        Server.start();
         // Start the library before the suite runs
-        library = new Library('0.0.0.0')
-        // Start the plugin before the suite runs
-        plugin = new Plugin('0.0.0.0', 'username', 'password')
-    })
-
-    afterEach(async function() {
-        // Close the session with the WebDriverServer
-        await library.close();
-    })
-
-    after(function() {
-        // Stopping the WebDriverServer after the suite runs
-        Server.stop();
+        rokul = new Rokul(/*Roku IP Address =*/'0.0.0.0',
+          /*username=*/'username',
+          /*password=*/'password),
+          {
+            pressDelayInMillis: 1000,
+            retryDelayInMillis: 1000,
+            retries: 1
+          }
     })
 
     it('Should Launch The Channel', async function() {
-        await library.launchTheChannel({channelCode: 'dev'});
+        await rokul.launchTheChannel({channelCode: 'dev'});
     })
 
-    it('Should Delete The Channel', function() {
-        await plugin.deleteChannel();
+    it('Should Delete The Channel', async function() {
+        await rokul.deleteChannel();
     }
 })
 ```
-
-As can be seen, there is a corresponding `close()` function for the `Library` class. This does not destroy the Library, but instead closes the session that has been established with the WebDriverServer. This does not _have_ to be executed, but is in best practice to not let sessions hang around. Each Roku device can only have one concurrent session between the WebDriverServer and itself. The `buildURL()` and `createNewSession()` functions in `webdriver.ts` handle all of the logic for determining if a session currently exists (in which case, we just use that session), and if one does not, creating a session.
-
-### WebDriverServer
-
-See [Server section of the Utils doc](./docs/utils.md#Server) for more information on starting and stopping `WebDriverServer` automatically.
 
 ### Library
 
 See [Library](./docs/library.md) docs file for more information.
 
-### Plugin
+#### Development Application Installer functions
 
-Both pieces of core functionality in the `plugin` class are unstable. They will execute, however they have been known to have a stream that continues after all functions have completed. They currently do not throw errors (although debugging for all exceptions may yield some results), but do not be surprised if you use these functions if they cause your tests to continue to "run" for a minute or more after completion.
+Sideloading (specifically `installChannel()` and `replaceChannel()`) and Screenshotting (`getScreenshot()`) are somewhat flaky. They will execute, however they have been known to have a stream that continues after all functions have completed. They currently do not throw errors (although debugging for all exceptions may yield some results), but do not be surprised if you use these functions if they cause your tests to continue to "run" for a minute or more after completion.
 
-For more information, look at the [Plugin documentation](./docs/plugin.md).
-
-## WebDriverServer
-
-WebDriverServer is a binary compiled from the Go source code that Roku provided for [automated testing](https://github.com/rokudev/automated-channel-testing). It provides routing and handlers to forward commands to a Roku device.
-
-Note: this binary was compiled for OS X and will not work for Linux or Windows
+For more information, look at the [Library documentation](./docs/library.md).
 
 ## FAQ
 
@@ -86,11 +64,10 @@ Note: this binary was compiled for OS X and will not work for Linux or Windows
   - Write up any feature suggestions or issues on the Github.
 - I don't quite follow most of the names for classes. What gives?
   - The names of the classes were taken from the original Roku Robot Framework. My best suggestion is to create your "library" instance as "driver".
-  - "Plugin" is named after the beginning of the url that all of the calls use.
 - Most of the functions provided are asynchronous. Why?
   - A majority of the functions are either HTTP requests or rely on responses from HTTP requests. In order to ensure that the requests have completed and the responses have returned, the functions were made asynchronous.
 - I need to test the requests or responses. Is there any easier way to do that than running writing automation?
-  - Yes! One of the contributors to this project has created a Postman collection. [See the collection here.](https://gist.github.com/aaron-goff/64152b5162bc4c0003c1962d8f811d9e) You will still need to spin up a WebDriverServer, which can be done by either cloning this repo and executing the binary, or following the instructions in the [Roku Robot Framework repository](https://github.com/rokudev/automated-channel-testing).
+  - Yes! One of the contributors to this project has created a Postman collection. [See the collection here.](https://gist.github.com/aaron-goff/b2306f4446da3e1623488512b5973ad1) You will still need to spin up a WebDriverServer, which can be done by either cloning this repo and executing the binary, or following the instructions in the [Roku Robot Framework repository](https://github.com/rokudev/automated-channel-testing).
 
 ## Documentation
 

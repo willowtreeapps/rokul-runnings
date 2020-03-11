@@ -1,13 +1,12 @@
 import { WebDriver } from './webdriver';
 import { sleep } from '../utils/sleep';
-import {
-  elementValueParsed,
-  appResponse,
-  elementDataObject,
-  nullValueResponse,
-  elementValueRaw,
-  elementValueRawAttrs,
-} from '../types/webdriver';
+import { elementDataObject, Apps, paramObject, elementsResponseObject, Action, Method } from '../types/webdriver';
+import * as FormData from 'form-data';
+import * as indigestion from 'indigestion';
+import axios from 'axios';
+import { IncomingHttpHeaders } from 'http';
+import path = require('path');
+import fs = require('fs');
 
 export enum Buttons {
   up = 'up',
@@ -26,303 +25,605 @@ export enum Buttons {
 }
 
 export class Library {
+  public driver: WebDriver;
+  private pressDelayInMillis: number;
+  private retryDelayInMillis: number;
+  private retries: number;
   constructor(
-    rokuIPAddress: string,
-    timeoutInMillis = 0,
-    pressDelayInMillis = 0,
-    public driver: WebDriver = new WebDriver(rokuIPAddress, timeoutInMillis, pressDelayInMillis),
+    public rokuIPAddress: string,
+    private username: string,
+    private password: string,
+    {
+      pressDelayInMillis = 1000,
+      retryDelayInMillis = 1000,
+      retries = 1,
+    }: { pressDelayInMillis?: number; retryDelayInMillis?: number; retries?: number },
   ) {
-    this.driver = driver;
-  }
-
-  /** Closes the session */
-  async close(retries = 3) {
-    await this.driver.quiet(retries);
+    this.rokuIPAddress = rokuIPAddress;
+    this.pressDelayInMillis = pressDelayInMillis;
+    this.driver = new WebDriver(rokuIPAddress, retries);
+    this.retryDelayInMillis = retryDelayInMillis;
+    this.retries = retries;
   }
 
   /** Launches the channel corresponding to the specified channel ID. */
-  async launchTheChannel({ channelCode, retries = 3 }: { channelCode: string; retries?: number }) {
-    return this.driver.sendLaunchChannel({ channelCode, retries });
+  launchTheChannel({
+    channelCode,
+    retries = this.retries,
+    params,
+  }: {
+    channelCode: string;
+    retries?: number;
+    params?: paramObject;
+  }) {
+    return this.driver.sendLaunchChannel({ channelCode, retries, params });
   }
 
   /** Returns a list of installed channels as an array of objects */
-  async getApps(retries = 3) {
-    const response = await this.driver.getApps(retries);
-    return response.value;
+  getApps(retries = this.retries) {
+    return this.driver.getApps(retries);
   }
 
   /** Verifies the specified channel is installed on the device. */
-  async verifyIsChannelExist({ apps, id, retries = 3 }: { apps?: appResponse[]; id: string; retries?: number }) {
+  async verifyIsChannelExist({ apps, id, retries }: { apps?: Apps; id: string; retries?: number }) {
     if (!apps) {
       apps = await this.getApps(retries);
     }
-    return !!apps.find(app => app.ID === id);
+    for (const key of Object.keys(apps)) {
+      if (apps[key].id === id) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Verify that the screen is loaded based on the provided element data. */
   async verifyIsScreenLoaded({
     data,
-    maxRetries = 10,
-    delayInMillis = 1000,
-    postRetries = 3,
+    maxAttempts = 10,
+    delayInMillis = this.retryDelayInMillis,
+    httpRetries = this.retries,
   }: {
     data: elementDataObject;
-    maxRetries?: number;
+    maxAttempts?: number;
     delayInMillis?: number;
-    postRetries?: number;
+    httpRetries?: number;
   }) {
-    let functionRetries = 0;
-    while (functionRetries < maxRetries) {
-      const uiLayoutResponse = await this.driver.getUIElementError({ data, retries: postRetries });
-      if (uiLayoutResponse.status !== 200) functionRetries++;
-      else return true;
-      await sleep(delayInMillis);
-    }
-    return false;
-  }
-
-  /** Alias for verifyIsScreenLoaded with a more intuitive name */
-  async verifyIsElementOnScreen({
-    data,
-    maxRetries = 10,
-    delayInMillis = 1000,
-    postRetries = 3,
-  }: {
-    data: elementDataObject;
-    maxRetries?: number;
-    delayInMillis?: number;
-    postRetries?: number;
-  }) {
-    return this.verifyIsScreenLoaded({ data, maxRetries, delayInMillis, postRetries });
-  }
-
-  /** Simulates the press and release of the specified key. */
-  async pressBtn({
-    keyPress,
-    delayInMillis = 2000,
-    retries = 3,
-  }: {
-    keyPress: string;
-    delayInMillis?: number;
-    retries?: 3;
-  }) {
-    await sleep(delayInMillis);
-    return this.driver.sendKeypress({ keyPress, retries });
-  }
-
-  /** Simulates the press and release of each letter in a word. */
-  async sendWord({
-    word,
-    delayInMillis = 2000,
-    retries = 3,
-  }: {
-    word: string;
-    delayInMillis?: number;
-    retries?: number;
-  }) {
-    await sleep(delayInMillis);
-    const wordResponse: { [key: string]: nullValueResponse }[] = [];
-    for (let charIndex = 0; charIndex < word.length; charIndex++) {
-      await sleep(500);
-      const key = word.charAt(charIndex);
-      const value = await this.driver.sendKeypress({ keyPress: 'LIT_' + key, retries });
-      wordResponse[charIndex] = { [key]: value };
-    }
-    return wordResponse;
-  }
-
-  /** Simulates the sequence of keypresses and releases. */
-  async sendButtonSequence({
-    sequence,
-    delayInMillis = 2000,
-    retries = 3,
-  }: {
-    sequence: Buttons[];
-    delayInMillis?: number;
-    retries?: number;
-  }) {
-    await sleep(delayInMillis);
-    return this.driver.sendSequence({ sequence, retries });
-  }
-
-  /** Searches for an element on the page based on the specified locator starting from the screen root.
-   * Returns information on the first matching element. */
-  async getElement({
-    data,
-    delayInMillis = 1000,
-    retries = 3,
-  }: {
-    data: elementDataObject;
-    delayInMillis?: number;
-    retries?: number;
-  }) {
-    await sleep(delayInMillis);
-    const response = await this.driver.getUIElement({ data, retries });
-    const [attributes] = await this.getAllAttributes([response.value]);
-    return attributes;
-  }
-
-  /** Searches for elements on the page based on the specified locators starting from the screen root.
-   * Returns information on all matching elements. */
-  async getElements({
-    data,
-    delayInMillis = 1000,
-    retries = 3,
-  }: {
-    data: elementDataObject;
-    delayInMillis?: number;
-    retries?: number;
-  }) {
-    await sleep(delayInMillis);
-    const response = await this.driver.getUIElements({ data, retries });
-    const attributes = await this.getAllAttributes(response);
-    return attributes;
-  }
-
-  /** Return the element on the screen that currently has focus. */
-  async getFocusedElement(retries = 3) {
-    const response = await this.driver.getActiveElement(retries);
-    const [element] = await this.getAllAttributes([response.value]);
-    return element;
-  }
-
-  /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
-  async verifyFocusedElementIsOfCertainTag({
-    tag,
-    maxRetries = 10,
-    postRetries = 3,
-  }: {
-    tag: string;
-    maxRetries?: number;
-    postRetries?: number;
-  }) {
-    let functionRetries = 0;
-    let element: elementValueParsed;
-    while (element.XMLName !== tag && functionRetries < maxRetries) {
-      const response = await this.driver.getActiveElement(postRetries);
-      [element] = await this.getAllAttributes([response.value]);
-      functionRetries++;
-    }
-    return element.XMLName === tag;
-  }
-
-  /** Verify that the specified channel has been launched. */
-  async verifyIsChannelLoaded({
-    id,
-    maxRetries = 10,
-    delayInMillis = 1000,
-    getRetries = 3,
-  }: {
-    id: string;
-    maxRetries?: number;
-    delayInMillis?: number;
-    getRetries?: number;
-  }) {
-    let functionRetries = 0;
-    while (functionRetries < maxRetries) {
-      const response = await this.driver.getCurrentApp(getRetries);
-      if (response.ID !== id) functionRetries++;
-      else return true;
-      await sleep(delayInMillis);
-    }
-    return false;
-  }
-
-  /** Returns an object containing information about the channel currently loaded. */
-  async getCurrentChannelInfo(retries = 3) {
-    const response = await this.driver.getCurrentApp(retries);
-    return response;
-  }
-
-  /** Returns an object containing the information about the device. */
-  async getDeviceInfo(retries = 3) {
-    return this.driver.getDeviceInfo(retries);
-  }
-
-  /** Returns an object containing information about the Roku media player */
-  async getPlayerInfo(retries = 3) {
-    const response = await this.driver.getPlayerInfo(retries);
-    if (typeof response.Position === 'string') {
-      response.Position = parseInt(response.Position.split(' ')[0]);
-    }
-    if (typeof response.Duration === 'string') {
-      response.Duration = parseInt(response.Duration.split(' ')[0]);
-    }
-    return response;
-  }
-
-  /** Verify playback has started on the Roku media player. */
-  async verifyIsPlaybackStarted({
-    maxRetries = 10,
-    delayInMillis = 1000,
-    getRetries = 3,
-  }: {
-    maxRetries?: number;
-    delayInMillis?: number;
-    getRetries?: number;
-  }) {
-    let functionRetries = 0;
-    while (functionRetries < maxRetries) {
-      const response = await this.driver.getPlayerInfoError(getRetries);
-      if (response.status !== 200) {
-        functionRetries++;
-      } else if (Object.keys(response.body.value).includes('State')) {
-        // eslint-disable-next-line dot-notation
-        if (response.body.value['State'] !== 'play') {
-          functionRetries++;
-        } else return true;
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+      try {
+        const response = await this.driver.getUIElement({ data, retries: httpRetries });
+        if (response) {
+          return true;
+        } else {
+          attempts++;
+          await sleep(delayInMillis);
+        }
+      } catch (error) {
+        console.log(error);
+        attempts++;
         await sleep(delayInMillis);
       }
     }
     return false;
   }
 
-  /** Sets the timeout for Web driver client requests. */
-  async setTimeout({ timeoutInMillis, retries = 3 }: { timeoutInMillis: number; retries?: number }) {
-    await this.driver.setTimeouts({ timeoutType: 'implicit', delayInMillis: timeoutInMillis, retries });
+  /** Alias for verifyIsScreenLoaded with a more intuitive name */
+  verifyIsElementOnScreen({
+    data,
+    maxAttempts = 10,
+    delayInMillis = this.retryDelayInMillis,
+    httpRetries = this.retries,
+  }: {
+    data: elementDataObject;
+    maxAttempts?: number;
+    delayInMillis?: number;
+    httpRetries?: number;
+  }) {
+    return this.verifyIsScreenLoaded({ data, maxAttempts, delayInMillis, httpRetries });
   }
 
-  /** Sets the delay between key presses. */
-  async setDelay({ delayInMillis, retries = 3 }: { delayInMillis: number; retries?: number }) {
-    await this.driver.setTimeouts({ timeoutType: 'pressDelay', delayInMillis, retries });
+  /** Simulates the press and release of the specified key. */
+  async pressBtn({
+    keyPress,
+    delayInMillis = this.pressDelayInMillis,
+    retries = this.retries,
+    params,
+  }: {
+    keyPress: string;
+    delayInMillis?: number;
+    retries?: number;
+    params?: paramObject;
+  }) {
+    const response = this.driver.sendKeypress({ keyPress, retries, params });
+    await sleep(delayInMillis);
+    return response;
   }
 
-  /** Returns all elements in an array, with their attributes in Name.Local:Value pairs, and their child nodes in an array. */
-  private async getAllAttributes(elements: elementValueRaw[]) {
-    const allElements: elementValueParsed[] = [];
-    for (let i = 0; i < elements.length; i++) {
-      const element = elements[i].Attrs;
-      const allAttributesForElement: elementValueParsed = await this.parseAttributes(element);
-      if (elements[i].Nodes !== null) {
-        allAttributesForElement.Nodes = await this.parseAttributeNodes(elements[i].Nodes);
+  /** Simulates the press and release of each letter in a word. */
+  async sendWord({
+    word,
+    delayInMillis = this.pressDelayInMillis,
+    retries = this.retries,
+    params,
+  }: {
+    word: string;
+    delayInMillis?: number;
+    retries?: number;
+    params?: paramObject;
+  }) {
+    const sequence: string[] = [];
+    for (let charIndex = 0; charIndex < word.length; charIndex++) {
+      const key = word.charAt(charIndex);
+      sequence.push(`LIT_${key}`);
+    }
+    return this.sendButtonSequence({ sequence, delayInMillis, retries, params });
+  }
+
+  /** Simulates the sequence of keypresses and releases. */
+  async sendButtonSequence({
+    sequence,
+    delayInMillis = this.pressDelayInMillis,
+    retries = this.retries,
+    params,
+  }: {
+    sequence: Buttons[] | string[];
+    delayInMillis?: number;
+    retries?: number;
+    params?: paramObject;
+  }) {
+    const response = await this.driver.sendSequence({ sequence, params, retries });
+    await sleep(delayInMillis);
+    return response;
+  }
+
+  /** Searches for an element on the page based on the specified locator starting from the screen root.
+   * Returns information on the first matching element. */
+  async getElement({
+    data,
+    retries = this.retries,
+  }: {
+    data: elementDataObject;
+    delayInMillis?: number;
+    retries?: number;
+  }) {
+    const response = await this.driver.getUIElement({ data, retries });
+    return this.squashAttributes(response)[0];
+  }
+
+  /** Searches for elements on the page based on the specified locators starting from the screen root.
+   * Returns information on all matching elements. */
+  async getElements({
+    data,
+    retries = this.retries,
+  }: {
+    data: elementDataObject;
+    delayInMillis?: number;
+    retries?: number;
+  }) {
+    const response = await this.driver.getUIElements({ data, retries });
+    return this.squashAttributes(response);
+  }
+
+  /** Return the element on the screen that currently has focus. */
+  async getFocusedElement(retries = this.retries) {
+    const response = await this.driver.getActiveElement(retries);
+    return this.squashAttributes(response)[0];
+  }
+
+  /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
+  async verifyFocusedElementIsOfCertainTag({
+    tag,
+    maxAttempts = 10,
+    delayInMillis = this.retryDelayInMillis,
+    httpRetries = this.retries,
+  }: {
+    tag: string;
+    maxAttempts?: number;
+    delayInMillis?: number;
+    httpRetries?: number;
+  }) {
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+      const response = await this.getFocusedElement(httpRetries);
+      if (Object.keys(response)[0] === tag) {
+        return true;
       }
-      allAttributesForElement.XMLName = elements[i].XMLName.Local;
-      allElements[i] = allAttributesForElement;
+      attempts++;
+      await sleep(delayInMillis);
     }
-    return allElements;
+    return false;
   }
 
-  /** Parses the given JSON object and returns it as an object with Name.Local:Value pairs. */
-  private async parseAttributes(element: elementValueRawAttrs) {
-    const parsedElement: elementValueParsed = { XMLName: '', Attrs: {} };
-    for (let i = 0; i < element.length; i++) {
-      const key = element[i].Name.Local;
-      parsedElement.Attrs[key] = element[i].Value;
-    }
-    return parsedElement;
+  /** Returns the current screen elements. */
+  async getScreenSource(retries = this.retries) {
+    return this.driver.getScreenSource(retries);
   }
 
-  /** Resursive function to parse all child nodes of the parent element */
-  private async parseAttributeNodes(node: elementValueRaw[]) {
-    const allAttributesForElement = [];
-    for (let i = 0; i < node.length; i++) {
-      allAttributesForElement[i] = await this.parseAttributes(node[i].Attrs);
-      if (node[i].Nodes !== null) {
-        allAttributesForElement[i].Nodes = [];
-        for (let j = 0; j < node[i].Nodes.length; j++)
-          allAttributesForElement[i].Nodes[j] = await this.parseAttributeNodes(node[i].Nodes);
+  /** Verify that the specified channel has been launched. */
+  async verifyIsChannelLoaded({
+    id,
+    maxAttempts = 10,
+    delayInMillis = this.retryDelayInMillis,
+    httpRetries = this.retries,
+  }: {
+    id: string;
+    maxAttempts?: number;
+    delayInMillis?: number;
+    httpRetries?: number;
+  }) {
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+      const response = await this.getCurrentChannelInfo(httpRetries);
+      if (response[Object.keys(response)[0]].id === id) {
+        return true;
       }
+      attempts++;
+      await sleep(delayInMillis);
     }
-    return allAttributesForElement;
+    return false;
+  }
+
+  /** Returns an object containing information about the channel currently loaded. */
+  getCurrentChannelInfo(retries = this.retries) {
+    return this.driver.getCurrentApp(retries);
+  }
+
+  /** Returns an object containing the information about the device. */
+  getDeviceInfo(retries = this.retries) {
+    return this.driver.getDeviceInfo(retries);
+  }
+
+  /** Returns an object containing information about the Roku media player */
+  async getPlayerInfo(retries = this.retries) {
+    const response = await this.driver.getPlayerInfo(retries);
+    if (typeof response.position === 'string') {
+      response.position = parseInt(response.position.split(' ')[0]);
+    }
+    if (typeof response.duration === 'string') {
+      response.duration = parseInt(response.duration.split(' ')[0]);
+    }
+    return response;
+  }
+
+  /** Verify playback has started on the Roku media player. */
+  async verifyIsPlaybackStarted({
+    maxAttempts = 10,
+    delayInMillis = this.retryDelayInMillis,
+    httpRetries = this.retries,
+  }: {
+    maxAttempts?: number;
+    delayInMillis?: number;
+    httpRetries?: number;
+  }) {
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+      const response = await this.driver.getPlayerInfo(httpRetries);
+      if (response.attributes.state === 'play') {
+        return true;
+      }
+      attempts++;
+      await sleep(delayInMillis);
+    }
+    return false;
+  }
+
+  /** Function that generates a screenshot by hitting the `/plugin_inspect` endpoint and then saves the screenshot to a specified location. */
+  async getScreenshot({
+    directoryPath = `${path.resolve(__dirname)}/images`,
+    fileName = new Date(new Date().toString().split('GMT')[0] + ' UTC')
+      .toISOString()
+      .split('.')[0]
+      .replace(/:/g, '-')
+      .replace('T', '_'),
+    print = false,
+  }: {
+    directoryPath?: string;
+    fileName?: string;
+    print?: boolean;
+  }) {
+    /** Generate the screenshot from the provided FormData */
+    await this.generateScreenshot();
+
+    /** Save screenshot from Roku to local */
+    await this.saveScreenshot({ directoryPath, fileName, print });
+  }
+
+  /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
+  private async generateScreenshot() {
+    /** define variables */
+    const endpoint = '/plugin_inspect';
+    const method = 'POST';
+    let formData = await this.populateFormData({ action: 'Screenshot' });
+    const headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData,
+    });
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method,
+    });
+
+    formData = await this.populateFormData({ action: 'Screenshot' });
+
+    /** Execute the POST command */
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: '/plugin_inspect',
+          headers: {
+            Authorization: authorization,
+          },
+        },
+        function(error, res) {
+          const chunks = [];
+          if (error) {
+            reject(error);
+          } else {
+            res.on('data', data => {
+              chunks.push(data);
+            });
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
+          }
+        },
+      );
+    });
+  }
+
+  /** Function that saves the screenshot, using a `GET` request to `/pkgs/dev.jpg`. */
+  private async saveScreenshot({
+    directoryPath,
+    fileName,
+    print = false,
+  }: {
+    directoryPath: string;
+    fileName: string;
+    print: boolean;
+  }) {
+    /** Define variables */
+    const endpoint: string = '/pkgs/dev.jpg';
+    const method = 'GET';
+    const headers = await this.generateHeaders({ method, endpoint });
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method,
+    });
+
+    /** Define file path variables */
+    const filePath = path.resolve(directoryPath, `${fileName}.jpg`);
+    const writer = fs.createWriteStream(filePath);
+
+    /** Execute the GET command */
+    const response = await axios.get(`http://${this.rokuIPAddress}${endpoint}`, {
+      headers: { Authorization: authorization },
+      responseType: 'stream',
+    });
+
+    /** Write the response to a file */
+    response.data.pipe(writer);
+
+    /** Close the writer */
+    return new Promise((resolve, reject) => {
+      writer.on('finish', function() {
+        writer.end();
+        if (print) console.log(`Saved at ${directoryPath}/${fileName}.jpg`);
+        resolve();
+      });
+      writer.on('error', reject);
+    });
+  }
+
+  /** Function to install a channel, by submitting a `POST` to `/plugin_install` */
+  installChannel(channelLocation: string) {
+    return this.sideload({
+      action: 'Install',
+      channelLocation: channelLocation,
+    });
+  }
+
+  /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
+  replaceChannel(channelLocation: string) {
+    return this.sideload({
+      action: 'Replace',
+      channelLocation: channelLocation,
+    });
+  }
+
+  /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
+  deleteChannel() {
+    return this.sideload({
+      action: 'Delete',
+      channelLocation: '',
+    });
+  }
+
+  /** Function to communicate with the Roku device, by submitting a `POST` to `/plugin_install` */
+  private async sideload({ action, channelLocation }: { action: Action; channelLocation: string }) {
+    /** Define variables */
+    const endpoint = '/plugin_install';
+    const method = 'POST';
+    /** Generate FormData */
+    let formData = await this.populateFormData({ action, channelLocation });
+    /** Generate a Digest Authentication string */
+    const headers = await this.generateHeaders({
+      method,
+      endpoint,
+      formData,
+    });
+    let attempts = 0;
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (headers === undefined && attempts < 8) {
+      await sleep(250);
+      attempts++;
+    }
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username: this.username,
+      password: this.password,
+      uri: endpoint,
+      method,
+    });
+
+    /** Regenerate FormData */
+    formData = await this.populateFormData({ action, channelLocation });
+
+    /** Execute POST */
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: endpoint,
+          headers: {
+            Authorization: authorization,
+            Connection: 'Close',
+          },
+        },
+        function(error, res) {
+          const chunks = [];
+          if (error) {
+            reject(error);
+          } else {
+            res.on('data', data => {
+              chunks.push(data);
+            });
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
+          }
+        },
+      );
+    });
+  }
+
+  /** Function to generate auth headers */
+  private generateHeaders({
+    method,
+    endpoint,
+    formData,
+  }: {
+    method: Method;
+    endpoint: string;
+    formData?: FormData;
+  }): Promise<IncomingHttpHeaders> {
+    /** If executing a GET */
+    if (method === 'GET') {
+      return this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
+    } else {
+      /** If executing a POST */
+      return this.generatePostHeaders({
+        endpoint: endpoint,
+        formData: formData,
+      });
+    }
+  }
+
+  /** Function to return headers for a GET request */
+  private generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
+    return axios
+      .get(url)
+      .then(result => {
+        return result.headers;
+      })
+      .catch(error => {
+        if (error.response) {
+          if (error.response.status !== 401) console.error(error);
+          else return error.response.headers;
+        }
+      });
+  }
+
+  /** Function to return headers for a POST request */
+  private generatePostHeaders({
+    endpoint,
+    formData,
+  }: {
+    endpoint: string;
+    formData: FormData;
+  }): Promise<IncomingHttpHeaders> {
+    return axios
+      .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
+        headers: formData.getHeaders(),
+      })
+      .then(result => {
+        return result.headers;
+      })
+      .catch(error => {
+        if (error.response) {
+          if (error.response.status !== 401) throw error;
+          else {
+            return error.response.headers;
+          }
+        }
+      });
+  }
+
+  /** Function to create FormData */
+  private populateFormData({
+    action,
+    channelLocation,
+  }: {
+    action: Action;
+    channelLocation?: string;
+  }): Promise<FormData> {
+    return new Promise(resolve => {
+      /** Declare variable */
+      const formData = new FormData();
+      /** Append data for `mysubmit` */
+      formData.append('mysubmit', action);
+      /** Append data depending on `mysubmit` value */
+      if (action === 'Install' || action === 'Replace') {
+        const file = fs.createReadStream(channelLocation);
+        const fileNameArray = channelLocation.split('/');
+        const fileName = fileNameArray[fileNameArray.length - 1];
+        formData.append('archive', file, {
+          contentType: 'application/zip',
+          filename: fileName,
+        });
+      } else formData.append('archive', '');
+
+      /** Return the FormData */
+      resolve(formData);
+    });
+  }
+
+  private squashAttributes(responseObject: elementsResponseObject[]) {
+    const elementsArray: elementsResponseObject[] = [];
+    responseObject.forEach(element => {
+      const elementName = Object.keys(element)[0];
+      const childElement = element[elementName] as elementsResponseObject;
+      elementsArray.push({ [elementName]: childElement.attributes } as elementsResponseObject);
+    });
+    return elementsArray;
   }
 }
