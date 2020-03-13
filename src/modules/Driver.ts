@@ -1,9 +1,9 @@
-import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params } from '../types/webdriver';
+import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params } from '../types/RokulRunnings';
 import * as http from '../utils/http';
-import * as sleep from '../utils/sleep';
+import { sleep } from '../utils/sleep';
 import * as xmljs from 'xml-js';
 
-export class WebDriver {
+export class Driver {
   constructor(public rokuIPAddress: string, public retries: number) {
     this.rokuIPAddress = rokuIPAddress;
     this.retries = retries;
@@ -125,7 +125,7 @@ export class WebDriver {
   }) {
     const url = `${this.baseURL}/launch/${channelCode}`;
     const response = await http.basePOST({ url, params, retries });
-    if (sleepsAfterLaunch) await sleep.sleep(sleepTimeInMillis);
+    if (sleepsAfterLaunch) await sleep(sleepTimeInMillis);
     // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
     return response;
   }
@@ -142,7 +142,7 @@ export class WebDriver {
   }
 
   /** Simulates the press and release of the specified key. */
-  async sendKeypress({ keyPress, retries, params }: { keyPress: string; retries: number; params: Params }) {
+  async sendKeyPress({ keyPress, retries, params }: { keyPress: string; retries: number; params: Params }) {
     const url = `${this.baseURL}/keypress/${keyPress}`;
     const response = await http.basePOST({ url, retries, params });
     // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
@@ -150,13 +150,29 @@ export class WebDriver {
   }
 
   /** Sends a sequence of keys to be input by the device */
-  async sendSequence({ sequence, retries, params }: { sequence: string[]; retries: number; params: Params }) {
-    const responseArray: { [key: string]: number }[] = [];
-    sequence.forEach(async press => {
-      const url = `${this.baseURL}/keypress/${press}`;
-      const response = await http.basePOST({ url, params, retries });
-      responseArray.push({ [press]: response });
-    });
+  async sendSequence({
+    sequence,
+    delayInMillis,
+    retries,
+    params,
+  }: {
+    sequence: string[];
+    delayInMillis: number;
+    retries: number;
+    params: Params;
+  }) {
+    // eslint-disable-next-line prefer-const
+    let responseArray: { [key: string]: number }[] = [];
+    for (let i = 0; i < sequence.length; i++) {
+      const response = await this.sendKeyPress({ keyPress: sequence[i], retries, params });
+      await sleep(delayInMillis);
+      responseArray.push({ [sequence[i]]: response });
+    }
+    // sequence.forEach(async keyPress => {
+    //   const response = await this.sendKeyPress({ keyPress, retries, params });
+    //   await sleep(delayInMillis);
+    //   responseArray.push({ [keyPress]: response });
+    // });
     // Responses do not contain a response body, so responseArray is an array of status codes. Anything in the 200's is considered successful
     return responseArray;
   }

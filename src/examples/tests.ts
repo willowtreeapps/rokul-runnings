@@ -1,50 +1,40 @@
-import { Buttons, Library } from '../modules/library';
-import { Server } from '../utils/server';
+import { Buttons, RokulRunnings } from '../modules/RokulRunnings';
 import * as data from '../utils/elementData';
-import { Plugin } from '../modules/plugin';
 import * as assert from 'assert';
 import { sleep } from '../utils/sleep';
 
-let driver: Library;
+let rr: RokulRunnings;
 
 describe('Other tests', function() {
   // Setting the Mocha timeout to non-existant
   this.timeout(0);
-  // Creating plugin driver
-  const plugin = new Plugin('0.0.0.0', 'username', 'password');
 
   before(async function() {
     // ensure the channel is sideloaded
-    await plugin.installChannel('./main.zip');
-    // before all tests, start the WebDriverServer
-    Server.start();
+    await rr.installChannel('./main.zip');
   });
 
   beforeEach(async function() {
     // before each test, instantiate the driver
     // The first parameter should be the IP address of the Roku device
-    driver = new Library('0.0.0.0', 0, 2000);
+    rr = new RokulRunnings('0.0.0.0', 'username', 'password', {});
   });
 
   afterEach(async function() {
     // after each test, return to the Roku home screen
-    await driver.pressBtn(Buttons.home);
-    // after each test, end the session
-    await driver.close();
+    await rr.pressBtn({ keyPress: Buttons.home });
   });
 
   after(async function() {
-    // after all tests, stop the WebDriverServer
-    Server.stop();
     // remove the sideloaded channel
-    await plugin.deleteChannel();
+    await rr.deleteChannel();
   });
 
   it('Should Verify That The Channel Is Loaded', async function() {
     // launch the channel
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
     // verify the currently displayed channel is "dev"
-    const response = await driver.verifyIsChannelLoaded({ id: 'dev' });
+    const response = await rr.verifyIsChannelLoaded({ id: 'dev' });
 
     // assert that the response value is true
     assert.deepEqual(response, true, 'Channel is not loaded successfully.');
@@ -52,25 +42,25 @@ describe('Other tests', function() {
 
   it('Should Find ResizeList Item 2', async function() {
     // launch the channel with the id of "dev"
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
 
     // create a data element with the text of ArcInterpolator
     const arcInterpolator = data.text('ArcInterpolator');
 
     // verify that the screen is loaded, by finding the arcInterpolator element
-    await driver.verifyIsScreenLoaded(arcInterpolator);
+    await rr.verifyIsScreenLoaded({ data: arcInterpolator });
 
     // define button sequence
     const buttonSequence = [Buttons.up, Buttons.up, Buttons.up, Buttons.right];
 
     // send the button sequence
-    await driver.sendButtonSequence(buttonSequence);
+    await rr.sendButtonSequence({ sequence: buttonSequence });
 
     // define the element data that we want to find
     const elementData = data.text('Item 2');
 
     // find the appropriate element data
-    const response = await driver.getElement(elementData);
+    const response = await rr.getElement({ data: elementData });
 
     // create the expected values
     const expectedValues = {
@@ -103,7 +93,7 @@ describe('Other tests', function() {
 
   it('Should Verify That An Element With Tag "Poster" and Text "Roku" exists', async function() {
     // launch the channel with the id of "dev"
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
 
     // wait 2 seconds for the channel to load
     await sleep(2000);
@@ -112,7 +102,7 @@ describe('Other tests', function() {
     const poster = data.tag('Poster');
 
     // return Object of all elements on the screen with a tag of Poster
-    const elements = await driver.getElements(poster);
+    const elements = await rr.getElements({ data: poster });
 
     // create variable for if the correct element is found
     let isCorrectElementFound = false;
@@ -128,7 +118,7 @@ describe('Other tests', function() {
   it("Should Verify That Channel 'dev' Exists", async function() {
     // assert that the channel "dev" exists, based on the list of channels from `getApps()`
     assert.deepEqual(
-      await driver.verifyIsChannelExist({ id: 'dev' }),
+      await rr.verifyIsChannelExist({ id: 'dev' }),
       true,
       'Expected channel is not in the list of currently installed channels.',
     );
@@ -136,27 +126,27 @@ describe('Other tests', function() {
 
   it('Should Search For Roku', async function() {
     // launch the channel with the id of "dev"
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
 
     // define button sequence
     const buttonSequence = [Buttons.home, Buttons.up, Buttons.up, Buttons.up, Buttons.select];
 
     // navigate according to the button sequence
-    await driver.sendButtonSequence(buttonSequence);
+    await rr.sendButtonSequence({ sequence: buttonSequence });
 
     // enter the word "Roku" into the search bar
-    await driver.sendWord('Roku');
+    await rr.sendWord({ word: 'Roku' });
   });
 
   it('Should Return a Focused Element That Has The Text of ArcInterpolator', async function() {
     // launch the channel with the id of "dev"
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
 
     // wait for the channel to load
     await sleep(3000);
 
     // return the focused element
-    const focusedElement = await driver.getFocusedElement();
+    const focusedElement = await rr.getFocusedElement();
 
     // create the expected focused element
     const expectedElement = {
@@ -181,26 +171,26 @@ describe('Other tests', function() {
 
   it('Should Verify An Element is a RenderableNode', async function() {
     // launch the channel with the id of "dev"
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
 
     // wait for the channel to load
     await sleep(3000);
 
     // return a boolean value for if the currently focused element is a `RenderableNode`
-    const isRenderableNode = await driver.verifyFocusedElementIsOfCertainTag('RenderableNode');
+    const isRenderableNode = await rr.verifyFocusedElementIsOfCertainTag({ tag: 'RenderableNode' });
 
     assert.deepEqual(isRenderableNode, true, 'Focused element is not a "RenderableNode"!');
   });
 
   it('Should Return The Channel Information', async function() {
     // launch the channel with the id of "dev"
-    await driver.launchTheChannel('dev');
+    await rr.launchTheChannel({ channelCode: 'dev' });
 
     // wait for the channel to load
     await sleep(3000);
 
     // get current channel info
-    const channelInfo = await driver.getCurrentChannelInfo();
+    const channelInfo = await rr.getCurrentChannelInfo();
 
     const expectedChannelInfo = {
       Title: 'Some Channel',
@@ -218,9 +208,10 @@ describe('Other tests', function() {
   });
 
   it('Should Only Execute If The Language is Not English', async function() {
-    const deviceInfo = await driver.getDeviceInfo();
+    const deviceInfo = await rr.getDeviceInfo();
 
-    if (deviceInfo.language !== 'en') {
+    // eslint-disable-next-line dot-notation
+    if (deviceInfo['language'] !== 'en') {
       // Do some function
     } else {
       // Do some other function

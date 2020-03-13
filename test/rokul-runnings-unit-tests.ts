@@ -1,5 +1,5 @@
 import * as elementData from '../src/utils/elementData';
-import { Buttons, Library } from '../src/modules/library';
+import { Buttons, RokulRunnings } from '../src/modules/RokulRunnings';
 import { screenshotResponse } from './resources/screenshot-response';
 import { sideloadResponse } from './resources/sideload-response';
 import * as nock from 'nock';
@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
 
-let libraryDriver: Library;
-const baseIP = '127.0.0.1';
+let rr: RokulRunnings;
+const baseIP = '10.0.0.118';
 let baseURL: string;
 let baseURLWithoutPort: string;
 const username = 'rokudev';
@@ -38,22 +38,22 @@ function readJson(file: string) {
   return JSON.parse(fs.readFileSync(jsons(file), 'utf8'));
 }
 
-describe('Library Unit tests', function() {
+describe('Rokul Runnings Unit tests', function() {
   this.timeout(0);
 
   beforeEach(function() {
-    libraryDriver = new Library(baseIP, username, password, { pressDelayInMillis: 200, retryDelayInMillis: 200 });
+    rr = new RokulRunnings(baseIP, username, password, { pressDelayInMillis: 1000, retryDelayInMillis: 1000 });
 
-    baseURL = libraryDriver.driver.baseURL;
+    baseURL = rr.driver.baseURL;
     // Development Application Installer requires the baseURL without the port attached.
     baseURLWithoutPort = baseURL.split(':8060')[0];
   });
 
-  afterEach(function() {
+  afterEach(async function() {
     nock.cleanAll();
   });
 
-  after(function() {
+  after(async function() {
     fs.unlink(`${directoryPath}/${fileName}.jpg`, error => {
       if (error) {
         throw error;
@@ -66,7 +66,7 @@ describe('Library Unit tests', function() {
       .post(`/launch/dev`)
       .reply(200);
 
-    const response = await libraryDriver.launchTheChannel({ channelCode: 'dev' });
+    const response = await rr.launchTheChannel({ channelCode: 'dev' });
 
     expect(response).to.eql(200);
   });
@@ -78,7 +78,7 @@ describe('Library Unit tests', function() {
       .get(`/query/apps`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getApps();
+    const response = await rr.getApps();
 
     expect(response).to.eql(readJson(file));
   });
@@ -90,7 +90,7 @@ describe('Library Unit tests', function() {
       .get(`/query/apps`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.verifyIsChannelExist({ id: '552944' });
+    const response = await rr.verifyIsChannelExist({ id: '552944' });
 
     expect(response).to.eql(true);
   });
@@ -102,7 +102,7 @@ describe('Library Unit tests', function() {
       .get(`/query/app-ui`)
       .reply(200, readXml(file));
 
-    expect(await libraryDriver.verifyIsScreenLoaded({ data: defaultData })).to.eql(true);
+    expect(await rr.verifyIsScreenLoaded({ data: defaultData })).to.eql(true);
   });
 
   it('Should Verify Element Exists on Screen', async function() {
@@ -112,7 +112,7 @@ describe('Library Unit tests', function() {
       .get(`/query/app-ui`)
       .reply(200, readXml(file));
 
-    expect(await libraryDriver.verifyIsElementOnScreen({ data: defaultData })).to.eql(true);
+    expect(await rr.verifyIsElementOnScreen({ data: defaultData })).to.eql(true);
   });
 
   it('Should Verify Button is Pressed', async function() {
@@ -120,7 +120,7 @@ describe('Library Unit tests', function() {
       .post(`/keypress/up`)
       .reply(200);
 
-    expect(await libraryDriver.pressBtn({ keyPress: Buttons.up })).to.eql(200);
+    expect(await rr.pressBtn({ keyPress: Buttons.up })).to.eql(200);
   });
 
   it('Should Verify Word is Pressed', async function() {
@@ -131,7 +131,7 @@ describe('Library Unit tests', function() {
       .reply(200)
       .persist();
 
-    const response = await libraryDriver.sendWord({ word });
+    const response = await rr.sendWord({ word });
     const expectedResponse: { [key: string]: number }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       const key = word.charAt(charIndex);
@@ -154,7 +154,7 @@ describe('Library Unit tests', function() {
       expectedResponse.push({ [key]: 200 });
     }
 
-    const response = await libraryDriver.sendButtonSequence({ sequence: buttonSequence });
+    const response = await rr.sendButtonSequence({ sequence: buttonSequence });
 
     expect(response).to.eql(expectedResponse);
   });
@@ -166,7 +166,7 @@ describe('Library Unit tests', function() {
       .get(`/query/app-ui`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getElement({ data: defaultData });
+    const response = await rr.getElement({ data: defaultData });
 
     expect(response).to.eql(readJson('getElement'));
   });
@@ -179,7 +179,7 @@ describe('Library Unit tests', function() {
       .reply(200, readXml(file))
       .persist();
 
-    const response = await libraryDriver.getElements({ data: defaultData });
+    const response = await rr.getElements({ data: defaultData });
 
     expect(response).to.eql(readJson('getElements'));
   });
@@ -191,7 +191,7 @@ describe('Library Unit tests', function() {
       .get(`/query/app-ui`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getFocusedElement();
+    const response = await rr.getFocusedElement();
 
     expect(response).to.eql(readJson('getActiveElement'));
   });
@@ -203,7 +203,7 @@ describe('Library Unit tests', function() {
       .get(`/query/app-ui`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.verifyFocusedElementIsOfCertainTag({ tag: 'LabelList' });
+    const response = await rr.verifyFocusedElementIsOfCertainTag({ tag: 'LabelList' });
 
     expect(response).to.eql(true);
   });
@@ -215,7 +215,7 @@ describe('Library Unit tests', function() {
       .get(`/query/app-ui`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getScreenSource();
+    const response = await rr.getScreenSource();
 
     expect(response).to.eql(readJson('app-ui'));
   });
@@ -227,7 +227,7 @@ describe('Library Unit tests', function() {
       .get(`/query/active-app`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.verifyIsChannelLoaded({ id: 'dev' });
+    const response = await rr.verifyIsChannelLoaded({ id: 'dev' });
 
     expect(response).to.eql(true);
   });
@@ -239,7 +239,7 @@ describe('Library Unit tests', function() {
       .get(`/query/active-app`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getCurrentChannelInfo();
+    const response = await rr.getCurrentChannelInfo();
 
     expect(response).to.eql(readJson(file));
   });
@@ -251,7 +251,7 @@ describe('Library Unit tests', function() {
       .get(`/query/device-info`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getDeviceInfo();
+    const response = await rr.getDeviceInfo();
 
     expect(response).to.eql(readJson(file));
   });
@@ -263,7 +263,7 @@ describe('Library Unit tests', function() {
       .get(`/query/media-player`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.getPlayerInfo();
+    const response = await rr.getPlayerInfo();
 
     expect(response).to.eql(readJson(file));
   });
@@ -275,7 +275,7 @@ describe('Library Unit tests', function() {
       .get(`/query/media-player`)
       .reply(200, readXml(file));
 
-    const response = await libraryDriver.verifyIsPlaybackStarted({});
+    const response = await rr.verifyIsPlaybackStarted({});
 
     expect(response).to.eql(true);
   });
@@ -297,7 +297,7 @@ describe('Library Unit tests', function() {
       .get('/pkgs/dev.jpg')
       .reply(401, '', authenticateHeader);
 
-    await libraryDriver.getScreenshot({
+    await rr.getScreenshot({
       directoryPath,
       fileName,
     });
@@ -316,7 +316,7 @@ describe('Library Unit tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    expect(await libraryDriver.installChannel(channelLocation)).to.equal(200);
+    expect(await rr.installChannel(channelLocation)).to.equal(200);
   });
 
   it('Should Replace The Channel', async function() {
@@ -328,7 +328,7 @@ describe('Library Unit tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    expect(await libraryDriver.replaceChannel(channelLocation)).to.equal(200);
+    expect(await rr.replaceChannel(channelLocation)).to.equal(200);
   });
 
   it('Should Delete The Channel', async function() {
@@ -340,6 +340,6 @@ describe('Library Unit tests', function() {
       .post('/plugin_install')
       .reply(401, '', authenticateHeader);
 
-    expect(await libraryDriver.deleteChannel()).to.equal(200);
+    expect(await rr.deleteChannel()).to.equal(200);
   });
 });

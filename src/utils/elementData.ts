@@ -1,4 +1,4 @@
-import { ElementDataObject } from '../types/webdriver';
+import { ElementDataObject } from '../types/RokulRunnings';
 
 /** Returns an elementDataObject for a search by text */
 export function text(text: string): ElementDataObject {

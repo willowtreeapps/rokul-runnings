@@ -1,4 +1,4 @@
-import { WebDriver } from './webdriver';
+import { Driver } from './Driver';
 import { sleep } from '../utils/sleep';
 import {
   ElementDataObject,
@@ -8,7 +8,7 @@ import {
   Action,
   Method,
   SquashedAppUIObject,
-} from '../types/webdriver';
+} from '../types/RokulRunnings';
 import * as FormData from 'form-data';
 import * as indigestion from 'indigestion';
 import axios from 'axios';
@@ -32,8 +32,8 @@ export enum Buttons {
   home = 'home',
 }
 
-export class Library {
-  public driver: WebDriver;
+export class RokulRunnings {
+  public driver: Driver;
   private pressDelayInMillis: number;
   private retryDelayInMillis: number;
   private retries: number;
@@ -49,7 +49,7 @@ export class Library {
   ) {
     this.rokuIPAddress = rokuIPAddress;
     this.pressDelayInMillis = pressDelayInMillis;
-    this.driver = new WebDriver(rokuIPAddress, retries);
+    this.driver = new Driver(rokuIPAddress, retries);
     this.retryDelayInMillis = retryDelayInMillis;
     this.retries = retries;
   }
@@ -143,7 +143,7 @@ export class Library {
     retries?: number;
     params?: Params;
   }) {
-    const response = this.driver.sendKeypress({ keyPress, retries, params });
+    const response = await this.driver.sendKeyPress({ keyPress, retries, params });
     await sleep(delayInMillis);
     return response;
   }
@@ -165,7 +165,8 @@ export class Library {
       const key = word.charAt(charIndex);
       sequence.push(`LIT_${key}`);
     }
-    return this.sendButtonSequence({ sequence, delayInMillis, retries, params });
+    const response = this.sendButtonSequence({ sequence, delayInMillis, retries, params });
+    return response;
   }
 
   /** Simulates the sequence of keypresses and releases. */
@@ -180,8 +181,7 @@ export class Library {
     retries?: number;
     params?: Params;
   }) {
-    const response = await this.driver.sendSequence({ sequence, params, retries });
-    await sleep(delayInMillis);
+    const response = await this.driver.sendSequence({ sequence, delayInMillis, params, retries });
     return response;
   }
 
