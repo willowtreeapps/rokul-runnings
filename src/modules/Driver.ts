@@ -168,11 +168,6 @@ export class Driver {
       await sleep(delayInMillis);
       responseArray.push({ [sequence[i]]: response });
     }
-    // sequence.forEach(async keyPress => {
-    //   const response = await this.sendKeyPress({ keyPress, retries, params });
-    //   await sleep(delayInMillis);
-    //   responseArray.push({ [keyPress]: response });
-    // });
     // Responses do not contain a response body, so responseArray is an array of status codes. Anything in the 200's is considered successful
     return responseArray;
   }
@@ -230,15 +225,8 @@ export class Driver {
 
   /** Searches for an element on the page, starting from the screen root. The first located element will be returned as a WebElement JSON object. */
   async getUIElement({ data, retries }: { data: ElementDataObject; retries: number }) {
-    const url = this.queryUrl('app-ui');
-    const response = await http.baseGET({ url, retries });
-    const jsonResponse = this.parser(response);
-    const elements = jsonResponse['app-ui'].topscreen.screen.AppScene;
-
-    const foundElements = this.matchElements(data, elements, 'AppScene');
-
-    // Return the first element in the foundElements array
-    return [foundElements[0]];
+    const elements = await this.getUIElements({ data, retries });
+    return [elements[0]];
   }
 
   /** Searches for elements on the page matching the search criteria, starting from the screen root. All the matching elements will be returned in a WebElement JSON object. */

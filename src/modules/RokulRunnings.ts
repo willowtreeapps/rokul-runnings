@@ -557,43 +557,39 @@ export class RokulRunnings {
   }
 
   /** Function to return headers for a GET request */
-  private generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
-    return axios
-      .get(url)
-      .then(result => {
-        return result.headers;
-      })
-      .catch(error => {
-        if (error.response) {
-          if (error.response.status !== 401) console.error(error);
-          else return error.response.headers;
-        }
-      });
+  private async generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
+    try {
+      const result = await axios.get(url);
+      return result.headers;
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status !== 401) console.error(error);
+        else return error.response.headers;
+      }
+    }
   }
 
   /** Function to return headers for a POST request */
-  private generatePostHeaders({
+  private async generatePostHeaders({
     endpoint,
     formData,
   }: {
     endpoint: string;
     formData: FormData;
   }): Promise<IncomingHttpHeaders> {
-    return axios
-      .post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
+    try {
+      const result = await axios.post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
         headers: formData.getHeaders(),
-      })
-      .then(result => {
-        return result.headers;
-      })
-      .catch(error => {
-        if (error.response) {
-          if (error.response.status !== 401) throw error;
-          else {
-            return error.response.headers;
-          }
-        }
       });
+      return result.headers;
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status !== 401) throw error;
+        else {
+          return error.response.headers;
+        }
+      }
+    }
   }
 
   /** Function to create FormData */

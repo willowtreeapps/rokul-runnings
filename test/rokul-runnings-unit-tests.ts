@@ -120,7 +120,7 @@ describe('Rokul Runnings Unit tests', function() {
       .post(`/keypress/up`)
       .reply(200);
 
-    expect(await rr.pressBtn({ keyPress: Buttons.up })).to.eql(200);
+    expect(await rr.pressBtn({ keyPress: Buttons.up, delayInMillis: 100 })).to.eql(200);
   });
 
   it('Should Verify Word is Pressed', async function() {
@@ -131,7 +131,7 @@ describe('Rokul Runnings Unit tests', function() {
       .reply(200)
       .persist();
 
-    const response = await rr.sendWord({ word });
+    const response = await rr.sendWord({ word, delayInMillis: 100 });
     const expectedResponse: { [key: string]: number }[] = [];
     for (let charIndex = 0; charIndex < word.length; charIndex++) {
       const key = word.charAt(charIndex);
@@ -154,7 +154,7 @@ describe('Rokul Runnings Unit tests', function() {
       expectedResponse.push({ [key]: 200 });
     }
 
-    const response = await rr.sendButtonSequence({ sequence: buttonSequence });
+    const response = await rr.sendButtonSequence({ sequence: buttonSequence, delayInMillis: 100 });
 
     expect(response).to.eql(expectedResponse);
   });
