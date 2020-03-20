@@ -1,6 +1,6 @@
 {
   "name": "@willowtreeapps/rokul-runnings",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Library to send automated commands to a Roku",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -50,11 +50,12 @@
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
-    "@types/chai": "^4.2.9",
+    "@types/chai": "^4.2.10",
     "@types/form-data": "^2.5.0",
-    "@types/mocha": "^7.0.1",
+    "@types/mocha": "^7.0.2",
     "@types/nock": "^11.1.0",
     "@types/node": "^13.1.0",
+    "@types/xml-js": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^2.15.0",
     "@typescript-eslint/parser": "^2.15.0",
     "chai": "^4.2.0",
@@ -72,7 +73,8 @@
     "nock": "^11.7.0",
     "prettier": "^1.19.1",
     "ts-node": "^8.6.2",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.3",
+    "xml-js": "^1.6.11"
   },
   "husky": {
     "hooks": {

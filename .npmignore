@@ -16,3 +16,5 @@ test
 .prettierrc
 src/modules/images
 src/images
+test/resources/images
+*.tgz
