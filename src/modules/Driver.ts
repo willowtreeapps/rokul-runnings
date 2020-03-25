@@ -2,6 +2,7 @@ import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params } f
 import * as http from '../utils/http';
 import { sleep } from '../utils/sleep';
 import * as xmljs from 'xml-js';
+import { Buttons } from './RokulRunnings';
 
 export class Driver {
   constructor(public rokuIPAddress: string, public retries: number) {
@@ -112,22 +113,64 @@ export class Driver {
    */
   async sendLaunchChannel({
     channelCode = 'dev',
+    contentId,
+    mediaType,
+    retries,
+    sleepsAfterLaunch = false,
+    sleepTimeInMillis = 2000,
+    params,
+    deepLink = false,
+  }: {
+    channelCode?: string;
+    contentId: string;
+    mediaType: string;
+    retries: number;
+    sleepsAfterLaunch?: boolean;
+    sleepTimeInMillis?: number;
+    params: Params;
+    deepLink?: boolean;
+  }) {
+    const endpoint = deepLink ? 'input' : 'launch';
+    let url = `${this.baseURL}/${endpoint}/${channelCode}`;
+    if (contentId) {
+      url = `${url}?contentId=${contentId}`;
+    }
+    if (mediaType) {
+      url = `${url}?mediaType=${mediaType}`;
+    }
+    const response = await http.basePOST({ url, params, retries });
+    if (sleepsAfterLaunch) await sleep(sleepTimeInMillis);
+    // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
+    return response;
+  }
+
+  async deepLink({
+    channelCode = 'dev',
+    contentId,
+    mediaType,
     retries,
     sleepsAfterLaunch = false,
     sleepTimeInMillis = 2000,
     params,
   }: {
     channelCode?: string;
+    contentId: string;
+    mediaType: string;
     retries: number;
     sleepsAfterLaunch?: boolean;
     sleepTimeInMillis?: number;
     params: Params;
   }) {
-    const url = `${this.baseURL}/launch/${channelCode}`;
-    const response = await http.basePOST({ url, params, retries });
-    if (sleepsAfterLaunch) await sleep(sleepTimeInMillis);
-    // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
-    return response;
+    return this.sendLaunchChannel({
+      channelCode,
+      contentId,
+      mediaType,
+      retries,
+      sleepsAfterLaunch,
+      sleepTimeInMillis,
+      params,
+      deepLink: true,
+    });
   }
 
   /**
@@ -141,12 +184,26 @@ export class Driver {
     return response;
   }
 
-  /** Simulates the press and release of the specified key. */
-  async sendKeyPress({ keyPress, retries, params }: { keyPress: string; retries: number; params: Params }) {
-    const url = `${this.baseURL}/keypress/${keyPress}`;
+  async sendKey({ keyType, key, retries, params }: { keyType: string; key: string; retries: number; params: Params }) {
+    const url = `${this.baseURL}/key${keyType}/${key}`;
     const response = await http.basePOST({ url, retries, params });
     // Responses do not contain a response body, so response is just the status code. Anything in the 200's is considered successful.
     return response;
+  }
+
+  /** Simulates the press and release of the specified key. */
+  async sendKeyPress({ keyPress, retries, params }: { keyPress: string; retries: number; params: Params }) {
+    return this.sendKey({ keyType: 'press', key: keyPress, retries, params });
+  }
+
+  /** Simulates the press down of the specified key. */
+  async sendKeyDown({ keyDown, retries, params }: { keyDown: string; retries: number; params: Params }) {
+    return this.sendKey({ keyType: 'down', key: keyDown, retries, params });
+  }
+
+  /** Simulates the press up of the specified key. */
+  async sendKeyUp({ keyUp, retries, params }: { keyUp: string; retries: number; params: Params }) {
+    return this.sendKey({ keyType: 'up', key: keyUp, retries, params });
   }
 
   /** Sends a sequence of keys to be input by the device */
@@ -156,7 +213,7 @@ export class Driver {
     retries,
     params,
   }: {
-    sequence: string[];
+    sequence: { up?: string | Buttons; down?: string | Buttons; press?: string | Buttons }[];
     delayInMillis: number;
     retries: number;
     params: Params;
@@ -164,9 +221,17 @@ export class Driver {
     // eslint-disable-next-line prefer-const
     let responseArray: { [key: string]: number }[] = [];
     for (let i = 0; i < sequence.length; i++) {
-      const response = await this.sendKeyPress({ keyPress: sequence[i], retries, params });
-      await sleep(delayInMillis);
-      responseArray.push({ [sequence[i]]: response });
+      const keyObject = sequence[i];
+      if (Object.keys(keyObject).length === 1) {
+        const keyValue = Object.keys(keyObject)[0];
+        const response = await this.sendKey({ keyType: keyValue, key: keyObject[keyValue], retries, params });
+        await sleep(delayInMillis);
+        responseArray.push({ [`${keyValue}:${keyObject[keyValue]}`]: response });
+      } else {
+        throw Error(
+          'Sequence is not formatted correctly. Sequence should be an array of objects, with each object containing one key of either up, down, or press',
+        );
+      }
     }
     // Responses do not contain a response body, so responseArray is an array of status codes. Anything in the 200's is considered successful
     return responseArray;
