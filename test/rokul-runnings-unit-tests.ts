@@ -63,10 +63,20 @@ describe('Rokul Runnings Unit tests', function() {
 
   it('Should Launch the Channel', async function() {
     nock(baseURL)
-      .post(`/launch/dev`)
+      .post(/\/launch\/dev/)
       .reply(200);
 
     const response = await rr.launchTheChannel({ channelCode: 'dev' });
+
+    expect(response).to.eql(200);
+  });
+
+  it('Should Deep Link Into the Channel', async function() {
+    nock(baseURL)
+      .post(/\/input/)
+      .reply(200);
+
+    const response = await rr.deepLinkIntoChannel({ channelCode: 'dev', contentId: 'content', mediaType: 'video' });
 
     expect(response).to.eql(200);
   });
@@ -123,6 +133,22 @@ describe('Rokul Runnings Unit tests', function() {
     expect(await rr.pressBtn({ keyPress: Buttons.up, delayInMillis: 100 })).to.eql(200);
   });
 
+  it('Should Verify Button is Pressed Down', async function() {
+    nock(baseURL)
+      .post(`/keydown/up`)
+      .reply(200);
+
+    expect(await rr.pressBtnDown({ keyDown: Buttons.up, delayInMillis: 100 })).to.eql(200);
+  });
+
+  it('Should Verify Button is Pressed Up', async function() {
+    nock(baseURL)
+      .post(`/keyup/up`)
+      .reply(200);
+
+    expect(await rr.pressBtnUp({ keyUp: Buttons.up, delayInMillis: 100 })).to.eql(200);
+  });
+
   it('Should Verify Word is Pressed', async function() {
     const word = 'hello';
 
@@ -155,6 +181,19 @@ describe('Rokul Runnings Unit tests', function() {
     }
 
     const response = await rr.sendButtonSequence({ sequence: buttonSequence, delayInMillis: 100 });
+
+    expect(response).to.eql(expectedResponse);
+  });
+
+  it('Should Verify Mixed Button Sequence is Pressed', async function() {
+    nock(baseURL)
+      .post(/key.*\/.*/)
+      .reply(200)
+      .persist();
+
+    const customSequence = [{ up: Buttons.up }, { down: Buttons.down }, { press: Buttons.select }];
+    const expectedResponse = [{ 'up:up': 200 }, { 'down:down': 200 }, { 'press:select': 200 }];
+    const response = await rr.sendMixedButtonSequence({ customSequence, delayInMillis: 100 });
 
     expect(response).to.eql(expectedResponse);
   });

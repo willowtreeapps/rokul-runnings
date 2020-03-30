@@ -240,8 +240,16 @@ export class RokulRunnings {
   }) {
     const newSequence: ({ up: string | Buttons } | { down: string | Buttons } | { press: string | Buttons })[] = [];
     sequence.forEach(button => {
-      if (keyType === 'up' || keyType === 'down' || keyType === 'press') {
-        newSequence.push({ [keyType]: button });
+      switch (keyType) {
+        case 'down':
+          newSequence.push({ down: button });
+          break;
+        case 'press':
+          newSequence.push({ press: button });
+          break;
+        case 'up':
+          newSequence.push({ up: button });
+          break;
       }
     });
     const response = await this.driver.sendSequence({ sequence: newSequence, delayInMillis, params, retries });
