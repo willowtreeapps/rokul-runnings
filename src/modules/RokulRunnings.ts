@@ -232,7 +232,7 @@ export class RokulRunnings {
     params,
     keyType = 'press',
   }: {
-    sequence: Buttons[] | string[];
+    sequence: (Buttons | string)[];
     delayInMillis?: number;
     retries?: number;
     params?: Params;
