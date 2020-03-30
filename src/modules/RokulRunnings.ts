@@ -164,7 +164,7 @@ export class RokulRunnings {
     retries?: number;
     params?: Params;
   }) {
-    const response = await this.driver.sendKeyPress({ keyPress, retries, params });
+    const response = await this.driver.sendKey({ keyType: 'press', key: keyPress, retries, params });
     await sleep(delayInMillis);
     return response;
   }
@@ -181,7 +181,7 @@ export class RokulRunnings {
     retries?: number;
     params?: Params;
   }) {
-    const response = await this.driver.sendKeyDown({ keyDown, retries, params });
+    const response = await this.driver.sendKey({ keyType: 'down', key: keyDown, retries, params });
     await sleep(delayInMillis);
     return response;
   }
@@ -198,7 +198,7 @@ export class RokulRunnings {
     retries?: number;
     params?: Params;
   }) {
-    const response = await this.driver.sendKeyUp({ keyUp, retries, params });
+    const response = await this.driver.sendKey({ keyType: 'up', key: keyUp, retries, params });
     await sleep(delayInMillis);
     return response;
   }
@@ -238,11 +238,9 @@ export class RokulRunnings {
     params?: Params;
     keyType?: 'up' | 'down' | 'press';
   }) {
-    const newSequence: { up?: string | Buttons; down?: string | Buttons; press?: string | Buttons }[] = [];
+    const newSequence: ({ up: string | Buttons } | { down: string | Buttons } | { press: string | Buttons })[] = [];
     sequence.forEach(button => {
-      if (!newSequence) {
-        newSequence[0] = { [keyType]: button };
-      } else {
+      if (keyType === 'up' || keyType === 'down' || keyType === 'press') {
         newSequence.push({ [keyType]: button });
       }
     });
@@ -263,7 +261,7 @@ export class RokulRunnings {
     retries = this.retries,
     params,
   }: {
-    customSequence: [{ up?: string; down?: string; press?: string }];
+    customSequence: ({ up: string } | { down: string } | { press: string })[];
     delayInMillis?: number;
     retries?: number;
     params?: Params;

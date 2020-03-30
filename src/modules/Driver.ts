@@ -191,21 +191,6 @@ export class Driver {
     return response;
   }
 
-  /** Simulates the press and release of the specified key. */
-  async sendKeyPress({ keyPress, retries, params }: { keyPress: string; retries: number; params: Params }) {
-    return this.sendKey({ keyType: 'press', key: keyPress, retries, params });
-  }
-
-  /** Simulates the press down of the specified key. */
-  async sendKeyDown({ keyDown, retries, params }: { keyDown: string; retries: number; params: Params }) {
-    return this.sendKey({ keyType: 'down', key: keyDown, retries, params });
-  }
-
-  /** Simulates the press up of the specified key. */
-  async sendKeyUp({ keyUp, retries, params }: { keyUp: string; retries: number; params: Params }) {
-    return this.sendKey({ keyType: 'up', key: keyUp, retries, params });
-  }
-
   /** Sends a sequence of keys to be input by the device */
   async sendSequence({
     sequence,
@@ -213,13 +198,12 @@ export class Driver {
     retries,
     params,
   }: {
-    sequence: { up?: string | Buttons; down?: string | Buttons; press?: string | Buttons }[];
+    sequence: ({ up: string | Buttons } | { down: string | Buttons } | { press: string | Buttons })[];
     delayInMillis: number;
     retries: number;
     params: Params;
   }) {
-    // eslint-disable-next-line prefer-const
-    let responseArray: { [key: string]: number }[] = [];
+    const responseArray: { [key: string]: number }[] = [];
     for (let i = 0; i < sequence.length; i++) {
       const keyObject = sequence[i];
       if (Object.keys(keyObject).length === 1) {
