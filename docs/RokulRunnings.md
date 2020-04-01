@@ -39,11 +39,13 @@ const rr = new RokulRunnings(/*Roku IP Address =*/'0.0.0.0',
 
 This function launches the specified channel.
 
-| Parameter   | Type   | Description                                                                                                                                       |
-| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| channelCode | string | ID of the channel to be launched. Released Roku channels have a specific `id`, which is a number. Sideloaded channels have the `id` of `'dev'`.   |
-| retries     | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                         |
-| params      | object | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value. |
+| Parameter   | Type   | Description                                                                                                                                                                                    |
+| ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| channelCode | string | ID of the channel to be launched. Released Roku channels have a specific `id`, which is a number. Sideloaded channels have the `id` of `'dev'`.                                                |
+| contentId   | string | _Optional_: The ID of the [content](https://developer.roku.com/en-ca/docs/developer-program/discovery/implementing-deep-linking.md#understanding-deep-linking-parameters) to be played         |
+| mediaType   | string | _Optional_: The [mediaType](https://developer.roku.com/en-ca/docs/developer-program/discovery/implementing-deep-linking.md#understanding-deep-linking-parameters) of the content to be played. |
+| retries     | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                                                                      |
+| params      | object | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.                                              |
 
 ### Return
 
@@ -53,6 +55,28 @@ This function returns the response status from the network call.
 
 ```
 const response = await rr.launchTheChannel({channelCode: 'dev', retries: 1});
+```
+
+## deepLinkIntoChannel()
+
+This function deep links into the specified channel
+
+| Parameter   | Type   | Description                                                                                                                                                                        |
+| ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| channelCode | string | ID of the channel to be launched. Released Roku channels have a specific `id`, which is a number. Sideloaded channels have the `id` of `'dev'`.                                    |
+| contentId   | string | The ID of the [content](https://developer.roku.com/en-ca/docs/developer-program/discovery/implementing-deep-linking.md#understanding-deep-linking-parameters) to be played         |
+| mediaType   | string | The [mediaType](https://developer.roku.com/en-ca/docs/developer-program/discovery/implementing-deep-linking.md#understanding-deep-linking-parameters) of the content to be played. |
+| retries     | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is 3.                                                          |
+| params      | object | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.                                  |
+
+### Return
+
+This function returns the response status from the network call.
+
+### Example
+
+```
+const response = await rr.deepLinkIntoChannel({channelCode: 'dev', contentId: 'myMovieId', mediaType: 'movie'});
 ```
 
 ## getApps()
@@ -141,16 +165,16 @@ const data = elementData.text('textOnElement');
 const isElementOnScreen = await rr.verifyIsElementOnScreen({data});
 ```
 
-## pressBtn()
+## pressBtn() / pressBtnDown() / pressBtnUp/
 
-This function simulates the pressing of a specific key. It is highly suggested that you import the `Buttons` enum to know the possible button strings.
+This function simulates the press and release, press down, or release (press up) of a specific key. It is highly suggested that you import the `Buttons` enum to know the possible button strings.
 
-| Parameter     | Type   | Description                                                                                                                                            |
-| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| keyPress      | string | The key to be pressed. This can be any of the values from the `buttons` enum, or an alphanumeric key (`LIT_{key}`)                                     |
-| delayInMillis | number | _Optional_: The delay before sending the key press, in milliseconds. The default value is RokulRunning's `pressDelayInMillis` value.                   |
-| retries       | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
-| params        | object | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.      |
+| Parameter                  | Type   | Description                                                                                                                                            |
+| -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| keyPress / keyDown / keyUp | string | The key to be sent. This can be any of the values from the `buttons` enum, or an alphanumeric key (`LIT_{key}`)                                        |
+| delayInMillis              | number | _Optional_: The delay before sending the key press, in milliseconds. The default value is RokulRunning's `pressDelayInMillis` value.                   |
+| retries                    | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
+| params                     | object | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.      |
 
 ### Return
 
@@ -159,7 +183,9 @@ This function returns the response status from the network call.
 ### Examples
 
 ```
-const response = await rr.pressBtn({keyPress: Buttons.up});
+const pressResponse = await rr.pressBtn({keyPress: Buttons.right});
+const downResponse = await rr.pressBtnDown({keyDown: Buttons.select});
+const upResponse = await rr.pressBtnUp({keyUp: Buttons.left})
 ```
 
 ## sendWord()
@@ -202,14 +228,15 @@ const response = await rr.sendWord({word: 'Roku'});
 
 ## sendButtonSequence()
 
-This function sends an array of key presses to the Roku.
+This function sends an array of keys, all of the same keyType (up, down, or press) to the Roku.
 
-| Parameter     | Type          | Description                                                                                                                                            |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| sequence      | buttons array | The sequence of key presses to be sent.                                                                                                                |
-| delayInMillis | number        | _Optional_: The delay before sending the key press, in milliseconds. The default value is RokulRunning's `pressDelayInMillis` value.                   |
-| retries       | number        | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
-| params        | object        | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.      |
+| Parameter     | Type                           | Description                                                                                                                                            |
+| ------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| sequence      | an array of Buttons or strings | The sequence of keys to be sent.                                                                                                                       |
+| delayInMillis | number                         | _Optional_: The delay before sending the key press, in milliseconds. The default value is RokulRunning's `pressDelayInMillis` value.                   |
+| retries       | number                         | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
+| params        | object                         | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.      |
+| keyType       | 'up', 'down', or 'press'       | _Optional_: The key type to be sent, associated with all keys in the sequence. Default value is `'press'`                                              |
 
 ### Return
 
@@ -235,6 +262,49 @@ This function returns an array of objects, with the `Button` as the key and the 
 const buttonSequence = [ buttons.up, buttons.up, buttons.select ]
 
 const response = await rr.sendButtonSequence({sequence: buttonSequence});
+
+const upResponse = await rr.sendButtonSequence({sequence: buttonSequence, keyType: 'up'})
+```
+
+## sendMixedButtonSequence
+
+This function sends an array of keys, with mixed keyTypes (up, down, or press) to the Roku.
+
+| Parameter      | Type                | Description                                                                                                                                                                            |
+| -------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| customSequence | an array of objects | The sequence of keys and keyTypes to be sent. Each object in the array should take the format of the keyType (up, down, or press) as the object key, and the key to send as the value. |
+| delayInMillis  | number              | _Optional_: The delay before sending the key press, in milliseconds. The default value is RokulRunning's `pressDelayInMillis` value.                                                   |
+| retries        | number              | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value.                                 |
+| params         | object              | _Optional_: Parameters to be passed into the POST request, appended as query parameters on the end of the request URL. There is no default value.                                      |
+
+### Return
+
+This function returns an array of objects, with the keyType and key as the object key (as `"keyType:key"`), and the response statuses as the value.
+
+```
+[
+  {
+    "up:select": 200
+  },
+  {
+    "down:right": 200
+  },
+  {
+    "press:left": 200
+  }
+]
+```
+
+### Example
+
+```
+const customSequence = [
+  { up: Buttons.select },
+  { down: Buttons.right },
+  { press: Buttons.left }
+]
+
+const response = await rr.sendMixedButtonSequence({customSequence});
 ```
 
 ## getElement(), getElements()

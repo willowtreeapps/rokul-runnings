@@ -57,14 +57,35 @@ export class RokulRunnings {
   /** Launches the channel corresponding to the specified channel ID. */
   launchTheChannel({
     channelCode,
+    contentId,
+    mediaType,
     retries = this.retries,
     params,
   }: {
     channelCode: string;
+    contentId?: string;
+    mediaType?: string;
     retries?: number;
     params?: Params;
   }) {
-    return this.driver.sendLaunchChannel({ channelCode, retries, params });
+    return this.driver.sendLaunchChannel({ channelCode, contentId, mediaType, retries, params });
+  }
+
+  /** Deep Links into channel */
+  deepLinkIntoChannel({
+    channelCode,
+    contentId,
+    mediaType,
+    retries = this.retries,
+    params,
+  }: {
+    channelCode: string;
+    contentId?: string;
+    mediaType?: string;
+    retries?: number;
+    params?: Params;
+  }) {
+    return this.driver.deepLink({ channelCode, contentId, mediaType, retries, params });
   }
 
   /** Returns a list of installed channels as an array of objects */
@@ -143,7 +164,41 @@ export class RokulRunnings {
     retries?: number;
     params?: Params;
   }) {
-    const response = await this.driver.sendKeyPress({ keyPress, retries, params });
+    const response = await this.driver.sendKey({ keyType: 'press', key: keyPress, retries, params });
+    await sleep(delayInMillis);
+    return response;
+  }
+
+  /** Simulates the press down of the specified key. */
+  async pressBtnDown({
+    keyDown,
+    delayInMillis = this.pressDelayInMillis,
+    retries = this.retries,
+    params,
+  }: {
+    keyDown: string;
+    delayInMillis?: number;
+    retries?: number;
+    params?: Params;
+  }) {
+    const response = await this.driver.sendKey({ keyType: 'down', key: keyDown, retries, params });
+    await sleep(delayInMillis);
+    return response;
+  }
+
+  /** Simulates the press up of the specified key. */
+  async pressBtnUp({
+    keyUp,
+    delayInMillis = this.pressDelayInMillis,
+    retries = this.retries,
+    params,
+  }: {
+    keyUp: string;
+    delayInMillis?: number;
+    retries?: number;
+    params?: Params;
+  }) {
+    const response = await this.driver.sendKey({ keyType: 'up', key: keyUp, retries, params });
     await sleep(delayInMillis);
     return response;
   }
@@ -175,13 +230,51 @@ export class RokulRunnings {
     delayInMillis = this.pressDelayInMillis,
     retries = this.retries,
     params,
+    keyType = 'press',
   }: {
-    sequence: Buttons[] | string[];
+    sequence: (Buttons | string)[];
+    delayInMillis?: number;
+    retries?: number;
+    params?: Params;
+    keyType?: 'up' | 'down' | 'press';
+  }) {
+    const newSequence: ({ up: string | Buttons } | { down: string | Buttons } | { press: string | Buttons })[] = [];
+    sequence.forEach(button => {
+      switch (keyType) {
+        case 'down':
+          newSequence.push({ down: button });
+          break;
+        case 'press':
+          newSequence.push({ press: button });
+          break;
+        case 'up':
+          newSequence.push({ up: button });
+          break;
+      }
+    });
+    const response = await this.driver.sendSequence({ sequence: newSequence, delayInMillis, params, retries });
+    const formattedResponse: { [key: string]: number }[] = [];
+    response.forEach(responseObject => {
+      const key = Object.keys(responseObject)[0];
+      const newKey = key.replace(`${keyType}:`, '');
+      formattedResponse.push({ [newKey]: responseObject[key] });
+    });
+    return formattedResponse;
+  }
+
+  /** Allows for a sequence to be sent that uses keyUp, keyDown, and keyPress */
+  async sendMixedButtonSequence({
+    customSequence,
+    delayInMillis = this.pressDelayInMillis,
+    retries = this.retries,
+    params,
+  }: {
+    customSequence: ({ up: string } | { down: string } | { press: string })[];
     delayInMillis?: number;
     retries?: number;
     params?: Params;
   }) {
-    const response = await this.driver.sendSequence({ sequence, delayInMillis, params, retries });
+    const response = await this.driver.sendSequence({ sequence: customSequence, delayInMillis, retries, params });
     return response;
   }
 
