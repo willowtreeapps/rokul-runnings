@@ -127,7 +127,7 @@ describe('Rokul Runnings Unit tests', function() {
 
   it('Should Verify Button is Pressed', async function() {
     nock(baseURL)
-      .post(`/keypress/up`)
+      .post(/keypress\/.*/)
       .reply(200);
 
     expect(await rr.pressBtn({ keyPress: Buttons.up, delayInMillis: 100 })).to.eql(200);
@@ -135,7 +135,7 @@ describe('Rokul Runnings Unit tests', function() {
 
   it('Should Verify Button is Pressed Down', async function() {
     nock(baseURL)
-      .post(`/keydown/up`)
+      .post(/keydown\/.*/)
       .reply(200);
 
     expect(await rr.pressBtnDown({ keyDown: Buttons.up, delayInMillis: 100 })).to.eql(200);
@@ -143,7 +143,7 @@ describe('Rokul Runnings Unit tests', function() {
 
   it('Should Verify Button is Pressed Up', async function() {
     nock(baseURL)
-      .post(`/keyup/up`)
+      .post(/keyup\/.*/)
       .reply(200);
 
     expect(await rr.pressBtnUp({ keyUp: Buttons.up, delayInMillis: 100 })).to.eql(200);
