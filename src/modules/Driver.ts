@@ -283,9 +283,22 @@ export class Driver {
     const url = this.queryUrl('app-ui');
     const response = await http.baseGET({ url, retries });
     const jsonResponse = this.parser(response);
-    const elements = jsonResponse['app-ui'].topscreen.screen.AppScene;
-
-    const foundElements = this.matchElements(data, elements, 'AppScene');
+    const screen = jsonResponse['app-ui'].topscreen.screen;
+    let sceneName;
+    let elements;
+    // required to find the root scene
+    for (const key of Object.keys(screen)) {
+      const value = screen[key];
+      if (key === 'Scene' || (value.attributes && value.attributes.extends === 'Scene')) {
+        elements = value;
+        sceneName = key;
+        break;
+      }
+    }
+    if (!sceneName || !elements) {
+      throw new Error('Cannot find root Scene component');
+    }
+    const foundElements = this.matchElements(data, elements, sceneName);
 
     return foundElements;
   }
