@@ -352,6 +352,34 @@ These functions return information about the specified elements. `getElement()` 
 
 ```
 
+If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
+
+```
+{
+  "Label": {
+    "color": "#262626ff",
+    "index": "0",
+    "name": "ExampleElement",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+would be returned as
+
+```
+{
+  "ExampleElement": {
+    "color": "#262626ff",
+    "index": "0",
+    "tag": "Label",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
 ### Examples
 
 ```
@@ -360,6 +388,152 @@ const data = elementData.text('ArcInterpolator');
 const firstElement = await rr.getElement({data});
 
 const allElements = await rr.getElements({data});
+```
+
+## getElementByText(), getElementByTag, getElementsByText(), getElementByTags()
+
+These functions return information about the specified elements. They are not used to interact with the specified elements. Do not think of these functions as something like `findElementBy...`.
+
+The differ only in responses. `getElementBy...()` returns information for the first element found, while `getElementsBy...()` returns information for all elements found.
+
+| Parameter | Type   | Description                                                                                                                                            |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| value     | string | Value to be passed along to the `elementDataObject`. For `...ByText()` this will be text, and for `...ByTag()` this will be the tag (XML)              |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
+
+### Return
+
+These functions return information about the specified elements. `getElementBy...()` returns a singular object, where `getElementsBy...()` returns an array of objects:
+
+```
+{
+  "Label": {
+    "color": "#262626ff",
+    "index": "0",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+```
+[
+  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
+  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
+  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+]
+
+```
+
+If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
+
+```
+{
+  "Label": {
+    "color": "#262626ff",
+    "index": "0",
+    "name": "ExampleElement",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+would be returned as
+
+```
+{
+  "ExampleElement": {
+    "color": "#262626ff",
+    "index": "0",
+    "tag": "Label",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+### Examples
+
+```
+const textElement = await rr.getElementByText({value: 'ArcInterpolator'});
+const tagElement = await rr.getElementByTag({value: 'Label'});
+
+const textElements = await rr.getElementsByText({value: 'ArcInterpolator'});
+const tagElements = await rr.getElementsByTag({ value: 'Label'});
+```
+
+## getElementByAttribute(), getElementByAttributes()
+
+These functions return information about the specified elements. They are not used to interact with the specified elements. Do not think of these functions as something like `findElementBy...`.
+
+The differ only in responses. `getElementByAttribute()` returns information for the first element found, while `getElementsByAttribute()` returns information for all elements found.
+
+| Parameter | Type   | Description                                                                                                                                            |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| attribute | string | Attribute to be passed along to the `elementDataObject`                                                                                                |
+| value     | string | Attribute value to be passed along to the `elementDataObject`                                                                                          |
+| retries   | number | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
+
+### Return
+
+These functions return information about the specified elements. `getElementByAttribute()` returns a singular object, where `getElementsByAttribute()` returns an array of objects:
+
+```
+{
+  "Label": {
+    "color": "#262626ff",
+    "index": "0",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+```
+[
+  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
+  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
+  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+]
+
+```
+
+If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
+
+```
+{
+  "Label": {
+    "color": "#262626ff",
+    "index": "0",
+    "name": "ExampleElement",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+would be returned as
+
+```
+{
+  "ExampleElement": {
+    "color": "#262626ff",
+    "index": "0",
+    "tag": "Label",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}
+```
+
+### Examples
+
+```
+const attributeElement = await rr.getElementByAttribute({attribute: 'color', value: '#252525ff'});
+
+const attributeElements = await rr.getElementsByAttribute({attribute: 'color', value: '#252525ff'});
+
 ```
 
 ## getFocusedElement()
@@ -375,6 +549,24 @@ This function returns the information about the currently focused element.
 This function returns an object with element information:
 
 ```
+
+{
+  "LabelList": {
+    "bounds": "{0, 37, 388, 612}",
+    "children": "23",
+    "count": "21",
+    "focusItem": "0",
+    "focusable": "true",
+    "focused": "true",
+    "index": "0",
+  }
+}
+
+```
+
+If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
+
+```
 {
   "LabelList": {
     "bounds": "{0, 37, 388, 612}",
@@ -387,18 +579,36 @@ This function returns an object with element information:
     "name": "componentList"
   }
 }
+```
 
+would be returned as
+
+```
+{
+  "componentList": {
+    "bounds": "{0, 37, 388, 612}",
+    "children": "23",
+    "count": "21",
+    "focusItem": "0",
+    "focusable": "true",
+    "focused": "true",
+    "index": "0",
+    "tag": "LabelList"
+  }
+}
 ```
 
 ### Examples
 
 ```
+
 const element = await rr.getFocusedElement();
+
 ```
 
 ## verifyFocusedElementIsOfCertainTag()
 
-This function verifies if the response from `getFocusedElement()` is of a certain tag or XMLName.
+This function verifies if the response from `getFocusedElement()` is of a certain tag or XMLName. It will check if the element returned's key matches the tag first. If it does not match, then it will check if the element's attributes contain a `tag` attribute and check that.
 
 | Parameter     | Type   | Description                                                                                                                                            |
 | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -414,7 +624,9 @@ This function returns a boolean value, with `true` meaning the focused element i
 ### Example
 
 ```
+
 const isElementRenderableNode = await rr.verifyFocusedElementIsOfCertainTag({tag: 'RenderableNode'});
+
 ```
 
 ## getScreenSource()
@@ -434,7 +646,9 @@ To preserve space in this file, an example is stored in [a test JSON file](../te
 ### Example
 
 ```
+
 const allElements = await rr.getScreenSource();
+
 ```
 
 ## verifyIsChannelLoaded()
@@ -455,7 +669,9 @@ This function returns a boolean value, where `true` means that the current chann
 ### Examples
 
 ```
+
 const isChannelLoaded = await rr.verifyIsChannelLoaded({id: 'dev'});
+
 ```
 
 ## getCurrentChannelInfo()
@@ -471,13 +687,14 @@ This function returns information about the currently launched channel
 This function returns information about the currently launched channel as an object:
 
 ```
+
 {
-  "rocute": {
-    "id": "dev",
-    "subtype": "rsga",
-    "type": "appl",
-    "version": "1.0.1"
-  }
+"rocute": {
+"id": "dev",
+"subtype": "rsga",
+"type": "appl",
+"version": "1.0.1"
+}
 }
 
 ```
@@ -485,7 +702,9 @@ This function returns information about the currently launched channel as an obj
 ### Examples
 
 ```
+
 const channelInfo = await rr.getCurrentChannelInfo();
+
 ```
 
 ## getDeviceInfo()
@@ -505,7 +724,9 @@ To preserve space in this file, an example is stored in [a test JSON file](../te
 ### Examples
 
 ```
+
 const deviceInfo = await rr.getDeviceInfo();
+
 ```
 
 ## getPlayerInfo()
@@ -521,37 +742,38 @@ This function returns information about the media player.
 This function returns information about the media player as an object:
 
 ```
+
 {
-  "attributes": { "error": "false", "state": "play" },
-  "plugin": {
-    "bandwidth": "925831054 bps",
-    "id": "dev",
-    "name": "rocute"
-  },
-  "format": {
-    "audio": "aac",
-    "captions": "none",
-    "container": "mp4",
-    "drm": "none",
-    "video": "mpeg4_15",
-    "video_res": "1280x546"
-  },
-  "buffering": {
-    "current": "1000",
-    "max": "1000",
-    "target": "0"
-  },
-  "new_stream": { "speed": "128000 bps" },
-  "position": 270717,
-  "duration": 887999,
-  "is_live": "false",
-  "runtime": "887999 ms",
-  "stream_segment": {
-    "bitrate": "0",
-    "media_sequence": "89",
-    "segment_type": "mux",
-    "time": "268098"
-  }
+"attributes": { "error": "false", "state": "play" },
+"plugin": {
+"bandwidth": "925831054 bps",
+"id": "dev",
+"name": "rocute"
+},
+"format": {
+"audio": "aac",
+"captions": "none",
+"container": "mp4",
+"drm": "none",
+"video": "mpeg4_15",
+"video_res": "1280x546"
+},
+"buffering": {
+"current": "1000",
+"max": "1000",
+"target": "0"
+},
+"new_stream": { "speed": "128000 bps" },
+"position": 270717,
+"duration": 887999,
+"is_live": "false",
+"runtime": "887999 ms",
+"stream_segment": {
+"bitrate": "0",
+"media_sequence": "89",
+"segment_type": "mux",
+"time": "268098"
+}
 }
 
 ```
@@ -561,7 +783,9 @@ Note: `Position` and `Duration` are expected to be returned as a string, such as
 ### Examples
 
 ```
+
 const playerInfo = await rr.getPlayerInfo();
+
 ```
 
 ## verifyIsPlaybackStarted()
@@ -581,7 +805,9 @@ This function returns a boolean value, where `true` means playback has started, 
 ### Examples
 
 ```
+
 const isPlaybackStarted = await rr.verifyIsPlaybackStarted();
+
 ```
 
 ## getScreenshot()
@@ -606,19 +832,23 @@ This function returns void.
 If the function is executed from a file within the `/test` directory:
 
 ```
+
 await rr.getScreenshot({
-    fileName: 'screenshot'
+fileName: 'screenshot'
 })
+
 ```
 
 Would save an image to `/test/images/screenshot.jpg`
 
 ```
+
 await rr.getScreenshot({
-    directoryPath: '../test/resources/images',
-    fileName: 'secondExample',
-    print: true
+directoryPath: '../test/resources/images',
+fileName: 'secondExample',
+print: true
 })
+
 ```
 
 Would save an image to `/test/resources/images/secondExample.jpg`, and print out a message that states `Saved at {fullPathToTestDirectory}/test/resources/images/secondExample.jpg`
@@ -638,11 +868,15 @@ This function returns the response status code from the Roku as a number.
 ### Examples
 
 ```
+
 await rr.installChannel('./channel.zip');
+
 ```
 
 ```
+
 await rr.replaceChannel('./channel.zip');
+
 ```
 
 ## deleteChannel()
@@ -656,5 +890,11 @@ This function returns the response status code from the Roku as a number.
 ### Example
 
 ```
+
 await rr.deleteChannel();
+
+```
+
+```
+
 ```

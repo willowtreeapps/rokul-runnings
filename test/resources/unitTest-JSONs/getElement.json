@@ -1,1 +1,9 @@
-{ "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } }
+{
+  "ArcInterpolatorName": {
+    "color": "#262626ff",
+    "index": "0",
+    "tag": "Label",
+    "text": "ArcInterpolator",
+    "visible": "false"
+  }
+}

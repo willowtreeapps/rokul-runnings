@@ -10,5 +10,5 @@ node_modules
 dist
 src/modules/images
 src/images
-test/resources/images/screenshot-test.jpg
+test/resources/images/screenshot-test.*
 *.tgz

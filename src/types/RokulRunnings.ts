@@ -21,6 +21,7 @@ export type XMLAttributes = {
   text?: string;
   error?: string;
   state?: string;
+  name?: string;
   [key: string]: string;
 };
 
