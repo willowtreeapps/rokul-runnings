@@ -1,6 +1,7 @@
 import { Driver } from './Driver';
 import { sleep } from '../utils/sleep';
 import {
+  bounds,
   ElementDataObject,
   Apps,
   Params,
@@ -8,6 +9,7 @@ import {
   Action,
   Method,
   SquashedAppUIObject,
+  XMLAttributes,
 } from '../types/RokulRunnings';
 import * as FormData from 'form-data';
 import * as indigestion from 'indigestion';
@@ -719,8 +721,48 @@ export class RokulRunnings {
     responseObject.forEach(element => {
       const elementName = Object.keys(element)[0];
       const childElement = element[elementName] as AppUIResponseObject;
-      elementsArray.push({ [elementName]: childElement.attributes } as SquashedAppUIObject);
+      const childAttributes = this.normalizeAttributes(childElement.attributes);
+      elementsArray.push({ [elementName]: childAttributes } as SquashedAppUIObject);
     });
     return elementsArray;
+  }
+
+  private normalizeAttributes(attributes: XMLAttributes) {
+    const keys = Object.keys(attributes);
+    keys.forEach(key => {
+      if (typeof attributes[key] === 'string') {
+        if (key === 'bounds' && typeof attributes.bounds === 'string') {
+          const regexp = /\d+/g;
+          const boundsKeys = ['x', 'y', 'height', 'width'];
+          let match: RegExpExecArray;
+          const out = {};
+          while ((match = regexp.exec(attributes.bounds)) !== null) {
+            out[boundsKeys.shift()] = Number(match[0]);
+          }
+          attributes.bounds = out as bounds;
+        } else if (
+          key === 'children' ||
+          key === 'count' ||
+          key === 'focusItem' ||
+          key === 'index' ||
+          key === 'opacity' ||
+          key === 'loadStatus'
+        ) {
+          attributes[key] = Number(attributes[key]);
+        } else if (key === 'focusable' || key === 'focused' || key === 'visible') {
+          attributes[key] = attributes[key] === 'true';
+        }
+      }
+    });
+    return attributes;
+  }
+
+  private getBoundsAsNumberArray(boundsString: string) {
+    const response: number[] = [];
+    const digits = boundsString.split(',');
+    digits.forEach(digit => {
+      response.push(Number([digit.match(/\d+/)]));
+    });
+    return response;
   }
 }

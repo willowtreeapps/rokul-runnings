@@ -18,14 +18,30 @@ export type Apps = {
 };
 
 export type XMLAttributes = {
-  text?: string;
+  bounds?: bounds | string;
+  children?: number | string;
+  color?: string | string;
+  count?: string | number;
   error?: string;
+  extends?: string;
+  focusable?: boolean | string;
+  focused?: boolean | string;
+  focusItem?: number | string;
+  index?: number | string;
+  loadStatus?: number | string;
+  opacity?: number | string;
   state?: string;
-  [key: string]: string;
+  text?: string;
+  uri?: string;
+  visible?: boolean | string;
+  [key: string]: string | bounds | number | boolean;
 };
 
-export type Params = {
-  [key: string]: string | number;
+export type bounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 export type PlayerInfoResponse = {
@@ -53,3 +69,7 @@ export type SquashedAppUIObject = {
 
 export declare type Action = 'Install' | 'Replace' | 'Delete' | 'Screenshot';
 export declare type Method = 'GET' | 'POST';
+
+export type Params = {
+  [key: string]: string;
+};
