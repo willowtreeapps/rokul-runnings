@@ -762,7 +762,6 @@ export class RokulRunnings {
       if (childElementAttributes.name) {
         childElementAttributes.tag = elementName;
         elementName = childElementAttributes.name;
-        delete childElementAttributes.name;
       }
       elementsArray.push({ [elementName]: childElement.attributes } as SquashedAppUIObject);
     });
