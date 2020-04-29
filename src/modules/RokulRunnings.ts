@@ -716,18 +716,20 @@ export class RokulRunnings {
     });
   }
 
+  /** Function to take a more raw response from the Roku and turn it into a more digestible JSON */
   private squashAttributes(responseObject: AppUIResponseObject[]) {
     const elementsArray: SquashedAppUIObject[] = [];
     responseObject.forEach(element => {
       const elementName = Object.keys(element)[0];
       const childElement = element[elementName] as AppUIResponseObject;
-      const childAttributes = this.normalizeAttributes(childElement.attributes);
+      const childAttributes = this.typeifyAttributes(childElement.attributes);
       elementsArray.push({ [elementName]: childAttributes } as SquashedAppUIObject);
     });
     return elementsArray;
   }
 
-  private normalizeAttributes(attributes: XMLAttributes) {
+  /** Function to turn string attributes to their actual types */
+  private typeifyAttributes(attributes: XMLAttributes) {
     const keys = Object.keys(attributes);
     keys.forEach(key => {
       if (typeof attributes[key] === 'string') {
@@ -749,20 +751,19 @@ export class RokulRunnings {
           key === 'loadStatus'
         ) {
           attributes[key] = Number(attributes[key]);
-        } else if (key === 'focusable' || key === 'focused' || key === 'visible') {
+        } else if (attributes[key] === 'true' || attributes[key] === 'false') {
+          // any key with a value of true or false can assumed to be a boolean
           attributes[key] = attributes[key] === 'true';
         }
       }
     });
-    return attributes;
+    return { ...this.defaultAttributes, ...attributes };
   }
 
-  private getBoundsAsNumberArray(boundsString: string) {
-    const response: number[] = [];
-    const digits = boundsString.split(',');
-    digits.forEach(digit => {
-      response.push(Number([digit.match(/\d+/)]));
-    });
-    return response;
-  }
+  /** Default XML attributes to be passed in when typeifying attributes */
+  private defaultAttributes = {
+    focusable: false,
+    focused: false,
+    visible: true,
+  };
 }

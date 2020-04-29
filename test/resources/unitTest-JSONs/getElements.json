@@ -1,12 +1,34 @@
 [
-  { "Label": { "color": "#262626ff", "index": 0, "text": "ArcInterpolator", "visible": false } },
-  { "Label": { "color": "#262626ff", "index": 0, "opacity": 0, "text": "ArcInterpolator", "visible": false } },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "opacity": 0,
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
   {
     "Label": {
       "bounds": { "x": 0, "y": 0, "height": 340, "width": 26 },
       "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
       "index": 1,
-      "text": "ArcInterpolator"
+      "text": "ArcInterpolator",
+      "visible": true
     }
   }
 ]
