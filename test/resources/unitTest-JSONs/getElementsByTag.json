@@ -14,6 +14,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "BounceEffect"
     }
   },
@@ -22,6 +23,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "CardRotator"
     }
   },
@@ -30,6 +32,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "CardZoomDiagonal"
     }
   },
@@ -38,6 +41,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "CardZoomRotary"
     }
   },
@@ -46,6 +50,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "CircularImageClip"
     }
   },
@@ -54,6 +59,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "Clock"
     }
   },
@@ -62,6 +68,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "DatePicker"
     }
   },
@@ -70,6 +77,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "DisappearingLogo"
     }
   },
@@ -78,6 +86,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "DisappearingNavBar"
     }
   },
@@ -86,6 +95,7 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "HorizontalCardRotator"
     }
   },
@@ -94,26 +104,27 @@
       "bounds": "{0, 11, 340, 48}",
       "color": "#ddddddff",
       "index": "0",
+      "tag": "Label",
       "text": "HorizontalNavBar"
     }
   },
-  { "Label": { "color": "#ddddddff", "index": "0", "text": "LiveIcon" } },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "LiveIcon" } },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "text": "RandomColoredFontList" }
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RandomColoredFontList" }
   },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "text": "RandomColoredList" }
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RandomColoredList" }
   },
-  { "Label": { "color": "#ddddddff", "index": "0", "text": "RatingIcon" } },
-  { "Label": { "color": "#ddddddff", "index": "0", "text": "ResizeList" } },
-  { "Label": { "color": "#ddddddff", "index": "0", "text": "Ticker" } },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RatingIcon" } },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "ResizeList" } },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "Ticker" } },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "text": "TiledBackground" }
-  },
-  {
-    "Label": { "color": "#ddddddff", "index": "0", "text": "TriangularCornerClip" }
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TiledBackground" }
   },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "text": "TriangularImageClip" }
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TriangularCornerClip" }
+  },
+  {
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TriangularImageClip" }
   }
 ]

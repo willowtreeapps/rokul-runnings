@@ -759,8 +759,8 @@ export class RokulRunnings {
       let elementName = Object.keys(element)[0];
       const childElement = element[elementName] as AppUIResponseObject;
       const childElementAttributes = childElement.attributes;
+      childElementAttributes.tag = elementName;
       if (childElementAttributes.name) {
-        childElementAttributes.tag = elementName;
         elementName = childElementAttributes.name;
       }
       elementsArray.push({ [elementName]: childElement.attributes } as SquashedAppUIObject);
