@@ -336,21 +336,73 @@ These functions return information about the specified elements. `getElement()` 
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 ```
 [
-  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "opacity": 0,
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "bounds": {
+        x: 0,
+        y: 0,
+        height: 340,
+        width: 26
+        },
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 1, "text":
+      "ArcInterpolator",
+      "visible": true
+    }
+  }
 ]
 
 ```
+
+The `bounds` key will return an object with this shape:
+
+```
+"bounds": {
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
+```
+
+The following keys will return a number (not a string): children, count, focusItem, index, opacity, and loadStatus.
+Any key whose value returned from the Roku as a string `"true"` or `"false"` will be translated into an actual boolean - `true` or `false`.
+All other keys will remain as strings.
+The following keys have default values that will be added if not provided from the Roku: `focusable: false`, `focused: false`, and `visible: true`
 
 ### Examples
 
@@ -377,18 +429,39 @@ This function returns an object with element information:
 ```
 {
   "LabelList": {
-    "bounds": "{0, 37, 388, 612}",
-    "children": "23",
-    "count": "21",
-    "focusItem": "0",
-    "focusable": "true",
-    "focused": "true",
-    "index": "0",
-    "name": "componentList"
+    "bounds": {
+      "x": 0,
+      "y": 37
+      "height": 388,
+      "width": 612
+      },
+    "children": 23,
+    "count": 21,
+    "focusItem": 0,
+    "focusable": true,
+    "focused": true,
+    "index": 0,
+    "name": "componentList",
+    "visible": true
   }
 }
 
 ```
+
+The `bounds` key will return an object with this shape:
+
+```
+"bounds": {
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
+```
+
+The following keys will return a number (not a string): children, count, focusItem, index, opacity, and loadStatus.
+Any key whose value returned from the Roku as a string `"true"` or `"false"` will be translated into an actual boolean - `true` or `false`.
+All other keys will remain as strings.
 
 ### Examples
 
