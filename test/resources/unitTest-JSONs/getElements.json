@@ -2,30 +2,37 @@
   {
     "ArcInterpolatorName": {
       "color": "#262626ff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "name": "ArcInterpolatorName",
       "tag": "Label",
       "text": "ArcInterpolator",
-      "visible": "false"
+      "visible": false
     }
   },
   {
     "Label": {
       "color": "#262626ff",
-      "index": "0",
-      "opacity": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "opacity": 0,
       "tag": "Label",
       "text": "ArcInterpolator",
-      "visible": "false"
+      "visible": false
     }
   },
   {
     "Label": {
-      "bounds": "{0, 0, 340, 26}",
+      "bounds": { "x": 0, "y": 0, "height": 340, "width": 26 },
       "color": "#262626ff",
-      "index": "1",
+      "focusable": false,
+      "focused": false,
+      "index": 1,
       "tag": "Label",
-      "text": "ArcInterpolator"
+      "text": "ArcInterpolator",
+      "visible": true
     }
   }
 ]

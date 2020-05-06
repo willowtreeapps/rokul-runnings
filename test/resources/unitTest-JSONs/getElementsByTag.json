@@ -2,129 +2,244 @@
   {
     "ArcInterpolatorName": {
       "color": "#262626ff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "name": "ArcInterpolatorName",
       "tag": "Label",
       "text": "ArcInterpolator",
-      "visible": "false"
+      "visible": false
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "BounceEffect"
+      "text": "BounceEffect",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "CardRotator"
+      "text": "CardRotator",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "CardZoomDiagonal"
+      "text": "CardZoomDiagonal",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "CardZoomRotary"
+      "text": "CardZoomRotary",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "CircularImageClip"
+      "text": "CircularImageClip",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "Clock"
+      "text": "Clock",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "DatePicker"
+      "text": "DatePicker",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "DisappearingLogo"
+      "text": "DisappearingLogo",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "DisappearingNavBar"
+      "text": "DisappearingNavBar",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "HorizontalCardRotator"
+      "text": "HorizontalCardRotator",
+      "visible": true
     }
   },
   {
     "Label": {
-      "bounds": "{0, 11, 340, 48}",
+      "bounds": { "x": 0, "y": 11, "height": 340, "width": 48 },
       "color": "#ddddddff",
-      "index": "0",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
       "tag": "Label",
-      "text": "HorizontalNavBar"
+      "text": "HorizontalNavBar",
+      "visible": true
     }
   },
-  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "LiveIcon" } },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RandomColoredFontList" }
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "LiveIcon",
+      "visible": true
+    }
   },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RandomColoredList" }
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "RandomColoredFontList",
+      "visible": true
+    }
   },
-  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RatingIcon" } },
-  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "ResizeList" } },
-  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "Ticker" } },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TiledBackground" }
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "RandomColoredList",
+      "visible": true
+    }
   },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TriangularCornerClip" }
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "RatingIcon",
+      "visible": true
+    }
   },
   {
-    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TriangularImageClip" }
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "ResizeList",
+      "visible": true
+    }
+  },
+  {
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "Ticker",
+      "visible": true
+    }
+  },
+  {
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "TiledBackground",
+      "visible": true
+    }
+  },
+  {
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "TriangularCornerClip",
+      "visible": true
+    }
+  },
+  {
+    "Label": {
+      "color": "#ddddddff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "TriangularImageClip",
+      "visible": true
+    }
   }
 ]

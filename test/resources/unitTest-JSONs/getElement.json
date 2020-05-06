@@ -1,10 +1,12 @@
 {
   "ArcInterpolatorName": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
     "name": "ArcInterpolatorName",
-    "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "tag": "Label",
+    "visible": false
   }
 }

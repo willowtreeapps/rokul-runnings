@@ -69,11 +69,32 @@ export class Driver {
     return player;
   }
 
+  /** Specific formatting for responses from the `device-info` call
+   *  Expected to be used in the following way: `this.jsonFormatterDeviceInfo(this.parser(responseToParse))`
+   */
+  jsonFormatterDeviceInfo(responseObject: any) {
+    const deviceInfo = responseObject['device-info'];
+    const deviceInfoKeys = Object.keys(deviceInfo);
+    deviceInfoKeys.forEach(key => {
+      // only change the value if the text key exists
+      if (deviceInfo[key].text) {
+        // remove the text key
+        deviceInfo[key] = deviceInfo[key].text;
+        // if the key has a boolean value, turn it from a string to a boolean
+        if (deviceInfo[key] === 'true' || deviceInfo[key] === 'false') {
+          deviceInfo[key] = deviceInfo[key] === 'true';
+        }
+      }
+    });
+    responseObject['device-info'] = deviceInfo;
+    return responseObject;
+  }
+
   /** Retrieves information about the specified session. */
   async getDeviceInfo(retries: number) {
     const url = this.queryUrl('device-info');
     const response = await http.baseGET({ url, retries });
-    return this.parser(response);
+    return this.jsonFormatterDeviceInfo(this.parser(response));
   }
 
   /** Retrieves information about the Roku media player. */

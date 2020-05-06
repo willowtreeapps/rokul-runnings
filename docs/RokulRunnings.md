@@ -6,18 +6,14 @@ The `RokulRunnings` class sends commands to the Roku device. The Roku then mostl
 
 To instantiate the RokulRunnings class, simply create a new RokulRunnings object:
 
-```
+```ts
 import { RokulRunnings } from 'rokul-runnings';
 
-const rr = new RokulRunnings(/*Roku IP Address =*/'0.0.0.0',
-          /*username=*/'username',
-          /*password=*/'password),
-          {
-            pressDelayInMillis: 1000,
-            retryDelayInMillis: 1000,
-            retries: 1
-          }
-        )
+const rr = new RokulRunnings(/*Roku IP Address =*/ '0.0.0.0', /*username=*/ 'username', /*password=*/ 'password', {
+  pressDelayInMillis: 1000,
+  retryDelayInMillis: 1000,
+  retries: 1,
+});
 ```
 
 ### Parameters
@@ -53,8 +49,8 @@ This function returns the response status from the network call.
 
 ### Example
 
-```
-const response = await rr.launchTheChannel({channelCode: 'dev', retries: 1});
+```ts
+const response = await rr.launchTheChannel({ channelCode: 'dev', retries: 1 });
 ```
 
 ## deepLinkIntoChannel()
@@ -75,8 +71,8 @@ This function returns the response status from the network call.
 
 ### Example
 
-```
-const response = await rr.deepLinkIntoChannel({channelCode: 'dev', contentId: 'myMovieId', mediaType: 'movie'});
+```ts
+const response = await rr.deepLinkIntoChannel({ channelCode: 'dev', contentId: 'myMovieId', mediaType: 'movie' });
 ```
 
 ## getApps()
@@ -91,21 +87,18 @@ This function returns the list of all apps (channels) currently installed on the
 
 This function returns an object that contains each channel as an object. Each channel object contains relevant information, as strings.
 
-```
+```json
 {
   "Roku Media Player": { "id": "2213", "subtype": "sdka", "type": "appl", "version": "4.2.1657" },
   "Roku Tips & Tricks": { "id": "552944", "subtype": "rsga", "type": "appl", "version": "1.2.51" },
-  "Roku Streaming Player Intro": { "id": "184661", "subtype": "sdka", "type": "appl", "version": "1.0.45" },
+  "Roku Streaming Player Intro": { "id": "184661", "subtype": "sdka", "type": "appl", "version": "1.0.45" }
 }
-
 ```
 
 ### Examples
 
-```
-
+```ts
 const allApps = await rr.getApps();
-
 ```
 
 ## verifyIsChannelExist()
@@ -126,8 +119,8 @@ This function returns a boolean value, with `true` meaning the specified ID was 
 
 ### Examples
 
-```
-const isChannelExist = await rr.verifyIsChannelExist({id: 'dev'});
+```ts
+const isChannelExist = await rr.verifyIsChannelExist({ id: 'dev' });
 ```
 
 ## verifyIsScreenLoaded(), verifyIsElementOnScreen()
@@ -141,7 +134,7 @@ These functions are identical. `verifyIsScreenLoaded()` contains the logic, and 
 | delayInMillis | number            | _Optional_: The amount of time to wait between retries, in milliseconds. Defaults to RokulRunning's `retryDelayInMillis` value                         |
 | httpRetries   | number            | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
 
-```
+```ts
 {
   using: string;
   value: string;
@@ -157,12 +150,12 @@ This function returns a boolean value, with `true` meaning that the element was 
 
 ### Examples
 
-```
+```ts
 // Create data to be passed in
 const data = elementData.text('textOnElement');
 
 // Verify if element is found on screen
-const isElementOnScreen = await rr.verifyIsElementOnScreen({data});
+const isElementOnScreen = await rr.verifyIsElementOnScreen({ data });
 ```
 
 ## pressBtn() / pressBtnDown() / pressBtnUp/
@@ -182,10 +175,10 @@ This function returns the response status from the network call.
 
 ### Examples
 
-```
-const pressResponse = await rr.pressBtn({keyPress: Buttons.right});
-const downResponse = await rr.pressBtnDown({keyDown: Buttons.select});
-const upResponse = await rr.pressBtnUp({keyUp: Buttons.left})
+```ts
+const pressResponse = await rr.pressBtn({ keyPress: Buttons.right });
+const downResponse = await rr.pressBtnDown({ keyDown: Buttons.select });
+const upResponse = await rr.pressBtnUp({ keyUp: Buttons.left });
 ```
 
 ## sendWord()
@@ -203,27 +196,27 @@ This function sends a word to be entered as part of a keyboard entry screen (say
 
 This function returns an array of objects, with the `LIT_{letter}` as the key and the response statuses as the value.
 
-```
+```json
 [
   {
-    R: 200
+    "R": 200
   },
   {
-    O: 200
+    "O": 200
   },
   {
-    K: 200
+    "K": 200
   },
   {
-    U: 200
+    "U": 200
   }
 ]
 ```
 
 ### Examples
 
-```
-const response = await rr.sendWord({word: 'Roku'});
+```ts
+const response = await rr.sendWord({ word: 'Roku' });
 ```
 
 ## sendButtonSequence()
@@ -242,28 +235,28 @@ This function sends an array of keys, all of the same keyType (up, down, or pres
 
 This function returns an array of objects, with the `Button` as the key and the response statuses as the value.
 
-```
+```json
 [
   {
-    up: 200
+    "up": 200
   },
   {
-    up: 200
+    "up": 200
   },
   {
-    select: 200
+    "select": 200
   }
 ]
 ```
 
 ### Examples
 
-```
-const buttonSequence = [ buttons.up, buttons.up, buttons.select ]
+```ts
+const buttonSequence = [buttons.up, buttons.up, buttons.select];
 
-const response = await rr.sendButtonSequence({sequence: buttonSequence});
+const response = await rr.sendButtonSequence({ sequence: buttonSequence });
 
-const upResponse = await rr.sendButtonSequence({sequence: buttonSequence, keyType: 'up'})
+const upResponse = await rr.sendButtonSequence({ sequence: buttonSequence, keyType: 'up' });
 ```
 
 ## sendMixedButtonSequence
@@ -281,7 +274,7 @@ This function sends an array of keys, with mixed keyTypes (up, down, or press) t
 
 This function returns an array of objects, with the keyType and key as the object key (as `"keyType:key"`), and the response statuses as the value.
 
-```
+```json
 [
   {
     "up:select": 200
@@ -297,14 +290,10 @@ This function returns an array of objects, with the keyType and key as the objec
 
 ### Example
 
-```
-const customSequence = [
-  { up: Buttons.select },
-  { down: Buttons.right },
-  { press: Buttons.left }
-]
+```ts
+const customSequence = [{ up: Buttons.select }, { down: Buttons.right }, { press: Buttons.left }];
 
-const response = await rr.sendMixedButtonSequence({customSequence});
+const response = await rr.sendMixedButtonSequence({ customSequence });
 ```
 
 ## getElement(), getElements()
@@ -318,7 +307,7 @@ The differ only in responses. `getElement()` returns information for the first e
 | data      | elementDataObject | Element to be found. elementDataObject can easily be created by importing the `elementData` module and using one of the functions                      |
 | retries   | number            | _Optional_: The number of times the axios call will be retried if a 500 error status is received. The default value is RokulRunning's `retries` value. |
 
-```
+```ts
 {
   using: string;
   value: string;
@@ -332,65 +321,124 @@ The differ only in responses. `getElement()` returns information for the first e
 
 These functions return information about the specified elements. `getElement()` returns a singular object, where `getElements()` returns an array of objects:
 
-```
+```json
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
+    "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
-```
+```json
 [
-  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "opacity": 0,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "height": 340,
+        "width": 26
+      },
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 1,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": true
+    }
+  }
 ]
-
 ```
+
+The `bounds` key will return an object with this shape:
+
+```ts
+"bounds": {
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
+```
+
+The following keys will return a number (not a string): children, count, focusItem, index, opacity, and loadStatus.
+Any key whose value returned from the Roku as a string `"true"` or `"false"` will be translated into an actual boolean - `true` or `false`.
+All other keys will remain as strings.
+The following keys have default values that will be added if not provided from the Roku: `focusable: false`, `focused: false`, and `visible: true`.
 
 If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
 
-```
+```json
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
     "name": "ExampleElement",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 would be returned as
 
-```
+```json
 {
   "ExampleElement": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
     "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 ### Examples
 
-```
+```ts
 const data = elementData.text('ArcInterpolator');
 
-const firstElement = await rr.getElement({data});
+const firstElement = await rr.getElement({ data });
 
-const allElements = await rr.getElements({data});
+const allElements = await rr.getElements({ data });
 ```
 
-## getElementByText(), getElementByTag, getElementsByText(), getElementByTags()
+## getElementByText(), getElementByTag(), getElementsByText(), getElementByTags()
 
 These functions return information about the specified elements. They are not used to interact with the specified elements. Do not think of these functions as something like `findElementBy...`.
 
@@ -405,62 +453,92 @@ The differ only in responses. `getElementBy...()` returns information for the fi
 
 These functions return information about the specified elements. `getElementBy...()` returns a singular object, where `getElementsBy...()` returns an array of objects:
 
-```
+```json
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
+    "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
-```
+```json
 [
-  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+  {
+    "Label": {
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 0,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "index": 0,
+      "opacity": 0,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "bounds": { "x": 0, "y": 0, "height": 340, "width": 26 },
+      "color": "#262626ff",
+      "index": 1,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": true
+    }
+  }
 ]
-
 ```
 
 If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
 
-```
+```json
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "index": 0,
     "name": "ExampleElement",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 would be returned as
 
-```
+```json
 {
   "ExampleElement": {
     "color": "#262626ff",
-    "index": "0",
+    "index": 0,
     "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 ### Examples
 
-```
-const textElement = await rr.getElementByText({value: 'ArcInterpolator'});
-const tagElement = await rr.getElementByTag({value: 'Label'});
+```ts
+const textElement = await rr.getElementByText({ value: 'ArcInterpolator' });
+const tagElement = await rr.getElementByTag({ value: 'Label' });
 
-const textElements = await rr.getElementsByText({value: 'ArcInterpolator'});
-const tagElements = await rr.getElementsByTag({ value: 'Label'});
+const textElements = await rr.getElementsByText({ value: 'ArcInterpolator' });
+const tagElements = await rr.getElementsByTag({ value: 'Label' });
 ```
 
 ## getElementByAttribute(), getElementByAttributes()
@@ -479,61 +557,94 @@ The differ only in responses. `getElementByAttribute()` returns information for 
 
 These functions return information about the specified elements. `getElementByAttribute()` returns a singular object, where `getElementsByAttribute()` returns an array of objects:
 
-```
+```json
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "focusable": false,
+    "focused": false,
+    "index": 0,
+    "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
-```
+```json
 [
-  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+  {
+    "Label": {
+      "color": "#262626ff",
+      "index": 0,
+      "focusable": false,
+      "focused": false,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "index": 0,
+      "opacity": 0,
+      "focusable": false,
+      "focused": false,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": false
+    }
+  },
+  {
+    "Label": {
+      "bounds": { "x": 0, "y": 0, "height": 340, "width": 26 },
+      "color": "#262626ff",
+      "focusable": false,
+      "focused": false,
+      "index": 1,
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": true
+    }
+  }
 ]
-
 ```
 
 If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
 
-```
+```json
 {
   "Label": {
     "color": "#262626ff",
-    "index": "0",
+    "index": 0,
     "name": "ExampleElement",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 would be returned as
 
-```
+```json
 {
   "ExampleElement": {
     "color": "#262626ff",
-    "index": "0",
+    "index": 0,
     "tag": "Label",
     "text": "ArcInterpolator",
-    "visible": "false"
+    "visible": false
   }
 }
 ```
 
 ### Examples
 
-```
-const attributeElement = await rr.getElementByAttribute({attribute: 'color', value: '#252525ff'});
+```ts
+const attributeElement = await rr.getElementByAttribute({ attribute: 'color', value: '#252525ff' });
 
-const attributeElements = await rr.getElementsByAttribute({attribute: 'color', value: '#252525ff'});
-
+const attributeElements = await rr.getElementsByAttribute({ attribute: 'color', value: '#252525ff' });
 ```
 
 ## getFocusedElement()
@@ -548,62 +659,87 @@ This function returns the information about the currently focused element.
 
 This function returns an object with element information:
 
-```
-
+```json
 {
   "LabelList": {
-    "bounds": "{0, 37, 388, 612}",
-    "children": "23",
-    "count": "21",
-    "focusItem": "0",
-    "focusable": "true",
-    "focused": "true",
-    "index": "0",
+    "bounds": { "x": 0, "y": 37, "height": 388, "width": 612 },
+    "children": 23,
+    "count": 21,
+    "focusItem": 0,
+    "focusable": true,
+    "focused": true,
+    "index": 0,
+    "visible": true
   }
 }
-
 ```
 
 If an element returned has an attribute of 'name', then the element will be returned with the name value as the key, and a tag attribute with the XML name.
 
-```
+```json
 {
   "LabelList": {
-    "bounds": "{0, 37, 388, 612}",
-    "children": "23",
-    "count": "21",
-    "focusItem": "0",
-    "focusable": "true",
-    "focused": "true",
-    "index": "0",
-    "name": "componentList"
+    "bounds": {
+      "x": 0,
+      "y": 37,
+      "height": 388,
+      "width": 612
+    },
+    "children": 23,
+    "count": 21,
+    "focusItem": 0,
+    "focusable": true,
+    "focused": true,
+    "index": 0,
+    "name": "componentList",
+    "visible": true
   }
 }
 ```
 
 would be returned as
 
-```
+```json
 {
   "componentList": {
-    "bounds": "{0, 37, 388, 612}",
-    "children": "23",
-    "count": "21",
-    "focusItem": "0",
-    "focusable": "true",
-    "focused": "true",
-    "index": "0",
-    "tag": "LabelList"
+    "bounds": {
+      "x": 0,
+      "y": 37,
+      "height": 388,
+      "width": 612
+    },
+    "children": 23,
+    "count": 21,
+    "focusItem": 0,
+    "focusable": true,
+    "focused": true,
+    "index": 0,
+    "name": "componentList",
+    "tag": "LabelList",
+    "visible": true
   }
 }
 ```
 
-### Examples
+The `bounds` key will return an object with this shape:
 
+```ts
+"bounds": {
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
 ```
 
-const element = await rr.getFocusedElement();
+The following keys will return a number (not a string): children, count, focusItem, index, opacity, and loadStatus.
+Any key whose value returned from the Roku as a string `"true"` or `"false"` will be translated into an actual boolean - `true` or `false`.
+All other keys will remain as strings.
 
+### Examples
+
+```ts
+const element = await rr.getFocusedElement();
 ```
 
 ## verifyFocusedElementIsOfCertainTag()
@@ -623,10 +759,8 @@ This function returns a boolean value, with `true` meaning the focused element i
 
 ### Example
 
-```
-
-const isElementRenderableNode = await rr.verifyFocusedElementIsOfCertainTag({tag: 'RenderableNode'});
-
+```ts
+const isElementRenderableNode = await rr.verifyFocusedElementIsOfCertainTag({ tag: 'RenderableNode' });
 ```
 
 ## getScreenSource()
@@ -645,10 +779,8 @@ To preserve space in this file, an example is stored in [a test JSON file](../te
 
 ### Example
 
-```
-
+```ts
 const allElements = await rr.getScreenSource();
-
 ```
 
 ## verifyIsChannelLoaded()
@@ -668,10 +800,8 @@ This function returns a boolean value, where `true` means that the current chann
 
 ### Examples
 
-```
-
-const isChannelLoaded = await rr.verifyIsChannelLoaded({id: 'dev'});
-
+```ts
+const isChannelLoaded = await rr.verifyIsChannelLoaded({ id: 'dev' });
 ```
 
 ## getCurrentChannelInfo()
@@ -686,25 +816,21 @@ This function returns information about the currently launched channel
 
 This function returns information about the currently launched channel as an object:
 
-```
-
+```json
 {
-"rocute": {
-"id": "dev",
-"subtype": "rsga",
-"type": "appl",
-"version": "1.0.1"
+  "rocute": {
+    "id": "dev",
+    "subtype": "rsga",
+    "type": "appl",
+    "version": "1.0.1"
+  }
 }
-}
-
 ```
 
 ### Examples
 
-```
-
+```ts
 const channelInfo = await rr.getCurrentChannelInfo();
-
 ```
 
 ## getDeviceInfo()
@@ -723,10 +849,8 @@ To preserve space in this file, an example is stored in [a test JSON file](../te
 
 ### Examples
 
-```
-
+```ts
 const deviceInfo = await rr.getDeviceInfo();
-
 ```
 
 ## getPlayerInfo()
@@ -741,51 +865,47 @@ This function returns information about the media player.
 
 This function returns information about the media player as an object:
 
-```
-
+```json
 {
-"attributes": { "error": "false", "state": "play" },
-"plugin": {
-"bandwidth": "925831054 bps",
-"id": "dev",
-"name": "rocute"
-},
-"format": {
-"audio": "aac",
-"captions": "none",
-"container": "mp4",
-"drm": "none",
-"video": "mpeg4_15",
-"video_res": "1280x546"
-},
-"buffering": {
-"current": "1000",
-"max": "1000",
-"target": "0"
-},
-"new_stream": { "speed": "128000 bps" },
-"position": 270717,
-"duration": 887999,
-"is_live": "false",
-"runtime": "887999 ms",
-"stream_segment": {
-"bitrate": "0",
-"media_sequence": "89",
-"segment_type": "mux",
-"time": "268098"
+  "attributes": { "error": "false", "state": "play" },
+  "plugin": {
+    "bandwidth": "925831054 bps",
+    "id": "dev",
+    "name": "rocute"
+  },
+  "format": {
+    "audio": "aac",
+    "captions": "none",
+    "container": "mp4",
+    "drm": "none",
+    "video": "mpeg4_15",
+    "video_res": "1280x546"
+  },
+  "buffering": {
+    "current": "1000",
+    "max": "1000",
+    "target": "0"
+  },
+  "new_stream": { "speed": "128000 bps" },
+  "position": 270717,
+  "duration": 887999,
+  "is_live": "false",
+  "runtime": "887999 ms",
+  "stream_segment": {
+    "bitrate": "0",
+    "media_sequence": "89",
+    "segment_type": "mux",
+    "time": "268098"
+  }
 }
-}
-
 ```
 
 Note: `Position` and `Duration` are expected to be returned as a string, such as `1234 ms`, but are parsed down to just the numbers by the function, and are returned as a `number` instead of a `string`.
 
 ### Examples
 
-```
-
+```ts
 const playerInfo = await rr.getPlayerInfo();
-
 ```
 
 ## verifyIsPlaybackStarted()
@@ -804,10 +924,8 @@ This function returns a boolean value, where `true` means playback has started, 
 
 ### Examples
 
-```
-
+```ts
 const isPlaybackStarted = await rr.verifyIsPlaybackStarted();
-
 ```
 
 ## getScreenshot()
@@ -831,24 +949,20 @@ This function returns void.
 
 If the function is executed from a file within the `/test` directory:
 
-```
-
+```ts
 await rr.getScreenshot({
-fileName: 'screenshot'
-})
-
+  fileName: 'screenshot',
+});
 ```
 
 Would save an image to `/test/images/screenshot.jpg`
 
-```
-
+```ts
 await rr.getScreenshot({
-directoryPath: '../test/resources/images',
-fileName: 'secondExample',
-print: true
-})
-
+  directoryPath: '../test/resources/images',
+  fileName: 'secondExample',
+  print: true,
+});
 ```
 
 Would save an image to `/test/resources/images/secondExample.jpg`, and print out a message that states `Saved at {fullPathToTestDirectory}/test/resources/images/secondExample.jpg`
@@ -867,16 +981,12 @@ This function returns the response status code from the Roku as a number.
 
 ### Examples
 
-```
-
+```ts
 await rr.installChannel('./channel.zip');
-
 ```
 
-```
-
+```ts
 await rr.replaceChannel('./channel.zip');
-
 ```
 
 ## deleteChannel()
@@ -889,12 +999,6 @@ This function returns the response status code from the Roku as a number.
 
 ### Example
 
-```
-
+```ts
 await rr.deleteChannel();
-
-```
-
-```
-
 ```
