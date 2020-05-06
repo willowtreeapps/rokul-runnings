@@ -221,6 +221,7 @@
                         "attributes": {
                           "color": "#262626ff",
                           "index": "0",
+                          "name": "ArcInterpolatorName",
                           "text": "ArcInterpolator",
                           "visible": "false"
                         }

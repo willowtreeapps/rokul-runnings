@@ -210,6 +210,42 @@ describe('Rokul Runnings Unit tests', function() {
     expect(response).to.eql(readJson('getElement'));
   });
 
+  it('Should Get The Element by Text', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get('/query/app-ui')
+      .reply(200, readXml(file));
+
+    const response = await rr.getElementByText({ value: 'ArcInterpolator' });
+
+    expect(response).to.eql(readJson('getElement'));
+  });
+
+  it('Should Get the Element By Attribute', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get('/query/app-ui')
+      .reply(200, readXml(file));
+
+    const response = await rr.getElementByAttr({ attribute: 'color', value: '#262626ff' });
+
+    expect(response).to.eql(readJson('getElement'));
+  });
+
+  it('Should Get The Element by Tag', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get('/query/app-ui')
+      .reply(200, readXml(file));
+
+    const response = await rr.getElementByTag({ value: 'Label' });
+
+    expect(response).to.eql(readJson('getElement'));
+  });
+
   it('Should Get Elements', async function() {
     const file = 'app-ui';
 
@@ -221,6 +257,45 @@ describe('Rokul Runnings Unit tests', function() {
     const response = await rr.getElements({ data: defaultData });
 
     expect(response).to.eql(readJson('getElements'));
+  });
+
+  it('Should Get The Elements by Text', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get('/query/app-ui')
+      .reply(200, readXml(file))
+      .persist();
+
+    const response = await rr.getElementsByText({ value: 'ArcInterpolator' });
+
+    expect(response).to.eql(readJson('getElements'));
+  });
+
+  it('Should Get the Elements By Attribute', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get('/query/app-ui')
+      .reply(200, readXml(file))
+      .persist();
+
+    const response = await rr.getElementsByAttr({ attribute: 'color', value: '#262626ff' });
+
+    expect(response).to.eql(readJson('getElements'));
+  });
+
+  it('Should Get The Elements by Tag', async function() {
+    const file = 'app-ui';
+
+    nock(baseURL)
+      .get('/query/app-ui')
+      .reply(200, readXml(file))
+      .persist();
+
+    const response = await rr.getElementsByTag({ value: 'Label' });
+
+    expect(response).to.eql(readJson('getElementsByTag'));
   });
 
   it('Should Get Focused Element', async function() {
@@ -319,7 +394,7 @@ describe('Rokul Runnings Unit tests', function() {
     expect(response).to.eql(true);
   });
 
-  it('Should Get The Screenshot', async function() {
+  it('Should Get The Screenshot as a JPG', async function() {
     nock(baseURLWithoutPort, headerMatcher)
       .post('/plugin_inspect')
       .reply(200, screenshotResponse);
@@ -342,6 +417,34 @@ describe('Rokul Runnings Unit tests', function() {
     });
 
     const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.jpg`));
+
+    expect(fileExists).to.eql(true);
+  });
+
+  it('Should Get The Screenshot as a PNG', async function() {
+    nock(baseURLWithoutPort, headerMatcher)
+      .post('/plugin_inspect')
+      .reply(200, screenshotResponse);
+
+    nock(baseURLWithoutPort)
+      .post('/plugin_inspect')
+      .reply(401, '', authenticateHeader);
+
+    nock(baseURLWithoutPort, headerMatcher)
+      .get('/pkgs/dev.png')
+      .replyWithFile(200, `${__dirname}/resources/images/response.png`);
+
+    nock(baseURLWithoutPort)
+      .get('/pkgs/dev.png')
+      .reply(401, '', authenticateHeader);
+
+    await rr.getScreenshot({
+      directoryPath,
+      fileName,
+      fileType: 'png',
+    });
+
+    const fileExists = fs.existsSync(path.resolve(directoryPath, `${fileName}.png`));
 
     expect(fileExists).to.eql(true);
   });

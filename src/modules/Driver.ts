@@ -305,8 +305,8 @@ export class Driver {
     const response = await http.baseGET({ url, retries });
     const jsonResponse = this.parser(response);
     const screen = jsonResponse['app-ui'].topscreen.screen;
-    let sceneName;
-    let elements;
+    let sceneName: string;
+    let elements: AppUIResponseObject;
     // required to find the root scene
     for (const key of Object.keys(screen)) {
       const value = screen[key];

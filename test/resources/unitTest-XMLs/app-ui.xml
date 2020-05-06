@@ -54,7 +54,7 @@
                                 <LabelListItem index="0">
                                     <Poster index="0" opacity="0"/>
                                     <Poster index="1"/>
-                                    <Label color="#262626ff" index="0" text="ArcInterpolator" visible="false"/>
+                                    <Label color="#262626ff" index="0" text="ArcInterpolator" visible="false" name="ArcInterpolatorName"/>
                                     <ScrollingLabel bounds="{0, 11, 340, 26}" children="2" index="0">
                                         <Label color="#262626ff" index="0" opacity="0" text="ArcInterpolator" visible="false"/>
                                         <Label bounds="{0, 0, 340, 26}" color="#262626ff" index="1" text="ArcInterpolator"/>

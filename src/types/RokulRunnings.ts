@@ -29,8 +29,10 @@ export type XMLAttributes = {
   focusItem?: number | string;
   index?: number | string;
   loadStatus?: number | string;
+  name?: string;
   opacity?: number | string;
   state?: string;
+  tag?: string;
   text?: string;
   uri?: string;
   visible?: boolean | string;

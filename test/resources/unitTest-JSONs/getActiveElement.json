@@ -1,5 +1,5 @@
 {
-  "LabelList": {
+  "componentList": {
     "bounds": { "x": 0, "y": 37, "height": 388, "width": 612 },
     "children": 23,
     "count": 21,
@@ -8,6 +8,7 @@
     "focused": true,
     "index": 0,
     "name": "componentList",
+    "tag": "LabelList",
     "visible": true
   }
 }
