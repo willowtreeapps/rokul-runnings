@@ -1,0 +1,130 @@
+[
+  {
+    "ArcInterpolatorName": {
+      "color": "#262626ff",
+      "index": "0",
+      "name": "ArcInterpolatorName",
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": "false"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "BounceEffect"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "CardRotator"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "CardZoomDiagonal"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "CardZoomRotary"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "CircularImageClip"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "Clock"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "DatePicker"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "DisappearingLogo"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "DisappearingNavBar"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "HorizontalCardRotator"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 11, 340, 48}",
+      "color": "#ddddddff",
+      "index": "0",
+      "tag": "Label",
+      "text": "HorizontalNavBar"
+    }
+  },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "LiveIcon" } },
+  {
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RandomColoredFontList" }
+  },
+  {
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RandomColoredList" }
+  },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "RatingIcon" } },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "ResizeList" } },
+  { "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "Ticker" } },
+  {
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TiledBackground" }
+  },
+  {
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TriangularCornerClip" }
+  },
+  {
+    "Label": { "color": "#ddddddff", "index": "0", "tag": "Label", "text": "TriangularImageClip" }
+  }
+]

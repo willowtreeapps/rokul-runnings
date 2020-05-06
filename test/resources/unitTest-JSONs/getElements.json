@@ -1,5 +1,31 @@
 [
-  { "Label": { "color": "#262626ff", "index": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "color": "#262626ff", "index": "0", "opacity": "0", "text": "ArcInterpolator", "visible": "false" } },
-  { "Label": { "bounds": "{0, 0, 340, 26}", "color": "#262626ff", "index": "1", "text": "ArcInterpolator" } }
+  {
+    "ArcInterpolatorName": {
+      "color": "#262626ff",
+      "index": "0",
+      "name": "ArcInterpolatorName",
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": "false"
+    }
+  },
+  {
+    "Label": {
+      "color": "#262626ff",
+      "index": "0",
+      "opacity": "0",
+      "tag": "Label",
+      "text": "ArcInterpolator",
+      "visible": "false"
+    }
+  },
+  {
+    "Label": {
+      "bounds": "{0, 0, 340, 26}",
+      "color": "#262626ff",
+      "index": "1",
+      "tag": "Label",
+      "text": "ArcInterpolator"
+    }
+  }
 ]

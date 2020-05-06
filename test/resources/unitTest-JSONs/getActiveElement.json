@@ -1,5 +1,5 @@
 {
-  "LabelList": {
+  "componentList": {
     "bounds": "{0, 37, 388, 612}",
     "children": "23",
     "count": "21",
@@ -7,6 +7,7 @@
     "focusable": "true",
     "focused": "true",
     "index": "0",
-    "name": "componentList"
+    "name": "componentList",
+    "tag": "LabelList"
   }
 }

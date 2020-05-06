@@ -280,30 +280,62 @@ export class RokulRunnings {
 
   /** Searches for an element on the page based on the specified locator starting from the screen root.
    * Returns information on the first matching element. */
-  async getElement({
-    data,
-    retries = this.retries,
-  }: {
-    data: ElementDataObject;
-    delayInMillis?: number;
-    retries?: number;
-  }) {
+  async getElement({ data, retries = this.retries }: { data: ElementDataObject; retries?: number }) {
     const response = await this.driver.getUIElement({ data, retries });
     return this.squashAttributes(response)[0];
   }
 
-  /** Searches for elements on the page based on the specified locators starting from the screen root.
-   * Returns information on all matching elements. */
-  async getElements({
-    data,
+  async getElementByText({ value, retries = this.retries }: { value: string; retries?: number }) {
+    const data: ElementDataObject = { using: 'text', value };
+    return this.getElement({ data, retries });
+  }
+
+  async getElementByAttr({
+    attribute,
+    value,
     retries = this.retries,
   }: {
-    data: ElementDataObject;
-    delayInMillis?: number;
+    attribute: string;
+    value: string;
     retries?: number;
   }) {
+    const data: ElementDataObject = { using: 'attr', attribute, value };
+    return this.getElement({ data, retries });
+  }
+
+  async getElementByTag({ value, retries = this.retries }: { value: string; retries?: number }) {
+    const data: ElementDataObject = { using: 'tag', value };
+    return this.getElement({ data, retries });
+  }
+
+  /** Searches for elements on the page based on the specified locators starting from the screen root.
+   * Returns information on all matching elements. */
+  async getElements({ data, retries = this.retries }: { data: ElementDataObject; retries?: number }) {
     const response = await this.driver.getUIElements({ data, retries });
     return this.squashAttributes(response);
+  }
+
+  async getElementsByText({ value, retries = this.retries }: { value: string; retries?: number }) {
+    const data: ElementDataObject = { using: 'text', value };
+    return this.getElements({ data, retries });
+  }
+
+  async getElementsByAttr({
+    attribute,
+    value,
+    retries = this.retries,
+  }: {
+    attribute: string;
+    value: string;
+    retries?: number;
+  }) {
+    const data: ElementDataObject = { using: 'attr', attribute, value };
+    return this.getElements({ data, retries });
+  }
+
+  async getElementsByTag({ value, retries = this.retries }: { value: string; retries?: number }) {
+    const data: ElementDataObject = { using: 'tag', value };
+    return this.getElements({ data, retries });
   }
 
   /** Return the element on the screen that currently has focus. */
@@ -327,7 +359,10 @@ export class RokulRunnings {
     let attempts = 0;
     while (attempts < maxAttempts) {
       const response = await this.getFocusedElement(httpRetries);
-      if (Object.keys(response)[0] === tag) {
+      const nameOrTag = Object.keys(response)[0];
+      if (nameOrTag === tag) {
+        return true;
+      } else if (response[nameOrTag].tag === tag) {
         return true;
       }
       attempts++;
@@ -418,16 +453,18 @@ export class RokulRunnings {
       .replace(/:/g, '-')
       .replace('T', '_'),
     print = false,
+    fileType = 'jpg',
   }: {
     directoryPath?: string;
     fileName?: string;
     print?: boolean;
+    fileType?: 'jpg' | 'png';
   }) {
     /** Generate the screenshot from the provided FormData */
     await this.generateScreenshot();
 
     /** Save screenshot from Roku to local */
-    await this.saveScreenshot({ directoryPath, fileName, print });
+    await this.saveScreenshot({ directoryPath, fileName, print, fileType });
   }
 
   /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
@@ -493,13 +530,15 @@ export class RokulRunnings {
     directoryPath,
     fileName,
     print = false,
+    fileType,
   }: {
     directoryPath: string;
     fileName: string;
     print: boolean;
+    fileType: 'jpg' | 'png';
   }) {
     /** Define variables */
-    const endpoint: string = '/pkgs/dev.jpg';
+    const endpoint: string = `/pkgs/dev.${fileType}`;
     const method = 'GET';
     const headers = await this.generateHeaders({ method, endpoint });
     const authenticateHeader = headers['www-authenticate'];
@@ -512,7 +551,7 @@ export class RokulRunnings {
     });
 
     /** Define file path variables */
-    const filePath = path.resolve(directoryPath, `${fileName}.jpg`);
+    const filePath = path.resolve(directoryPath, `${fileName}.${fileType}`);
     const writer = fs.createWriteStream(filePath);
 
     /** Execute the GET command */
@@ -717,8 +756,13 @@ export class RokulRunnings {
   private squashAttributes(responseObject: AppUIResponseObject[]) {
     const elementsArray: SquashedAppUIObject[] = [];
     responseObject.forEach(element => {
-      const elementName = Object.keys(element)[0];
+      let elementName = Object.keys(element)[0];
       const childElement = element[elementName] as AppUIResponseObject;
+      const childElementAttributes = childElement.attributes;
+      childElementAttributes.tag = elementName;
+      if (childElementAttributes.name) {
+        elementName = childElementAttributes.name;
+      }
       elementsArray.push({ [elementName]: childElement.attributes } as SquashedAppUIObject);
     });
     return elementsArray;
