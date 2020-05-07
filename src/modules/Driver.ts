@@ -1,8 +1,11 @@
-import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params } from '../types/RokulRunnings';
+import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params, Action } from '../types/RokulRunnings';
 import * as http from '../utils/http';
 import { sleep } from '../utils/sleep';
 import * as xmljs from 'xml-js';
 import { Buttons } from './RokulRunnings';
+import { populateFormData } from '../utils/formData';
+import * as indigestion from 'indigestion';
+import { generateHeaders } from '../utils/authHeaders';
 
 export class Driver {
   constructor(public rokuIPAddress: string, public retries: number) {
@@ -327,5 +330,86 @@ export class Driver {
   /** Retrieves the element on the page that currently has focus. */
   async getActiveElement(retries: number) {
     return this.getUIElement({ data: { using: 'attr', attribute: 'focusItem', value: '0' }, retries });
+  }
+
+  /** Function to communicate with the Roku device, by submitting a `POST` to `/plugin_install` */
+  async sideload({
+    action,
+    channelLocation,
+    username,
+    password,
+    rokuIPAddress,
+  }: {
+    action: Action;
+    channelLocation: string;
+    username: string;
+    password: string;
+    rokuIPAddress: string;
+  }) {
+    /** Define variables */
+    const endpoint = '/plugin_install';
+    const address = `${rokuIPAddress}${endpoint}`;
+    const method = 'POST';
+    /** Generate FormData */
+    let formData = await populateFormData({ action, channelLocation });
+    /** Generate a Digest Authentication string */
+    const headers = await generateHeaders({
+      method,
+      address,
+      formData,
+    });
+    let attempts = 0;
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (headers === undefined && attempts < 8) {
+      await sleep(250);
+      attempts++;
+    }
+    const authenticateHeader = headers['www-authenticate'];
+    const authorization = indigestion.generateDigestAuth({
+      authenticateHeader,
+      username,
+      password,
+      uri: endpoint,
+      method,
+    });
+
+    /** Regenerate FormData */
+    formData = await populateFormData({ action, channelLocation });
+
+    /** Execute POST */
+    return new Promise((resolve, reject) => {
+      formData.submit(
+        {
+          host: this.rokuIPAddress,
+          path: endpoint,
+          headers: {
+            Authorization: authorization,
+            Connection: 'Close',
+          },
+        },
+        function(error, res) {
+          const chunks = [];
+          if (error) {
+            reject(error);
+          } else {
+            res.on('data', data => {
+              chunks.push(data);
+            });
+            res.on('end', () => {
+              // eslint-disable-next-line dot-notation
+              if (res.socket['_httpMessage']) {
+                // eslint-disable-next-line dot-notation
+                res.socket['_httpMessage'].writable = false;
+              } else {
+                res.emit('close');
+              }
+            });
+            res.on('close', () => {
+              resolve(res.statusCode);
+            });
+          }
+        },
+      );
+    });
   }
 }
