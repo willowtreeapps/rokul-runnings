@@ -1,16 +1,7 @@
 import { Driver } from './Driver';
+import { ElementDataObject, Apps, Params, Action, Method } from '../types/RokulRunnings';
+import { squashAttributes } from '../utils/formatters';
 import { sleep } from '../utils/sleep';
-import {
-  bounds,
-  ElementDataObject,
-  Apps,
-  Params,
-  AppUIResponseObject,
-  Action,
-  Method,
-  SquashedAppUIObject,
-  XMLAttributes,
-} from '../types/RokulRunnings';
 import * as FormData from 'form-data';
 import * as indigestion from 'indigestion';
 import axios from 'axios';
@@ -284,7 +275,7 @@ export class RokulRunnings {
    * Returns information on the first matching element. */
   async getElement({ data, retries = this.retries }: { data: ElementDataObject; retries?: number }) {
     const response = await this.driver.getUIElement({ data, retries });
-    return this.squashAttributes(response)[0];
+    return squashAttributes(response)[0];
   }
 
   async getElementByText({ value, retries = this.retries }: { value: string; retries?: number }) {
@@ -314,7 +305,7 @@ export class RokulRunnings {
    * Returns information on all matching elements. */
   async getElements({ data, retries = this.retries }: { data: ElementDataObject; retries?: number }) {
     const response = await this.driver.getUIElements({ data, retries });
-    return this.squashAttributes(response);
+    return squashAttributes(response);
   }
 
   async getElementsByText({ value, retries = this.retries }: { value: string; retries?: number }) {
@@ -343,7 +334,7 @@ export class RokulRunnings {
   /** Return the element on the screen that currently has focus. */
   async getFocusedElement(retries = this.retries) {
     const response = await this.driver.getActiveElement(retries);
-    return this.squashAttributes(response)[0];
+    return squashAttributes(response)[0];
   }
 
   /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
@@ -754,59 +745,4 @@ export class RokulRunnings {
       resolve(formData);
     });
   }
-
-  /** Function to take a more raw response from the Roku and turn it into a more digestible JSON */
-  private squashAttributes(responseObject: AppUIResponseObject[]) {
-    const elementsArray: SquashedAppUIObject[] = [];
-    responseObject.forEach(element => {
-      let elementName = Object.keys(element)[0];
-      const childElement = element[elementName] as AppUIResponseObject;
-      const childAttributes = this.typeifyAttributes(childElement.attributes);
-      childAttributes.tag = elementName;
-      if (childAttributes.name) {
-        elementName = childAttributes.name;
-      }
-      elementsArray.push({ [elementName]: childAttributes } as SquashedAppUIObject);
-    });
-    return elementsArray;
-  }
-
-  /** Function to turn string attributes to their actual types */
-  private typeifyAttributes(attributes: XMLAttributes) {
-    const keys = Object.keys(attributes);
-    keys.forEach(key => {
-      if (typeof attributes[key] === 'string') {
-        if (key === 'bounds' && typeof attributes.bounds === 'string') {
-          const regexp = /\d+/g;
-          const boundsKeys = ['x', 'y', 'height', 'width'];
-          let match: RegExpExecArray;
-          const out = {};
-          while ((match = regexp.exec(attributes.bounds)) !== null) {
-            out[boundsKeys.shift()] = Number(match[0]);
-          }
-          attributes.bounds = out as bounds;
-        } else if (
-          key === 'children' ||
-          key === 'count' ||
-          key === 'focusItem' ||
-          key === 'index' ||
-          key === 'opacity' ||
-          key === 'loadStatus'
-        ) {
-          attributes[key] = Number(attributes[key]);
-        } else if (attributes[key] === 'true' || attributes[key] === 'false') {
-          // any key with a value of true or false can assumed to be a boolean
-          attributes[key] = attributes[key] === 'true';
-        }
-      }
-    });
-    return { ...this.defaultAttributes, ...attributes };
-  }
-
-  /** Default XML attributes to be passed in when typeifying attributes */
-  private defaultAttributes = {
-    focusable: false,
-    focused: false,
-    visible: true,
-  };
 }
