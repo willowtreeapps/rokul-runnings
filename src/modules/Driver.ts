@@ -1,11 +1,12 @@
-import { ElementDataObject, Apps, XMLAttributes, AppUIResponseObject, Params, Action } from '../types/RokulRunnings';
+import { ElementDataObject, XMLAttributes, AppUIResponseObject, Params, Action } from '../types/RokulRunnings';
 import * as http from '../utils/http';
 import { sleep } from '../utils/sleep';
-import * as xmljs from 'xml-js';
 import { Buttons } from './RokulRunnings';
 import { populateFormData } from '../utils/formData';
 import * as indigestion from 'indigestion';
 import { generateHeaders } from '../utils/authHeaders';
+import { jsonFormatterDeviceInfo, jsonFormatterMediaPlayer, jsonFormatterApps } from '../utils/formatters';
+import { xmlParser as parser } from '../utils/xmlParser';
 
 export class Driver {
   constructor(public rokuIPAddress: string, public retries: number) {
@@ -21,104 +22,32 @@ export class Driver {
     return `${this.baseURL}/query/${endpoint}`;
   }
 
-  /** Custom settings for parsing the XML responses to JSON */
-  xmlToJsonOptions = {
-    compact: true,
-    attributesKey: 'attributes',
-    textKey: 'text',
-    declarationKey: 'declaration',
-  };
-
-  /** Custom parser turning XML responses from Roku into JSON */
-  parser(response: string) {
-    if (!response.startsWith('Request Failed with an error code of:')) {
-      return xmljs.xml2js(response, this.xmlToJsonOptions);
-    } else {
-      throw Error(response);
-    }
-  }
-
-  /** Specific formatting for responses from the `/query/apps` and `/query/active-app` calls
-   *  Expected to be used in the following way: `this.jsonFormatterApps(this.parser(responseToParse))`
-   */
-  jsonFormatterApps(responseObject: any) {
-    const responseArray = responseObject.apps ? responseObject.apps.app : [responseObject['active-app'].app];
-    const newResponseObject: Apps = {};
-    for (let i = 0; i < responseArray.length; i++) {
-      const text = responseArray[i].text;
-      const attribute = responseArray[i].attributes;
-      newResponseObject[text] = attribute;
-    }
-
-    if (responseObject.apps) {
-      responseObject.apps = newResponseObject;
-    } else {
-      responseObject['active-app'] = newResponseObject;
-    }
-
-    return newResponseObject;
-  }
-
-  /** Specific formatting for responses from the `/query/media-player` call
-   *  Expected to be used in the following way: `this.jsonFormatterMediaPlayer(this.parser(responseToParse))`
-   */
-  jsonFormatterMediaPlayer(responseObject: any) {
-    const player = responseObject.player;
-    Object.keys(player).forEach(key => {
-      if (Object.keys(player[key]).length === 1) {
-        player[key] = player[key][Object.keys(player[key])[0]];
-      }
-    });
-    return player;
-  }
-
-  /** Specific formatting for responses from the `device-info` call
-   *  Expected to be used in the following way: `this.jsonFormatterDeviceInfo(this.parser(responseToParse))`
-   */
-  jsonFormatterDeviceInfo(responseObject: any) {
-    const deviceInfo = responseObject['device-info'];
-    const deviceInfoKeys = Object.keys(deviceInfo);
-    deviceInfoKeys.forEach(key => {
-      // only change the value if the text key exists
-      if (deviceInfo[key].text) {
-        // remove the text key
-        deviceInfo[key] = deviceInfo[key].text;
-        // if the key has a boolean value, turn it from a string to a boolean
-        if (deviceInfo[key] === 'true' || deviceInfo[key] === 'false') {
-          deviceInfo[key] = deviceInfo[key] === 'true';
-        }
-      }
-    });
-    responseObject['device-info'] = deviceInfo;
-    return responseObject;
-  }
-
   /** Retrieves information about the specified session. */
   async getDeviceInfo(retries: number) {
     const url = this.queryUrl('device-info');
     const response = await http.baseGET({ url, retries });
-    return this.jsonFormatterDeviceInfo(this.parser(response));
+    return jsonFormatterDeviceInfo(parser(response));
   }
 
   /** Retrieves information about the Roku media player. */
   async getPlayerInfo(retries: number) {
     const url = this.queryUrl('media-player');
     const response = await http.baseGET({ url, retries });
-    return this.jsonFormatterMediaPlayer(this.parser(response));
+    return jsonFormatterMediaPlayer(parser(response));
   }
 
   /** Retrives the list of installed channels */
   async getApps(retries: number) {
     const url = this.queryUrl('apps');
     const response = await http.baseGET({ url, retries });
-    return this.jsonFormatterApps(this.parser(response));
+    return jsonFormatterApps(parser(response));
   }
 
   /** Returns information about the channel currently loaded on the device. */
   async getCurrentApp(retries: number) {
     const url = this.queryUrl('active-app');
     const response = await http.baseGET({ url, retries });
-    return this.jsonFormatterApps(this.parser(response));
+    return jsonFormatterApps(parser(response));
   }
 
   /** Gets the current screen source.
@@ -128,7 +57,7 @@ export class Driver {
   async getScreenSource(retries: number) {
     const url = this.queryUrl('app-ui');
     const response = await http.baseGET({ url, retries });
-    return this.parser(response);
+    return parser(response);
   }
 
   /** Launches the specified channel. Most likely this will be 'dev'.
@@ -306,7 +235,7 @@ export class Driver {
   async getUIElements({ data, retries }: { data: ElementDataObject; retries: number }) {
     const url = this.queryUrl('app-ui');
     const response = await http.baseGET({ url, retries });
-    const jsonResponse = this.parser(response);
+    const jsonResponse = parser(response);
     const screen = jsonResponse['app-ui'].topscreen.screen;
     let sceneName: string;
     let elements: AppUIResponseObject;

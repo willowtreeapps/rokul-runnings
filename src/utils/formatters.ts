@@ -1,4 +1,4 @@
-import { XMLAttributes, bounds, AppUIResponseObject, SquashedAppUIObject } from '../types/RokulRunnings';
+import { XMLAttributes, bounds, AppUIResponseObject, SquashedAppUIObject, Apps } from '../types/RokulRunnings';
 
 /** Default XML attributes to be passed in when typeifying attributes */
 const defaultAttributes = {
@@ -53,4 +53,59 @@ export function squashAttributes(responseObject: AppUIResponseObject[]) {
     elementsArray.push({ [elementName]: childAttributes } as SquashedAppUIObject);
   });
   return elementsArray;
+}
+
+/** Specific formatting for responses from the `/query/apps` and `/query/active-app` calls
+ *  Expected to be used in the following way: `jsonFormatterApps(jsonResponseToFormat)`
+ */
+export function jsonFormatterApps(responseObject: any) {
+  const responseArray = responseObject.apps ? responseObject.apps.app : [responseObject['active-app'].app];
+  const newResponseObject: Apps = {};
+  for (let i = 0; i < responseArray.length; i++) {
+    const text = responseArray[i].text;
+    const attribute = responseArray[i].attributes;
+    newResponseObject[text] = attribute;
+  }
+
+  if (responseObject.apps) {
+    responseObject.apps = newResponseObject;
+  } else {
+    responseObject['active-app'] = newResponseObject;
+  }
+
+  return newResponseObject;
+}
+
+/** Specific formatting for responses from the `/query/media-player` call
+ *  Expected to be used in the following way: `jsonFormatterMediaPlayer(jsonResponseToFormat)`
+ */
+export function jsonFormatterMediaPlayer(responseObject: any) {
+  const player = responseObject.player;
+  Object.keys(player).forEach(key => {
+    if (Object.keys(player[key]).length === 1) {
+      player[key] = player[key][Object.keys(player[key])[0]];
+    }
+  });
+  return player;
+}
+
+/** Specific formatting for responses from the `device-info` call
+ *  Expected to be used in the following way: `jsonFormatterDeviceInfo(jsonResponseToFormat)`
+ */
+export function jsonFormatterDeviceInfo(responseObject: any) {
+  const deviceInfo = responseObject['device-info'];
+  const deviceInfoKeys = Object.keys(deviceInfo);
+  deviceInfoKeys.forEach(key => {
+    // only change the value if the text key exists
+    if (deviceInfo[key].text) {
+      // remove the text key
+      deviceInfo[key] = deviceInfo[key].text;
+      // if the key has a boolean value, turn it from a string to a boolean
+      if (deviceInfo[key] === 'true' || deviceInfo[key] === 'false') {
+        deviceInfo[key] = deviceInfo[key] === 'true';
+      }
+    }
+  });
+  responseObject['device-info'] = deviceInfo;
+  return responseObject;
 }
