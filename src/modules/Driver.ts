@@ -267,17 +267,15 @@ export class Driver {
     channelLocation,
     username,
     password,
-    rokuIPAddress,
   }: {
     action: Action;
     channelLocation: string;
     username: string;
     password: string;
-    rokuIPAddress: string;
   }) {
     /** Define variables */
     const endpoint = '/plugin_install';
-    const address = `${rokuIPAddress}${endpoint}`;
+    const address = `http://${this.rokuIPAddress}${endpoint}`;
     const method = 'POST';
     /** Generate FormData */
     let formData = await populateFormData({ action, channelLocation });
