@@ -57,7 +57,7 @@ export class RokulRunnings {
   }
 
   /** Launches the channel corresponding to the specified channel ID. */
-  launchTheChannel({
+  async launchTheChannel({
     channelCode,
     contentId,
     mediaType,
@@ -91,7 +91,7 @@ export class RokulRunnings {
   }
 
   /** Returns a list of installed channels as an array of objects */
-  getApps(retries = this.retries) {
+  async getApps(retries = this.retries) {
     return this.driver.getApps(retries);
   }
 
