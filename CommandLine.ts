@@ -24,6 +24,16 @@ parser.addArgument(['-ga', '--getApps'], {
   action: 'storeTrue',
   help: 'returns currently installed channels; does not accept parameters',
 });
+parser.addArgument(['-gp', '--getPlayerInfo'], { action: 'storeTrue', help: 'get the player information' });
+parser.addArgument(['-gf', '--getFocusedElement'], { action: 'storeTrue', help: 'get focused element' });
+parser.addArgument(['--getScreenSource'], { action: 'storeTrue', help: 'get current screen source' });
+parser.addArgument(['-gc', '--getCurrentChannelInfo'], {
+  action: 'storeTrue',
+  help: 'get current channel information',
+});
+parser.addArgument(['-gd', '--getDeviceInfo'], { action: 'storeTrue', help: 'get device information' });
+
+parser.addArgument(['-gs', '--getScreenshot'], { help: 'gets a screenshot' });
 
 parser.addArgument(['-pb', '--pressBtn'], { help: 'sends a button press to the Roku' });
 parser.addArgument(['--pressBtnDown'], { help: 'sends a button down press to the Roku' });
@@ -42,8 +52,6 @@ const options = {
   retryDelayInMillis: args.setRetryDelay ? args.setRetryDelay : 1000,
   retries: args.setRetries ? args.setRetries : 1,
 };
-
-console.log(rokuIP, username, password, options);
 
 const runner = new RR(rokuIP, username, password, { ...options });
 
@@ -89,8 +97,45 @@ if (args.deepLink) {
   });
 }
 
+function getFunction(func) {
+  Promise.resolve(
+    func.then(response => {
+      console.log(response);
+    }),
+  );
+}
+
 if (args.getApps) {
-  Promise.resolve(runner.getApps()).then(response => {
+  getFunction(runner.getApps());
+}
+
+if (args.getFocusedElement) {
+  getFunction(runner.getFocusedElement());
+}
+
+if (args.getScreenSource) {
+  getFunction(runner.getScreenSource());
+}
+
+if (args.getCurrentChannelInfo) {
+  getFunction(runner.getCurrentChannelInfo());
+}
+
+if (args.getDeviceInfo) {
+  getFunction(runner.getDeviceInfo());
+}
+
+if (args.getPlayerInfo) {
+  getFunction(runner.getPlayerInfo());
+}
+
+// Figure out why this don't work
+if (args.getScreenshot) {
+  const opts = parseOpts({ opts: args.getScreenshot, defaultOpt: 'directoryPath' });
+  const okOpts = ['directoryPath', 'fileName', 'fileType'];
+  validateOpts(opts, okOpts);
+  const fullOpts = { ...opts, print: true };
+  Promise.resolve(runner.getScreenshot(fullOpts)).then(response => {
     console.log(response);
   });
 }
