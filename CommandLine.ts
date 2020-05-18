@@ -1,9 +1,15 @@
 #!/usr/bin/env node
+
 const RR = require('./src/modules/RokulRunnings').RokulRunnings;
 const ArgumentParser = require('argparse').ArgumentParser;
-// const Configstore = require('configstore');
+const Configstore = require('configstore');
 
-// const rrConfig = '';
+const rrConfig = new Configstore('Rokul Runnings', {
+  ip: '',
+  username: '',
+  password: '',
+  options: { pressDelay: 1000, retryDelay: 1000, retries: 1 },
+});
 
 const parser = new ArgumentParser({
   version: '0.0.1',
@@ -11,12 +17,12 @@ const parser = new ArgumentParser({
   description: 'CLI for Rokul Runnings',
 });
 
-parser.addArgument(['-si', '--setIP'], { help: 'set the IP Address for the Roku' });
-parser.addArgument(['-su', '--setUsername'], { help: 'set the username for the Roku' });
-parser.addArgument(['-sp', '--setPassword'], { help: 'set the password for the Roku' });
-parser.addArgument(['--setPressDelay'], { help: 'set the press delay' });
-parser.addArgument(['--setRetryDelay'], { help: 'set the retry delay' });
-parser.addArgument(['--setRetries'], { help: 'set the retries' });
+parser.addArgument(['-ip', '--ip'], { help: 'set the IP Address for the Roku' });
+parser.addArgument(['-u', '--username'], { help: 'set the username for the Roku' });
+parser.addArgument(['-p', '--password'], { help: 'set the password for the Roku' });
+parser.addArgument(['--pressDelay'], { help: 'set the press delay' });
+parser.addArgument(['--retryDelay'], { help: 'set the retry delay' });
+parser.addArgument(['--retries'], { help: 'set the retries' });
 parser.addArgument(['-lc', '--launchChannel'], { help: 'launch the specified channel' });
 parser.addArgument(['-dl', '--deepLink'], { help: 'deep link into the specified channel' });
 
@@ -35,25 +41,44 @@ parser.addArgument(['-gd', '--getDeviceInfo'], { action: 'storeTrue', help: 'get
 
 parser.addArgument(['-gs', '--getScreenshot'], { help: 'gets a screenshot' });
 
-parser.addArgument(['-pb', '--pressBtn'], { help: 'sends a button press to the Roku' });
+parser.addArgument(['-btn', '--pressBtn'], { help: 'sends a button press to the Roku' });
 parser.addArgument(['--pressBtnDown'], { help: 'sends a button down press to the Roku' });
 parser.addArgument(['--pressBtnUp'], { help: 'sends a button up press to the Roku' });
-parser.addArgument(['--sendWord'], { help: 'sends a word to the Roku' });
+parser.addArgument(['-w', '--sendWord'], { help: 'sends a word to the Roku' });
 
 parser.addArgument(['--print'], { action: 'storeTrue', help: 'print for debugging, does not require value' });
 
 const args = parser.parseArgs();
+if (args.ip) {
+  rrConfig.set('ip', args.ip);
+}
+if (args.username) {
+  rrConfig.set('username', args.username);
+}
+if (args.password) {
+  rrConfig.set('password', args.password);
+}
+if (args.pressDelay || args.retryDelay || args.retries) {
+  const rrConfigOptions = rrConfig.get('options');
+  const customOptions = {
+    pressDelay: args.pressDelay ? args.pressDelay : rrConfigOptions.pressDelay,
+    retryDelay: args.retryDelay ? args.retryDelay : rrConfigOptions.retryDelay,
+    retries: args.retries ? args.retries : rrConfigOptions.retries,
+  };
+  rrConfig.set('options', customOptions);
+}
 
-const rokuIP = args.setIP ? args.setIP : '';
-const username = args.setUsername ? args.setUsername : '';
-const password = args.setPassword ? args.setPassword : '';
-const options = {
-  pressDelayInMillis: args.setPressDelay ? args.setPressDelay : 1000,
-  retryDelayInMillis: args.setRetryDelay ? args.setRetryDelay : 1000,
-  retries: args.setRetries ? args.setRetries : 1,
-};
+const ip = rrConfig.get('ip');
+const username = rrConfig.get('username');
+const password = rrConfig.get('password');
+const options = rrConfig.get('options');
 
-const runner = new RR(rokuIP, username, password, { ...options });
+let runner;
+if (!(ip && username && password)) {
+  throw Error('IP, Username, or Password is missing. Please set before executing commands.');
+} else {
+  runner = new RR(ip, username, password, { ...options });
+}
 
 function parseOpts({ opts, defaultOpt }: { opts?: string; defaultOpt?: string }) {
   const splitOpts = opts.split(',');
@@ -74,7 +99,7 @@ function validateOpts(opts: {}, okOpts: string[]) {
   const optsKeys = Object.keys(opts);
   optsKeys.forEach(key => {
     if (!okOpts.includes(key)) {
-      throw Error(`Invalid Parameter! Acceptable parameters are ${okOpts}`);
+      throw Error(`Invalid Parameter! Acceptable parameters are ${okOpts}\nPlease use command "rr --help" for help.`);
     }
   });
 }
@@ -183,5 +208,5 @@ if (args.sendButtonSequence) {
 }
 
 if (args.print) {
-  console.log(runner);
+  console.log('Hey');
 }
