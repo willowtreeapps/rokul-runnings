@@ -123,7 +123,7 @@ export class RokulRunnings {
     let attempts = 0;
     while (attempts < maxAttempts) {
       try {
-        const response = await this.driver.getUIElement({ data, retries: httpRetries });
+        const [response] = await this.driver.getUIElement({ data, retries: httpRetries });
         if (response) {
           return true;
         } else {
