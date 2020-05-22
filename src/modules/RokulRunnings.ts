@@ -1,22 +1,9 @@
 import { Driver } from './Driver';
+import { ElementDataObject, Apps, Params } from '../types/RokulRunnings';
+import { squashAttributes } from '../utils/formatters';
+import { generateScreenshot, saveScreenshot } from '../utils/screenshots';
 import { sleep } from '../utils/sleep';
-import {
-  bounds,
-  ElementDataObject,
-  Apps,
-  Params,
-  AppUIResponseObject,
-  Action,
-  Method,
-  SquashedAppUIObject,
-  XMLAttributes,
-} from '../types/RokulRunnings';
-import * as FormData from 'form-data';
-import * as indigestion from 'indigestion';
-import axios from 'axios';
-import { IncomingHttpHeaders } from 'http';
 import path = require('path');
-import fs = require('fs');
 
 export enum Buttons {
   up = 'up',
@@ -39,6 +26,12 @@ export class RokulRunnings {
   private pressDelayInMillis: number;
   private retryDelayInMillis: number;
   private retries: number;
+  private devInstallerInfo = {
+    username: this.username,
+    password: this.password,
+    rokuIPAddress: `http://${this.rokuIPAddress}`,
+  };
+
   constructor(
     public rokuIPAddress: string,
     private username: string,
@@ -284,7 +277,7 @@ export class RokulRunnings {
    * Returns information on the first matching element. */
   async getElement({ data, retries = this.retries }: { data: ElementDataObject; retries?: number }) {
     const response = await this.driver.getUIElement({ data, retries });
-    return this.squashAttributes(response)[0];
+    return squashAttributes(response)[0];
   }
 
   async getElementByText({ value, retries = this.retries }: { value: string; retries?: number }) {
@@ -314,7 +307,7 @@ export class RokulRunnings {
    * Returns information on all matching elements. */
   async getElements({ data, retries = this.retries }: { data: ElementDataObject; retries?: number }) {
     const response = await this.driver.getUIElements({ data, retries });
-    return this.squashAttributes(response);
+    return squashAttributes(response);
   }
 
   async getElementsByText({ value, retries = this.retries }: { value: string; retries?: number }) {
@@ -343,7 +336,7 @@ export class RokulRunnings {
   /** Return the element on the screen that currently has focus. */
   async getFocusedElement(retries = this.retries) {
     const response = await this.driver.getActiveElement(retries);
-    return this.squashAttributes(response)[0];
+    return squashAttributes(response)[0];
   }
 
   /** Verifies that the Focused Element returned from {@link getFocusedElement} is of a certain type (XMLName/tag) */
@@ -463,350 +456,36 @@ export class RokulRunnings {
     fileType?: 'jpg' | 'png';
   }) {
     /** Generate the screenshot from the provided FormData */
-    await this.generateScreenshot();
+    await generateScreenshot({ ...this.devInstallerInfo });
 
     /** Save screenshot from Roku to local */
-    await this.saveScreenshot({ directoryPath, fileName, print, fileType });
-  }
-
-  /** Function that generates the screenshot by sending a POST to `/plugin_inspect` */
-  private async generateScreenshot() {
-    /** define variables */
-    const endpoint = '/plugin_inspect';
-    const method = 'POST';
-    let formData = await this.populateFormData({ action: 'Screenshot' });
-    const headers = await this.generateHeaders({
-      method,
-      endpoint,
-      formData,
-    });
-    const authenticateHeader = headers['www-authenticate'];
-    const authorization = indigestion.generateDigestAuth({
-      authenticateHeader,
-      username: this.username,
-      password: this.password,
-      uri: endpoint,
-      method,
-    });
-
-    formData = await this.populateFormData({ action: 'Screenshot' });
-
-    /** Execute the POST command */
-    return new Promise((resolve, reject) => {
-      formData.submit(
-        {
-          host: this.rokuIPAddress,
-          path: '/plugin_inspect',
-          headers: {
-            Authorization: authorization,
-          },
-        },
-        function(error, res) {
-          const chunks = [];
-          if (error) {
-            reject(error);
-          } else {
-            res.on('data', data => {
-              chunks.push(data);
-            });
-            res.on('end', () => {
-              // eslint-disable-next-line dot-notation
-              if (res.socket['_httpMessage']) {
-                // eslint-disable-next-line dot-notation
-                res.socket['_httpMessage'].writable = false;
-              } else {
-                res.emit('close');
-              }
-            });
-            res.on('close', () => {
-              resolve(res.statusCode);
-            });
-          }
-        },
-      );
-    });
-  }
-
-  /** Function that saves the screenshot, using a `GET` request to `/pkgs/dev.jpg`. */
-  private async saveScreenshot({
-    directoryPath,
-    fileName,
-    print = false,
-    fileType,
-  }: {
-    directoryPath: string;
-    fileName: string;
-    print: boolean;
-    fileType: 'jpg' | 'png';
-  }) {
-    /** Define variables */
-    const endpoint: string = `/pkgs/dev.${fileType}`;
-    const method = 'GET';
-    const headers = await this.generateHeaders({ method, endpoint });
-    const authenticateHeader = headers['www-authenticate'];
-    const authorization = indigestion.generateDigestAuth({
-      authenticateHeader,
-      username: this.username,
-      password: this.password,
-      uri: endpoint,
-      method,
-    });
-
-    /** Define file path variables */
-    const filePath = path.resolve(directoryPath, `${fileName}.${fileType}`);
-    const writer = fs.createWriteStream(filePath);
-
-    /** Execute the GET command */
-    const response = await axios.get(`http://${this.rokuIPAddress}${endpoint}`, {
-      headers: { Authorization: authorization },
-      responseType: 'stream',
-    });
-
-    /** Write the response to a file */
-    response.data.pipe(writer);
-
-    /** Close the writer */
-    return new Promise((resolve, reject) => {
-      writer.on('finish', function() {
-        writer.end();
-        if (print) console.log(`Saved at ${directoryPath}/${fileName}.jpg`);
-        resolve();
-      });
-      writer.on('error', reject);
-    });
+    await saveScreenshot({ directoryPath, fileName, print, fileType, ...this.devInstallerInfo });
   }
 
   /** Function to install a channel, by submitting a `POST` to `/plugin_install` */
   installChannel(channelLocation: string) {
-    return this.sideload({
+    return this.driver.sideload({
       action: 'Install',
       channelLocation: channelLocation,
+      ...this.devInstallerInfo,
     });
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
   replaceChannel(channelLocation: string) {
-    return this.sideload({
+    return this.driver.sideload({
       action: 'Replace',
       channelLocation: channelLocation,
+      ...this.devInstallerInfo,
     });
   }
 
   /** Function to replace a previously installed channel, by submitting a `POST` to `/plugin_install` */
   deleteChannel() {
-    return this.sideload({
+    return this.driver.sideload({
       action: 'Delete',
       channelLocation: '',
+      ...this.devInstallerInfo,
     });
   }
-
-  /** Function to communicate with the Roku device, by submitting a `POST` to `/plugin_install` */
-  private async sideload({ action, channelLocation }: { action: Action; channelLocation: string }) {
-    /** Define variables */
-    const endpoint = '/plugin_install';
-    const method = 'POST';
-    /** Generate FormData */
-    let formData = await this.populateFormData({ action, channelLocation });
-    /** Generate a Digest Authentication string */
-    const headers = await this.generateHeaders({
-      method,
-      endpoint,
-      formData,
-    });
-    let attempts = 0;
-    // eslint-disable-next-line no-unmodified-loop-condition
-    while (headers === undefined && attempts < 8) {
-      await sleep(250);
-      attempts++;
-    }
-    const authenticateHeader = headers['www-authenticate'];
-    const authorization = indigestion.generateDigestAuth({
-      authenticateHeader,
-      username: this.username,
-      password: this.password,
-      uri: endpoint,
-      method,
-    });
-
-    /** Regenerate FormData */
-    formData = await this.populateFormData({ action, channelLocation });
-
-    /** Execute POST */
-    return new Promise((resolve, reject) => {
-      formData.submit(
-        {
-          host: this.rokuIPAddress,
-          path: endpoint,
-          headers: {
-            Authorization: authorization,
-            Connection: 'Close',
-          },
-        },
-        function(error, res) {
-          const chunks = [];
-          if (error) {
-            reject(error);
-          } else {
-            res.on('data', data => {
-              chunks.push(data);
-            });
-            res.on('end', () => {
-              // eslint-disable-next-line dot-notation
-              if (res.socket['_httpMessage']) {
-                // eslint-disable-next-line dot-notation
-                res.socket['_httpMessage'].writable = false;
-              } else {
-                res.emit('close');
-              }
-            });
-            res.on('close', () => {
-              resolve(res.statusCode);
-            });
-          }
-        },
-      );
-    });
-  }
-
-  /** Function to generate auth headers */
-  private generateHeaders({
-    method,
-    endpoint,
-    formData,
-  }: {
-    method: Method;
-    endpoint: string;
-    formData?: FormData;
-  }): Promise<IncomingHttpHeaders> {
-    /** If executing a GET */
-    if (method === 'GET') {
-      return this.generateGetHeaders(`http://${this.rokuIPAddress}${endpoint}`);
-    } else {
-      /** If executing a POST */
-      return this.generatePostHeaders({
-        endpoint: endpoint,
-        formData: formData,
-      });
-    }
-  }
-
-  /** Function to return headers for a GET request */
-  private async generateGetHeaders(url: string): Promise<IncomingHttpHeaders> {
-    try {
-      const result = await axios.get(url);
-      return result.headers;
-    } catch (error) {
-      if (error.response) {
-        if (error.response.status !== 401) console.error(error);
-        else return error.response.headers;
-      }
-    }
-  }
-
-  /** Function to return headers for a POST request */
-  private async generatePostHeaders({
-    endpoint,
-    formData,
-  }: {
-    endpoint: string;
-    formData: FormData;
-  }): Promise<IncomingHttpHeaders> {
-    try {
-      const result = await axios.post(`http://${this.rokuIPAddress}${endpoint}`, formData, {
-        headers: formData.getHeaders(),
-      });
-      return result.headers;
-    } catch (error) {
-      if (error.response) {
-        if (error.response.status !== 401) throw error;
-        else {
-          return error.response.headers;
-        }
-      }
-    }
-  }
-
-  /** Function to create FormData */
-  private populateFormData({
-    action,
-    channelLocation,
-  }: {
-    action: Action;
-    channelLocation?: string;
-  }): Promise<FormData> {
-    return new Promise(resolve => {
-      /** Declare variable */
-      const formData = new FormData();
-      /** Append data for `mysubmit` */
-      formData.append('mysubmit', action);
-      /** Append data depending on `mysubmit` value */
-      if (action === 'Install' || action === 'Replace') {
-        const file = fs.createReadStream(channelLocation);
-        const fileNameArray = channelLocation.split('/');
-        const fileName = fileNameArray[fileNameArray.length - 1];
-        formData.append('archive', file, {
-          contentType: 'application/zip',
-          filename: fileName,
-        });
-      } else formData.append('archive', '');
-
-      /** Return the FormData */
-      resolve(formData);
-    });
-  }
-
-  /** Function to take a more raw response from the Roku and turn it into a more digestible JSON */
-  private squashAttributes(responseObject: AppUIResponseObject[]) {
-    const elementsArray: SquashedAppUIObject[] = [];
-    responseObject.forEach(element => {
-      let elementName = Object.keys(element)[0];
-      const childElement = element[elementName] as AppUIResponseObject;
-      const childAttributes = this.typeifyAttributes(childElement.attributes);
-      childAttributes.tag = elementName;
-      if (childAttributes.name) {
-        elementName = childAttributes.name;
-      }
-      elementsArray.push({ [elementName]: childAttributes } as SquashedAppUIObject);
-    });
-    return elementsArray;
-  }
-
-  /** Function to turn string attributes to their actual types */
-  private typeifyAttributes(attributes: XMLAttributes) {
-    const keys = Object.keys(attributes);
-    keys.forEach(key => {
-      if (typeof attributes[key] === 'string') {
-        if (key === 'bounds' && typeof attributes.bounds === 'string') {
-          const regexp = /\d+/g;
-          const boundsKeys = ['x', 'y', 'height', 'width'];
-          let match: RegExpExecArray;
-          const out = {};
-          while ((match = regexp.exec(attributes.bounds)) !== null) {
-            out[boundsKeys.shift()] = Number(match[0]);
-          }
-          attributes.bounds = out as bounds;
-        } else if (
-          key === 'children' ||
-          key === 'count' ||
-          key === 'focusItem' ||
-          key === 'index' ||
-          key === 'opacity' ||
-          key === 'loadStatus'
-        ) {
-          attributes[key] = Number(attributes[key]);
-        } else if (attributes[key] === 'true' || attributes[key] === 'false') {
-          // any key with a value of true or false can assumed to be a boolean
-          attributes[key] = attributes[key] === 'true';
-        }
-      }
-    });
-    return { ...this.defaultAttributes, ...attributes };
-  }
-
-  /** Default XML attributes to be passed in when typeifying attributes */
-  private defaultAttributes = {
-    focusable: false,
-    focused: false,
-    visible: true,
-  };
 }
