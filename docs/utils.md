@@ -10,19 +10,28 @@ import { ElementData } from 'rokul-runnings';
 
 ### Examples
 
-```
+```ts
 const textElement = ElementData.text('text-value');
-// the following two lines are functionally equal
-const textElementInfo = await rr.getElement(textElement);
-const textElementInfo2 = await rr.getElement({using: "text", value: "text-value"})
+// the following three lines are functionally equal
+const textElementInfo = await rr.getElement({ data: textElement });
+const textElementInfo2 = await rr.getElement({ data: { using: 'text', value: 'text-value' } });
+const textElementInfo3 = await rr.getElementByText({ value: 'text-value' });
 
 const attrElement = ElementData.attr('attribute-to-find', 'attribute-value');
-// the following two lines are functionally equal
-const attrElementsInfo = await rr.getElements(attrElement);
-const attrElementsInfo2 = await rr.getElements({using: "attr", attribute: "attribute-to-find", value: "attribute-value"})
+// the following three lines are functionally equal
+const attrElementsInfo = await rr.getElements({ data: attrElement });
+const attrElementsInfo2 = await rr.getElements({
+  data: {
+    using: 'attr',
+    attribute: 'attribute-to-find',
+    value: 'attribute-value',
+  },
+});
+const attrElementsInfo3 = await rr.getElementsByAttr({ attribute: 'attribute-to-find', value: 'attribute-value' });
 
 const tagElement = ElementData.tag('tag-value');
-// the following two lines are functionally equal
-const tagElementInfo = await rr.getElement(tagElement);
-const tagElementInfo2 = await rr.getElement({using: "tag", value: "tag-value"});
+// the following three lines are functionally equal
+const tagElementInfo = await rr.getElement({ data: tagElement });
+const tagElementInfo2 = await rr.getElement({ data: { using: 'tag', value: 'tag-value' } });
+const tagElementInfo3 = await rr.getElementByTag({ value: 'tag-value' });
 ```
