@@ -49,8 +49,10 @@ export class RokulRunnings {
     this.retries = retries;
   }
 
-  /** Launches the channel corresponding to the specified channel ID. */
-  async launchTheChannel({
+  /** Launches the channel corresponding to the specified channel ID.
+   * Does not need to be async as it already returns a promise
+   */
+  launchTheChannel({
     channelCode,
     contentId,
     mediaType,
@@ -66,7 +68,9 @@ export class RokulRunnings {
     return this.driver.sendLaunchChannel({ channelCode, contentId, mediaType, retries, params });
   }
 
-  /** Deep Links into channel */
+  /** Deep Links into channel
+   * Does not need to be async as it already returns a promise
+   */
   deepLinkIntoChannel({
     channelCode,
     contentId,
@@ -83,8 +87,10 @@ export class RokulRunnings {
     return this.driver.deepLink({ channelCode, contentId, mediaType, retries, params });
   }
 
-  /** Returns a list of installed channels as an array of objects */
-  async getApps(retries = this.retries) {
+  /** Returns a list of installed channels as an array of objects
+   * Does not need to be async as it already returns a promise
+   */
+  getApps(retries = this.retries) {
     return this.driver.getApps(retries);
   }
 

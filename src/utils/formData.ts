@@ -1,5 +1,5 @@
 import { Action } from '../types/RokulRunnings';
-import * as FormData from 'form-data';
+import FormData = require('form-data');
 import fs = require('fs');
 
 /** Function to create FormData */

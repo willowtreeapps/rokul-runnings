@@ -4,9 +4,9 @@
 import * as pp from './printPretty';
 import * as help from './helpers';
 import { getArgs } from './args';
-const log = console.log;
-const RR = require('../modules/RokulRunnings').RokulRunnings;
+import { RokulRunnings as RR } from '../modules/RokulRunnings';
 const Configstore = require('configstore');
+const log = console.log;
 
 // get configs
 const rrConfig = new Configstore('Rokul Runnings', {
@@ -34,7 +34,7 @@ if (args.pressDelay || args.retryDelay || args.retries) {
   const rokuOptions = {
     pressDelay: args.pressDelay ? args.pressDelay : rrConfigOptions.pressDelay,
     retryDelay: args.retryDelay ? args.retryDelay : rrConfigOptions.retryDelay,
-    retries: args.retries ? args.retries : rrConfigOptions.retries,
+    retries: args.retries ? args.rrretries : rrConfigOptions.retries,
   };
   rrConfig.set('options', rokuOptions);
 }
@@ -52,23 +52,75 @@ if (!(ip && username && password)) {
   runner = new RR(ip, username, password, { ...options });
 }
 
-if (args.launchChannel) {
-  const opts = help.parseOpts({ opts: args.launchChannel, defaultOpt: 'channelCode' });
-  const okOpts = ['channelCode', 'contentId', 'mediaType', 'params'];
+function argsFunction({
+  optsToParse,
+  parseElement = false,
+  defaultOpt,
+  okOpts,
+  sequence,
+  screenshot = false,
+  rrFunc,
+  print,
+}: {
+  optsToParse: string;
+  parseElement?: boolean;
+  defaultOpt?: string;
+  okOpts: string[];
+  sequence?: 'sequence' | 'customSequence';
+  screenshot?: boolean;
+  rrFunc: Function;
+  print?: { type?: 'trueFalse' | 'json' | 'status'; text?: string; false?: string };
+}) {
+  let opts = parseElement
+    ? help.parseElement(help.parseOpts({ opts: optsToParse, defaultOpt }))
+    : help.parseOpts({ opts: optsToParse, defaultOpt });
   help.validateOpts(opts, okOpts);
-  Promise.resolve(log(runner.launchTheChannel(opts))).then(response => {
-    log(response);
+  if (sequence) {
+    opts[sequence] = help.parseButtonSequence(opts[sequence]);
+  }
+  if (screenshot) {
+    opts = { ...opts, print: true };
+  }
+  Promise.resolve(rrFunc(opts)).then(response => {
+    if (!print) {
+      log(response);
+    } else if (print.type === 'trueFalse') {
+      response ? pp.trueText(print.text) : pp.falseText(print.false);
+    } else if (print.type === 'json') {
+      pp.json(response);
+    } else if (print.type === 'status') {
+      // prints out the trueText if the response a 200 of any type
+      response < 300 ? pp.trueText(`Status is ${response}`) : pp.falseText(`${response}`);
+    }
+  });
+}
+
+if (args.launchChannel) {
+  const launchTheChannel = params => {
+    return runner.launchTheChannel(params);
+  };
+  argsFunction({
+    optsToParse: args.launchChannel,
+    defaultOpt: 'channelCode',
+    okOpts: ['channelCode', 'contentId', 'mediaType', 'params'],
+    rrFunc: launchTheChannel,
+    print: { type: 'status' },
   });
 }
 
 if (args.deepLink) {
-  const opts = help.parseOpts({ opts: args.deepLink, defaultOpt: 'channelCode' });
-  const okOpts = ['channelCode', 'contentId', 'mediaType', 'params'];
-  help.validateOpts(opts, okOpts);
-  Promise.resolve(runner.deepLinkIntoChannel(opts)).then(response => {
-    log(response);
+  const deepLinkIntoChannel = params => {
+    return runner.deepLinkIntoChannel(params);
+  };
+  argsFunction({
+    optsToParse: args.deepLink,
+    defaultOpt: 'channelCode',
+    okOpts: ['channelCode', 'contentId', 'mediaType', 'params'],
+    rrFunc: deepLinkIntoChannel,
+    print: { type: 'status' },
   });
 }
+
 // Re-usable function for the basic get functions
 function getFunction(func) {
   Promise.resolve(
@@ -104,184 +156,288 @@ if (args.getPlayerInfo) {
 
 // This won't work if the folder where the screenshot should be saved doesn't exist
 if (args.getScreenshot) {
-  const opts = help.parseOpts({ opts: args.getScreenshot, defaultOpt: 'directoryPath' });
-  const okOpts = ['directoryPath', 'fileName', 'fileType'];
-  help.validateOpts(opts, okOpts);
-  const fullOpts = { ...opts, print: true };
-  Promise.resolve(runner.getScreenshot(fullOpts)).then(response => {
-    log(response);
+  const getScreenshot = params => {
+    return runner.getScreenshot(params);
+  };
+  argsFunction({
+    optsToParse: args.getScreenshot,
+    defaultOpt: 'directoryPath',
+    okOpts: ['directoryPath', 'fileName', 'fileType'],
+    screenshot: true,
+    rrFunc: getScreenshot,
   });
 }
 
 const screenLoadedOkOpts = ['data', 'maxAttempts'];
 
 if (args.verifyScreenLoaded) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.verifyScreenLoaded }));
-  help.validateOpts(opts, screenLoadedOkOpts);
-  Promise.resolve(runner.verifyIsScreenLoaded(opts)).then(response => {
-    response ? pp.trueText('Screen has been loaded.') : pp.falseText('Screen has not been loaded.');
+  const verifyIsScreenLoaded = params => {
+    return runner.verifyIsScreenLoaded(params);
+  };
+  argsFunction({
+    optsToParse: args.verifyScreenLoaded,
+    parseElement: true,
+    okOpts: screenLoadedOkOpts,
+    rrFunc: verifyIsScreenLoaded,
+    print: { type: 'trueFalse', text: `Screen has been loaded.`, false: 'Screen has not been loaded.' },
   });
 }
 
 if (args.verifyElementOnScreen) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.verifyElementOnScreen }));
-  help.validateOpts(opts, screenLoadedOkOpts);
-  Promise.resolve(runner.verifyIsElementOnScreen(opts)).then(response => {
-    response ? pp.trueText('Element is on the screen.') : pp.falseText('Element is not on the screen.');
+  const verifyIsElementOnScreen = params => {
+    return runner.verifyIsElementOnScreen(params);
+  };
+  argsFunction({
+    optsToParse: args.verifyElementOnScreen,
+    parseElement: true,
+    okOpts: screenLoadedOkOpts,
+    rrFunc: verifyIsElementOnScreen,
+    print: { type: 'trueFalse', text: 'Element is on the screen', false: 'Element is not on the screen"' },
   });
 }
 
 if (args.verifyChannelExist) {
-  const opts = help.parseOpts({ opts: args.verifyChannelExist, defaultOpt: 'id' });
-  const okOpts = ['id'];
-  help.validateOpts(opts, okOpts);
-  Promise.resolve(runner.verifyIsChannelExist(opts)).then(response => {
-    const id = opts['id'];
-    response ? pp.trueText(`${id} exists.`) : pp.falseText(`${id} does not exist.`);
+  const verifyIsChannelExist = params => {
+    return runner.verifyIsChannelExist(params);
+  };
+  argsFunction({
+    optsToParse: args.verifyChannelExist,
+    defaultOpt: 'id',
+    okOpts: ['id'],
+    rrFunc: verifyIsChannelExist,
+    print: { type: 'trueFalse', text: 'Channel exists.', false: 'Channel does not exist.' },
   });
 }
 
 if (args.verifyFocusedElementIsOfCertainTag) {
-  const opts = help.parseOpts({ opts: args.verifyFocusedElementIsOfCertainTag, defaultOpt: 'tag' });
-  help.validateOpts(opts, ['tag', 'maxAttempts']);
-  Promise.resolve(runner.verifyFocusedElementIsOfCertainTag(opts)).then(response => {
-    response
-      ? pp.trueText(`Focused element is of tag type: ${opts['tag']}`)
-      : pp.falseText(`Focused element is not of tag type: ${opts['tag']}`);
+  const verifyFocusedElementIsOfCertainTag = params => {
+    return runner.verifyFocusedElementIsOfCertainTag(params);
+  };
+  argsFunction({
+    optsToParse: args.verifyFocusedElementIsOfCertainTag,
+    defaultOpt: 'tag',
+    okOpts: ['tag', 'maxAttempts'],
+    rrFunc: verifyFocusedElementIsOfCertainTag,
+    print: {
+      type: 'trueFalse',
+      text: 'Focused element is of specified tag type.',
+      false: 'Focused element is not of specified tag type.',
+    },
   });
 }
 
 if (args.verifyChannelLoaded) {
-  const opts = help.parseOpts({ opts: args.verifyChannelLoaded, defaultOpt: 'id' });
-  help.validateOpts(opts, ['id', 'maxAttempts']);
-  Promise.resolve(runner.verifyIsChannelLoaded(opts)).then(response => {
-    response ? pp.trueText(`Channel is loaded.`) : pp.falseText(`Channel is not loaded.`);
+  const verifyIsChannelLoaded = params => {
+    return runner.verifyIsChannelLoaded(params);
+  };
+  argsFunction({
+    optsToParse: args.verifyChannelLoaded,
+    defaultOpt: 'id',
+    okOpts: ['id, maxAttempts'],
+    rrFunc: verifyIsChannelLoaded,
+    print: { type: 'trueFalse', text: 'Channel is loaded.', false: 'Channel is not loaded' },
   });
 }
 
 if (args.verifyPlaybackStarted) {
-  const opts = help.parseOpts({ opts: args.verifyPlaybackStarted });
-  help.validateOpts(opts, ['maxAttempts']);
-  Promise.resolve(runner.verifyIsPlaybackStarted(opts)).then(response => {
-    response ? pp.trueText(`Playback is started.`) : pp.falseText(`Playback is not started.`);
+  const verifyIsPlaybackStarted = params => {
+    return runner.verifyIsPlaybackStarted(params);
+  };
+  argsFunction({
+    optsToParse: args.verifyIsPlaybackStarted,
+    okOpts: ['maxAttempts'],
+    rrFunc: verifyIsPlaybackStarted,
+    print: { type: 'trueFalse', text: 'Playback is started.', false: 'Playback is not started.' },
   });
 }
 
 if (args.getElement) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElement }));
-  help.validateOpts(opts, ['data']);
-  Promise.resolve(runner.getElement(opts)).then(response => {
-    pp.json(response);
+  const getElement = params => {
+    return runner.getElement(params);
+  };
+  argsFunction({
+    optsToParse: args.getElement,
+    parseElement: true,
+    okOpts: ['data'],
+    rrFunc: getElement,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElementByText) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElementByText, defaultOpt: 'value' }));
-  help.validateOpts(opts, ['value']);
-  Promise.resolve(runner.getElementByText(opts)).then(response => {
-    pp.json(response);
+  const getElementByText = params => {
+    return runner.getElementByTag(params);
+  };
+  argsFunction({
+    optsToParse: args.getElementByTag,
+    parseElement: true,
+    defaultOpt: 'value',
+    okOpts: ['value'],
+    rrFunc: getElementByText,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElementByAttr) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElementByAttr }));
-  help.validateOpts(opts, ['value', 'attribute']);
-  Promise.resolve(runner.getElementByAttr(opts)).then(response => {
-    pp.json(response);
+  const getElementByAttr = params => {
+    return runner.getElementByAttr(params);
+  };
+  argsFunction({
+    optsToParse: args.getElementByAttr,
+    parseElement: true,
+    okOpts: ['value', 'attribute'],
+    rrFunc: getElementByAttr,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElementByTag) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElementByTag, defaultOpt: 'value' }));
-  help.validateOpts(opts, ['value']);
-  Promise.resolve(runner.getElementByTag(opts)).then(response => {
-    pp.json(response);
+  const getElementByTag = params => {
+    return runner.getElementByTag(params);
+  };
+  argsFunction({
+    optsToParse: args.getElementByTag,
+    parseElement: true,
+    defaultOpt: 'value',
+    okOpts: ['value'],
+    rrFunc: getElementByTag,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElements) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElements }));
-  help.validateOpts(opts, ['data']);
-  Promise.resolve(runner.getElements(opts)).then(response => {
-    pp.json(response);
+  const getElements = params => {
+    return runner.getElements(params);
+  };
+  argsFunction({
+    optsToParse: args.getElements,
+    parseElement: true,
+    okOpts: ['data'],
+    rrFunc: getElements,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElementsByText) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElementsByText, defaultOpt: 'value' }));
-  help.validateOpts(opts, ['value']);
-  Promise.resolve(runner.getElementsByText(opts)).then(response => {
-    pp.json(response);
+  const getElementsByText = params => {
+    return runner.getElementsByText(params);
+  };
+  argsFunction({
+    optsToParse: args.getElementsByText,
+    parseElement: true,
+    defaultOpt: 'value',
+    okOpts: ['value'],
+    rrFunc: getElementsByText,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElementsByAttr) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElementsByAttr }));
-  help.validateOpts(opts, ['value', 'attribute']);
-  Promise.resolve(runner.getElementsByAttr(opts)).then(response => {
-    pp.json(response);
+  const getElementsByAttr = params => {
+    return runner.getElementsByAttr(params);
+  };
+  argsFunction({
+    optsToParse: args.getElementsByAttr,
+    parseElement: true,
+    okOpts: ['value', 'attribute'],
+    rrFunc: getElementsByAttr,
+    print: { type: 'json' },
   });
 }
 
 if (args.getElementsByTag) {
-  const opts = help.parseElement(help.parseOpts({ opts: args.getElementsByTag, defaultOpt: 'value' }));
-  help.validateOpts(opts, ['value']);
-  Promise.resolve(runner.getElementsByTag(opts)).then(response => {
-    pp.json(response);
+  const getElementsByTag = params => {
+    return runner.getElementsByTag(params);
+  };
+  argsFunction({
+    optsToParse: args.getElementsByTag,
+    parseElement: true,
+    defaultOpt: 'value',
+    okOpts: ['value'],
+    rrFunc: getElementsByTag,
+    print: { type: 'json' },
   });
 }
 
 const okOptsBtnPress = ['keyPress', 'params'];
 
 if (args.pressBtn) {
-  const opts = help.parseOpts({ opts: args.pressBtn, defaultOpt: 'keyPress' });
-  help.validateOpts(opts, okOptsBtnPress);
-  Promise.resolve(runner.pressBtn(opts)).then(response => {
-    response === 200 ? pp.trueText('Status is 200') : pp.falseText(`${response}`);
+  const pressBtn = params => {
+    return runner.pressBtn(params);
+  };
+  argsFunction({
+    optsToParse: args.pressBtn,
+    defaultOpt: 'keyPress',
+    okOpts: okOptsBtnPress,
+    rrFunc: pressBtn,
+    print: { type: 'status' },
   });
 }
 
 if (args.pressBtnDown) {
-  const opts = help.parseOpts({ opts: args.pressBtnDown, defaultOpt: 'keyDown' });
-  help.validateOpts(opts, okOptsBtnPress);
-  Promise.resolve(runner.pressBtnDown(opts)).then(response => {
-    response === 200 ? pp.trueText('Status is 200') : pp.falseText(`${response}`);
+  const pressBtnDown = params => {
+    return runner.pressBtnDown(params);
+  };
+  argsFunction({
+    optsToParse: args.pressBtnDown,
+    defaultOpt: 'keyDown',
+    okOpts: okOptsBtnPress,
+    rrFunc: pressBtnDown,
+    print: { type: 'status' },
   });
 }
 
 if (args.pressBtnUp) {
-  const opts = help.parseOpts({ opts: args.pressBtnUp, defaultOpt: 'keyUp' });
-  help.validateOpts(opts, okOptsBtnPress);
-  Promise.resolve(runner.pressBtnUp(opts)).then(response => {
-    response === 200 ? pp.trueText('Status is 200') : pp.falseText(`${response}`);
+  const pressBtnUp = params => {
+    return runner.pressBtnUp(params);
+  };
+  argsFunction({
+    optsToParse: args.pressBtnUp,
+    defaultOpt: 'keyUp',
+    okOpts: okOptsBtnPress,
+    rrFunc: pressBtnUp,
+    print: { type: 'status' },
   });
 }
 
 if (args.sendWord) {
-  const opts = help.parseOpts({ opts: args.sendWord, defaultOpt: 'word' });
-  help.validateOpts(opts, ['word', 'params']);
-  Promise.resolve(runner.sendWord(opts)).then(response => {
-    pp.json(response);
+  const sendWord = params => {
+    return runner.sendWord(params);
+  };
+  argsFunction({
+    optsToParse: args.sendWord,
+    defaultOpt: 'word',
+    okOpts: ['word', 'params'],
+    rrFunc: sendWord,
+    print: { type: 'json' },
   });
 }
 
 if (args.sendSequence) {
-  const opts = help.parseOpts({ opts: args.sendSequence, defaultOpt: 'sequence' });
-  const okOpts = ['sequence', 'params', 'keyType'];
-  help.validateOpts(opts, okOpts);
-  opts['sequence'] = help.parseButtonSequence(opts['sequence']);
-  Promise.resolve(runner.sendButtonSequence(opts)).then(response => {
-    pp.json(response);
+  const sendSequence = params => {
+    return runner.sendButtonSequence(params);
+  };
+  argsFunction({
+    optsToParse: args.sendSequence,
+    defaultOpt: 'sequence',
+    okOpts: ['sequence', 'params', 'keyType'],
+    sequence: 'sequence',
+    rrFunc: sendSequence,
+    print: { type: 'json' },
   });
 }
 
 if (args.sendCustomSequence) {
-  const opts = help.parseOpts({ opts: args.sendCustomSequence, defaultOpt: 'customSequence' });
-  const okOpts = ['customSequence', 'params'];
-  opts['customSequence'] = help.parseButtonSequence(opts['customSequence']);
-  help.validateOpts(opts, okOpts);
-  Promise.resolve(runner.sendMixedButtonSequence(opts)).then(response => {
-    pp.json(response);
+  const sendCustomSequence = params => {
+    return runner.sendMixedButtonSequence(params);
+  };
+  argsFunction({
+    optsToParse: args.sendCustomSequence,
+    defaultOpt: 'customSequence',
+    okOpts: ['customSequence', 'params'],
+    sequence: 'customSequence',
+    rrFunc: sendCustomSequence,
+    print: { type: 'json' },
   });
 }
 
