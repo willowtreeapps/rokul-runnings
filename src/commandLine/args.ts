@@ -14,10 +14,16 @@ export function getArgs() {
   parser.addArgument(['--pressDelay'], { help: 'set the press delay' });
   parser.addArgument(['--retryDelay'], { help: 'set the retry delay' });
   parser.addArgument(['--retries'], { help: 'set the retries' });
+  parser.addArgument(['--printOptions'], { help: 'set the print options' });
 
   // functional args
-  parser.addArgument(['-lc', '--launchChannel'], { help: 'launch the specified channel' });
+  parser.addArgument(['-lc', '--launchChannel'], {
+    defaultValue: 'defaultValue',
+    nargs: '?',
+    help: 'launch the specified channel',
+  });
   parser.addArgument(['-dl', '--deepLink'], { help: 'deep link into the specified channel' });
+  parser.addArgument(['--sendInstallChannel'], { help: 'installs the channel according to the channel code' });
   parser.addArgument(['-btn', '--pressBtn'], { help: 'sends a button press to the Roku' });
   parser.addArgument(['--pressBtnDown'], { help: 'sends a button down press to the Roku' });
   parser.addArgument(['--pressBtnUp'], { help: 'sends a button up press to the Roku' });
@@ -38,17 +44,33 @@ export function getArgs() {
   });
   parser.addArgument(['-gd', '--getDeviceInfo'], { action: 'storeTrue', help: 'get device information' });
 
-  parser.addArgument(['-gs', '--getScreenshot'], { help: 'gets a screenshot' });
+  parser.addArgument(['-gs', '--getScreenshot'], {
+    defaultValue: 'defaultValue',
+    nargs: '?',
+    help: 'gets a screenshot',
+  });
 
   // verify args
-  parser.addArgument(['--verifyChannelExist'], { help: 'verifies that a specific channel exists' });
+  parser.addArgument(['--verifyChannelExist'], {
+    defaultValue: 'defaultValue',
+    nargs: '?',
+    help: 'verifies that a specific channel exists',
+  });
   parser.addArgument(['--verifyScreenLoaded'], { help: 'verifies that the screen has been loaded' });
   parser.addArgument(['--verifyElementOnScreen'], { help: 'verifies that the element specified is on the screen' });
   parser.addArgument(['--verifyFocusedElementIsOfCertainTag'], {
     help: 'verifies that the focused element is of a certain tag type',
   });
-  parser.addArgument(['--verifyChannelLoaded'], { help: 'verifies that the channel has been loaded' });
-  parser.addArgument(['--verifyPlaybackStarted'], { help: 'verifies that playback was stated' });
+  parser.addArgument(['--verifyChannelLoaded'], {
+    defaultValue: 'defaultValue',
+    nargs: '?',
+    help: 'verifies that the channel has been loaded',
+  });
+  parser.addArgument(['--verifyPlaybackStarted'], {
+    defaultValue: 'defaultValue',
+    nargs: '?',
+    help: 'verifies that playback was stated',
+  });
 
   // get element args
   parser.addArgument(['-gf', '--getFocusedElement'], { action: 'storeTrue', help: 'get focused element' });
@@ -62,9 +84,13 @@ export function getArgs() {
   parser.addArgument(['--getElementsByAttr'], { help: 'returns the first element found with the attribute value' });
   parser.addArgument(['--getElementsByTag'], { help: 'returns the first element found with the tag value' });
 
+  // sideload args
+  parser.addArgument(['--install'], { help: 'sideloads a channel' });
+  parser.addArgument(['--replace'], { help: 'replaces a sideloaded channel' });
+  parser.addArgument(['--delete'], { action: 'storeTrue', help: 'deletes a sideloaded channel' });
+
   // debug arg
-  // re-visit whether to keep or delete
-  parser.addArgument(['--print'], { action: 'storeTrue', help: 'print for debugging, does not require value' });
+  parser.addArgument(['--debug'], { action: 'storeTrue', help: 'print for debugging, does not require value' });
 
   const args = parser.parseArgs();
 

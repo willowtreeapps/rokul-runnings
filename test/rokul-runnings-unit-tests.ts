@@ -81,6 +81,17 @@ describe('Rokul Runnings Unit tests', function() {
     expect(response).to.eql(200);
   });
 
+  it('Should Install the Channel', async function() {
+    const channelCode = '123';
+    nock(baseURL)
+      .post(`/install/${channelCode}`)
+      .reply(200);
+
+    const response = await rr.sendInstallChannel({ channelCode });
+
+    expect(response).to.eql(200);
+  });
+
   it('Should Get a List of Channels', async function() {
     const file = 'apps';
 

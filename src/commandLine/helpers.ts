@@ -61,10 +61,10 @@ export function parseOpts({ opts, defaultOpt }: { opts?: string; defaultOpt?: st
   if (splitOpts.length > 1 || splitOpts[0].includes('=')) {
     splitOpts.forEach(opt => {
       const key = opt.split('=')[0];
-      const value = opt.split('=')[1];
+      const value = opt.split('=', 2)[1];
       returnOpts[key] = value;
     });
-  } else {
+  } else if (defaultOpt) {
     returnOpts[defaultOpt] = opts;
   }
   return returnOpts;

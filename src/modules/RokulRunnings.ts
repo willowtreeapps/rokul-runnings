@@ -87,6 +87,22 @@ export class RokulRunnings {
     return this.driver.deepLink({ channelCode, contentId, mediaType, retries, params });
   }
 
+  /**
+   * Installs a channel by the channel code as specified from Roku
+   * Can't be used to sideload a dev channel
+   */
+  sendInstallChannel({
+    channelCode,
+    retries = this.retries,
+    params,
+  }: {
+    channelCode: string;
+    retries?: number;
+    params?: Params;
+  }) {
+    return this.driver.sendInstallChannel({ channelCode, retries, params });
+  }
+
   /** Returns a list of installed channels as an array of objects
    * Does not need to be async as it already returns a promise
    */
