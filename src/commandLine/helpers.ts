@@ -1,11 +1,13 @@
 import { opts as Opts } from './types';
 
+// Validates that the keyType passed in is correct
 export function validateKeyType(keyType: string) {
   if (keyType !== 'up' && keyType !== 'down' && keyType !== 'press') {
     throw new Error(`Incorrect keyType. Valid keyTypes are up, down, and press. Found: ${keyType}`);
   }
 }
 
+// Validates that only the valid opts are present
 export function validateOpts(opts: {}, okOpts: string[]) {
   const optsKeys = Object.keys(opts);
   optsKeys.forEach(key => {
@@ -15,13 +17,23 @@ export function validateOpts(opts: {}, okOpts: string[]) {
   });
 }
 
+/**
+ * Parses the button sequences for either sendSequence or sendCustomSequence
+ * Sequences are expected to be sent in this format:
+ * sequence=home^select^right^down
+ * sequence=down.home^press.select^up.right^press.down
+ * The first sequence is a traditional sequence, where all presses are the same type
+ * The second sequence is a custom sequence, where each press has a separate type
+ * */
 export function parseButtonSequence(sequence: string) {
   const sequenceArray = sequence.split('^');
   const returnSequence = [];
   sequenceArray.forEach(key => {
+    // If a custom sequence is passed in, this will be true
     if (key.split('.').length === 2) {
       const keySplit = key.split('.');
       validateKeyType(keySplit[0]);
+      // custom sequences are expect to be formatted as `{ keyType: keyToPress }`
       returnSequence.push({ [keySplit[0]]: keySplit[1] });
     } else {
       returnSequence.push(key);
@@ -30,7 +42,8 @@ export function parseButtonSequence(sequence: string) {
   return returnSequence;
 }
 
-export function parseElement(opts: Opts) {
+// Parses a string value and returns an ElementDataObject for querying app-ui
+export function parseElementDataObject(opts: Opts) {
   if (!opts.value || !opts.using || (opts.using === 'attr' && !opts.attribute)) {
     throw new Error(
       'Data is formatted incorrectly or missing.\nIt should be formatted as "using=text|tag,value=valueValue" or\n"using=attr,attribute=attributeValue,value=valueValue"',
@@ -55,16 +68,23 @@ export function parseElement(opts: Opts) {
   return opts;
 }
 
-export function parseOpts({ opts, defaultOpt }: { opts?: string; defaultOpt?: string }) {
-  const splitOpts = opts.split(',');
+// Parses the string values and returns a JSON object
+// Values are expected to be sent as one of the following:
+// `value` (in which case the value is assumed to be matched to the defaultOpt key)
+// `key=value`
+// `key1=value1,key2=value2`
+export function parseValues({ opts, defaultOpt }: { opts?: string; defaultOpt?: string }) {
+  const splitValues = opts.split(',');
   const returnOpts = {};
-  if (splitOpts.length > 1 || splitOpts[0].includes('=')) {
-    splitOpts.forEach(opt => {
+  if (splitValues.length > 1 || splitValues[0].includes('=')) {
+    // If the string contains a key-value pair as key=value
+    splitValues.forEach(opt => {
       const key = opt.split('=')[0];
       const value = opt.split('=', 2)[1];
       returnOpts[key] = value;
     });
   } else if (defaultOpt) {
+    // If there is no key provided, then the value is assumed to be the default value
     returnOpts[defaultOpt] = opts;
   }
   return returnOpts;

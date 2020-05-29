@@ -24,34 +24,32 @@ Rokul Runnings CLI creates an instance of the Rokul Runnings class based on defa
 
 ```json
 {
-  "ip": "", // IP address of the Roku, defaults to "", which will throw an error
-  "username": "rokudev", // username to access Roku Dev portal, defaults to "rokudev"
-  "password": "password", // password to access the Roku Dev portal, defaults to "password",
+  "rokuIPAddress": "",
+  "username": "rokudev",
+  "password": "password",
   "options": {
-    // Rokul Runnings specific options
-    "pressDelay": 1000, // time to wait in milliseconds between trying keyPresses, defaults to 1000
-    "retryDelay": 1000, // time to wait in milliseconds between retrying calls to the Roku, defaults to 1000
-    "retries": 1 // how many times a call is retried if a non-successful response is returned, defaults to 1
+    "pressDelayInMillis": 1000,
+    "retryDelayInMillis": 1000,
+    "retries": 1
   },
   "printOptions": {
-    // options related to how text is printed, optional
-    "true": "", // text decoration to be used for true responses, optional, defaults to green
-    "false": "", // text decoration to be used for false responses, optional, defaults to red
-    "jsonKey": "", // text decoration to be used for keys in JSON objects, optional, defaults to green
-    "jsonValue": {
-      // text decoration to be used for values in JSON objects, optional
-      "string": "", // text decoration to be used for string values in JSON objects, optional, defaults to orange
-      "boolean": "", // text decoration to be used for boolean values in JSON objects, optional, defaults to blue
-      "number": "" // text decoration to be used for number values in JSON objects, optional, defaults to yellow
-    }
+    "trueStyle": "",
+    "falseStyle": "",
+    "jsonKeyStyle": "",
+    "jsonValueStyle": {
+      "stringStyle": "",
+      "booleanStyle": "",
+      "numberStyle": ""
+    },
+    "jsonIndentAmount": 4
   }
 }
 ```
 
-The `ip`, `username`, `password`, and `options` fields can be set via the CLI:
+The `rokuIPAddress`, `username`, `password`, and `options` can be set via the CLI and refer to the constructor values for the Rokul Runnings class:
 
 ```
-rr -ip 127.0.0.2 -u newUsername -p newPassword --retryDelay 2000 --pressDelay 2000 --retries 2
+rr -ip 127.0.0.2 -u newUsername -p newPassword --retryDelayInMillis 2000 --pressDelayInMillis 2000 --retries 2
 rr --ip 127.0.0.3 --username newUsername2 --password newPassword2
 ```
 
@@ -63,10 +61,10 @@ Setting any option via the CLI will also save them in the config JSON file.
 rr --printOptions true=blue.bgRed.bold,false=red.bgBlue.bold,jsonKey=keyword\(\'pink\'\)
 ```
 
-`jsonValue` fields are set with `jsonValue` prepended to their field name
+`jsonValue` fields can be set by just refering their key name.
 
 ```
-rr --printOptions jsonValuestring=red,jsonValueboolean=blue,jsonValuenumber=green
+rr --printOptions stringStyle=red,booleanStyle=blue,numberStyle=green
 ```
 
 All of the print options can be defined via [Chalk](https://www.npmjs.com/package/chalk). Certain characters will need to be escaped when being passed in via command line, such as `(`, `)`, `'`, and `'`.

@@ -8,11 +8,11 @@ export function getArgs() {
   });
 
   // setup args
-  parser.addArgument(['-ip', '--ip'], { help: 'set the IP Address for the Roku' });
+  parser.addArgument(['-ip', '--rokuIPAddress'], { help: 'set the IP Address for the Roku' });
   parser.addArgument(['-u', '--username'], { help: 'set the username for the Roku' });
   parser.addArgument(['-p', '--password'], { help: 'set the password for the Roku' });
-  parser.addArgument(['--pressDelay'], { help: 'set the press delay' });
-  parser.addArgument(['--retryDelay'], { help: 'set the retry delay' });
+  parser.addArgument(['--pressDelay, --pressDelayInMillis'], { help: 'set the press delay' });
+  parser.addArgument(['--retryDelay, --retryDelayInMillis'], { help: 'set the retry delay' });
   parser.addArgument(['--retries'], { help: 'set the retries' });
   parser.addArgument(['--printOptions'], { help: 'set the print options' });
 

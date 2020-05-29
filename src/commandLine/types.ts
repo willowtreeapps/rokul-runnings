@@ -9,29 +9,29 @@ export type configs = {
 };
 
 export type rokuOptions = {
-  pressDelay?: number;
-  retryDelay?: number;
+  pressDelayInMillis?: number;
+  retryDelayInMillis?: number;
   retries?: number;
 };
 
 export type printer = {
-  true?: string;
-  false?: string;
-  jsonKey?: string;
-  jsonValue?: jsonValueObject;
-  jsonIndent?: number;
+  trueStyle?: string;
+  falseStyle?: string;
+  jsonKeyStyle?: string;
+  jsonValueStyle?: jsonValueObject;
+  jsonIndentAmount?: number;
 };
 
 export type jsonValueObject = {
-  string?: string;
-  number?: string;
-  boolean?: string;
+  stringStyle?: string;
+  numberStyle?: string;
+  booleanStyle?: string;
 };
 
 export type opts = {
+  [key: string]: string | ElementDataObject;
   data?: ElementDataObject;
   value?: string;
   using?: 'text' | 'tag' | 'attr';
   attribute?: string;
-  [key: string]: string | ElementDataObject;
 };
