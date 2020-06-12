@@ -11,8 +11,8 @@ export function getArgs() {
   parser.addArgument(['-ip', '--rokuIPAddress'], { help: 'set the IP Address for the Roku' });
   parser.addArgument(['-u', '--username'], { help: 'set the username for the Roku' });
   parser.addArgument(['-p', '--password'], { help: 'set the password for the Roku' });
-  parser.addArgument(['--pressDelay, --pressDelayInMillis'], { help: 'set the press delay' });
-  parser.addArgument(['--retryDelay, --retryDelayInMillis'], { help: 'set the retry delay' });
+  parser.addArgument(['-pressDelay', '--pressDelayInMillis'], { help: 'set the press delay' });
+  parser.addArgument(['-retryDelay', '--retryDelayInMillis'], { help: 'set the retry delay' });
   parser.addArgument(['--retries'], { help: 'set the retries' });
   parser.addArgument(['--printOptions'], { help: 'set the print options' });
 
@@ -93,6 +93,8 @@ export function getArgs() {
   parser.addArgument(['--debug'], { action: 'storeTrue', help: 'print for debugging, does not require value' });
 
   const args = parser.parseArgs();
+
+  console.log(args);
 
   return args;
 }

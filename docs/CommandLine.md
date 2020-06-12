@@ -58,10 +58,10 @@ Setting any option via the CLI will also save them in the config JSON file.
 `printOptions` can also be set as a comma-delimited list via the CLI:
 
 ```
-rr --printOptions true=blue.bgRed.bold,false=red.bgBlue.bold,jsonKey=keyword\(\'pink\'\)
+rr --printOptions trueStyle=blue.bgRed.bold,falseStyle=red.bgBlue.bold,jsonKeyStyle=keyword\(\'pink\'\)
 ```
 
-`jsonValue` fields can be set by just refering their key name.
+`jsonValueStyle` fields can be set by just refering their key name.
 
 ```
 rr --printOptions stringStyle=red,booleanStyle=blue,numberStyle=green

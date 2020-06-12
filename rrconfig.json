@@ -1,5 +1,5 @@
 {
-  "rokuIPAddress": "",
+  "rokuIPAddress": "10.0.0.118",
   "username": "rokudev",
   "password": "Pass123",
   "options": {

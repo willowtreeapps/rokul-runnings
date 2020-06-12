@@ -40,7 +40,9 @@ export class Driver {
   /** Retrives the list of installed channels */
   async getApps(retries: number) {
     const url = this.queryUrl('apps');
+    console.log('The url is: ', url);
     const response = await http.baseGET({ url, retries });
+    console.log('Get Apps response is: ', response);
     return jsonFormatterApps(parser(response));
   }
 

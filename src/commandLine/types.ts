@@ -1,7 +1,7 @@
 import { ElementDataObject } from '../types/RokulRunnings';
 
 export type configs = {
-  ip: string;
+  rokuIPAddress: string;
   username: string;
   password: string;
   options?: rokuOptions;

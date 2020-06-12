@@ -65,6 +65,8 @@ export class RokulRunnings {
     retries?: number;
     params?: Params;
   }) {
+    console.log(this.rokuIPAddress);
+    console.log(this.driver);
     return this.driver.sendLaunchChannel({ channelCode, contentId, mediaType, retries, params });
   }
 

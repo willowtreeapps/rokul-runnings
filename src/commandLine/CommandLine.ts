@@ -8,7 +8,7 @@ import { RokulRunnings as RR } from '../modules/RokulRunnings';
 import * as fs from 'fs';
 import * as path from 'path';
 import { printer, rokuOptions } from './types';
-const Configstore = require('configstore');
+import Configstore = require('configstore');
 const log = console.log;
 
 // Defaults for Configstore setup
@@ -55,9 +55,13 @@ if (args.password) {
 if (args.pressDelayInMillis || args.retryDelayInMillis || args.retries) {
   const rrConfigOptions = rrConfig.get('options');
   const rokuOptions = {
-    pressDelayInMillis: args.pressDelayInMillis ? args.pressDelayInMillis : rrConfigOptions.pressDelayInMillis,
-    retryDelayInMillis: args.retryDelayInMillis ? args.retryDelayInMillis : rrConfigOptions.retryDelayInMillis,
-    retries: args.retries ? args.retries : rrConfigOptions.retries,
+    pressDelayInMillis: args.pressDelayInMillis
+      ? parseInt(args.pressDelayInMillis)
+      : rrConfigOptions.pressDelayInMillis,
+    retryDelayInMillis: args.retryDelayInMillis
+      ? parseInt(args.retryDelayInMillis)
+      : rrConfigOptions.retryDelayInMillis,
+    retries: args.retries ? parseInt(args.retries) : rrConfigOptions.retries,
   };
   rrConfig.set('options', rokuOptions);
 }
@@ -67,7 +71,13 @@ if (args.printOptions) {
   printConfig.forEach(option => {
     const options = option.split('=');
     if (options[0] === 'stringStyle' || options[0] === 'booleanStyle' || options[0] === 'numberStyle') {
+      if (!printConfigObj.jsonValueStyle) {
+        printConfigObj.jsonValueStyle = {};
+      }
       printConfigObj['jsonValueStyle'][options[0]] = options[1];
+    } else if (options[0] === 'jsonIndentAmount') {
+      // Do code to parse Int.
+      printConfigObj[options[0]] = parseInt(options[1]);
     } else {
       printConfigObj[options[0]] = options[1];
     }
@@ -94,7 +104,7 @@ if (!(rokuIPAddress && username && password) && !args.print) {
 const pp = new PrintPretty(printOptions);
 
 // Base function for arguments that pass in parameters
-function baseFunction({
+async function baseFunction({
   valuesToParse,
   parseElementDataObject = false,
   defaultOpt,
@@ -143,7 +153,7 @@ function baseFunction({
     opts = opts[keys[0]];
   }
 
-  Promise.resolve(rrFunc(opts)).then(response => {
+  Promise.resolve(await rrFunc(opts)).then(response => {
     // Use the print parameter to determine how the response is printed
     if (!print) {
       log(response);
@@ -155,6 +165,7 @@ function baseFunction({
       // prints out the trueText if the response a 200 of any type
       response < 300 ? pp.trueText(`Status is ${response}`) : pp.falseText(`${response}`);
     }
+    return response;
   });
 }
 
@@ -207,6 +218,7 @@ function storeTrue(func) {
   Promise.resolve(
     func.then(response => {
       pp.json(response);
+      return response;
     }),
   );
 }
