@@ -6,16 +6,10 @@ Rokul Runnings has a CLI to execute all commands in the Rokul Runnings class via
 
 ### Install
 
-Rokul Runnings CLI can be set up to run either globally or at a project level. In order to use either, they must be installed:
+Rokul Runnings CLI requires that the Rokul Runnings project be installed globally:
 
 ```
-// global
 npm install -g @willowtreeapps/rokul-runnings
-```
-
-```
-// project level
-npm install @willowtreeapps/rokul-runnings
 ```
 
 ### Defining Config values
@@ -141,7 +135,7 @@ Parameters can be passed in to the commands below. Parameters can either use the
 |`--install`|`channelLocation`|`channelLocation`|`installChannel()`|`rr --install '/path/to/zip.zip`|
 |`--replace`|`channelLocation`|`channelLocation`|`replaceChannel()`|`rr --replace '/path/to/zip.zip`|
 
-## Global vs. Local
+## Global vs. Local Configuration
 
 Rokul Runnings CLI uses simple logic to determine what config file to use. If the present working directory that the command is executed from contains a file named `rrconfig.json`, then that file is used. Otherwise, the global config file will be used. This will look something like FIND OUT WHAT IT LOOKS LIKE.
 
