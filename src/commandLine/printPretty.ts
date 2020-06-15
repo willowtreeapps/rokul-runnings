@@ -1,7 +1,7 @@
 import { printer } from './types';
+import * as chalk from 'chalk';
 
 const log = console.log;
-const chalk = require('chalk');
 
 export class PrintPretty {
   private printOptions: printer;

@@ -1,4 +1,5 @@
-const ArgumentParser = require('argparse').ArgumentParser;
+import argp = require('argparse');
+const ArgumentParser = argp.ArgumentParser;
 
 export function getArgs() {
   const parser = new ArgumentParser({

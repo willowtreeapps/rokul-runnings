@@ -8,7 +8,7 @@ import { RokulRunnings as RR } from '../modules/RokulRunnings';
 import * as fs from 'fs';
 import * as path from 'path';
 import { printer, rokuOptions } from './types';
-const Configstore = require('configstore');
+import Configstore = require('configstore');
 const log = console.log;
 
 // Defaults for Configstore setup
@@ -87,76 +87,15 @@ let runner;
 if (!(rokuIPAddress && username && password) && !args.print) {
   throw Error('IP, Username, or Password is missing. Please set before executing commands.');
 } else {
-  runner = new RR(rokuIPAddress, username, password, { ...options });
+  runner = new RR(rokuIPAddress, username, password, {
+    retryDelayInMillis: options.retryDelayInMillis,
+    pressDelayInMillis: options.pressDelayInMillis,
+    retries: options.retries,
+  });
 }
 
 // Start PrintPretty
 const pp = new PrintPretty(printOptions);
-
-// Base function for arguments that pass in parameters
-function baseFunction({
-  valuesToParse,
-  parseElementDataObject = false,
-  defaultOpt,
-  okOpts,
-  sequence,
-  screenshot = false,
-  rrFunc,
-  print,
-  stringInsteadOfObject = false,
-}: {
-  valuesToParse: string;
-  parseElementDataObject?: boolean;
-  defaultOpt?: string;
-  okOpts?: string[];
-  sequence?: 'sequence' | 'customSequence';
-  screenshot?: boolean;
-  rrFunc: Function;
-  print?: { type?: 'trueFalse' | 'json' | 'status'; text?: string; false?: string };
-  stringInsteadOfObject?: boolean;
-}) {
-  // Pass in parameter value from command line
-  let opts =
-    valuesToParse !== '' // as long as there are values to parse
-      ? parseElementDataObject // if there are ElementDataObjects to parse
-        ? help.parseElementDataObject(help.parseValues({ opts: valuesToParse, defaultOpt }))
-        : help.parseValues({ opts: valuesToParse, defaultOpt })
-      : {};
-  if (opts && okOpts) {
-    // only validate the opts if there are opts and a definite list of valid opts
-    help.validateOpts(opts, okOpts);
-  }
-  if (sequence) {
-    // if a sequence is passed in, there is special parsing to be done
-    opts[sequence] = help.parseButtonSequence(opts[sequence]);
-  }
-  if (screenshot) {
-    // Setting the print flag to true so that the filepath of the screenshot is printed
-    opts = { ...opts, print: true };
-    // if directoryPath is not set to PWD, then the directory used will be the node modules directory where Rokul Runnings is installed
-    opts['directoryPath'] = opts['directoryPath'] || './';
-  }
-  // if Rokul Runnings function needs a string parameter instead of an object
-  // Currently only used for --install and --replace
-  const keys = Object.keys(opts);
-  if (stringInsteadOfObject && keys.length === 1) {
-    opts = opts[keys[0]];
-  }
-
-  Promise.resolve(rrFunc(opts)).then(response => {
-    // Use the print parameter to determine how the response is printed
-    if (!print) {
-      log(response);
-    } else if (print.type === 'trueFalse') {
-      response ? pp.trueText(print.text) : pp.falseText(print.false);
-    } else if (print.type === 'json') {
-      pp.json(response);
-    } else if (print.type === 'status') {
-      // prints out the trueText if the response a 200 of any type
-      response < 300 ? pp.trueText(`Status is ${response}`) : pp.falseText(`${response}`);
-    }
-  });
-}
 
 /** The only time that !args.launchChannel === true is when no value is specified
   `rr --launchChannel`
@@ -167,12 +106,13 @@ if (args.launchChannel !== 'defaultValue' || !args.launchChannel) {
   const launchTheChannel = params => {
     return runner.launchTheChannel(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.launchChannel || 'dev',
     defaultOpt: 'channelCode',
     okOpts: ['channelCode', 'contentId', 'mediaType', 'params'],
     rrFunc: launchTheChannel,
     print: { type: 'status' },
+    pp,
   });
 }
 
@@ -180,12 +120,13 @@ if (args.deepLink) {
   const deepLinkIntoChannel = params => {
     return runner.deepLinkIntoChannel(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.deepLink,
     defaultOpt: 'channelCode',
     okOpts: ['channelCode', 'contentId', 'mediaType', 'params'],
     rrFunc: deepLinkIntoChannel,
     print: { type: 'status' },
+    pp,
   });
 }
 
@@ -193,46 +134,56 @@ if (args.sendInstallChannel) {
   const sendInstallChannel = params => {
     return runner.sendInstallChannel(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.sendInstallChannel,
     defaultOpt: 'channelCode',
     okOpts: ['channelCode', 'params'],
     rrFunc: sendInstallChannel,
     print: { type: 'status' },
+    pp,
   });
 }
 
-// Re-usable function for the basic get functions, all of which have their `action` as `'storeTrue'`
-function storeTrue(func) {
-  Promise.resolve(
-    func.then(response => {
-      pp.json(response);
-    }),
-  );
-}
-
 if (args.getApps) {
-  storeTrue(runner.getApps());
+  const getApps = () => {
+    return runner.getApps();
+  };
+  help.storeTrue(getApps, pp);
 }
 
 if (args.getFocusedElement) {
-  storeTrue(runner.getFocusedElement());
+  const getFocusedElement = () => {
+    return runner.getFocusedElement();
+  };
+  help.storeTrue(getFocusedElement, pp);
 }
 
 if (args.getScreenSource) {
-  storeTrue(runner.getScreenSource());
+  const getScreenSource = () => {
+    return runner.getScreenSource();
+  };
+  help.storeTrue(getScreenSource, pp);
 }
 
 if (args.getCurrentChannelInfo) {
-  storeTrue(runner.getCurrentChannelInfo());
+  const getCurrentChannelInfo = () => {
+    return runner.getCurrentChannelInfo();
+  };
+  help.storeTrue(getCurrentChannelInfo, pp);
 }
 
 if (args.getDeviceInfo) {
-  storeTrue(runner.getDeviceInfo());
+  const getDeviceInfo = () => {
+    return runner.getDeviceInfo();
+  };
+  help.storeTrue(getDeviceInfo, pp);
 }
 
 if (args.getPlayerInfo) {
-  storeTrue(runner.getPlayerInfo());
+  const getPlayerInfo = () => {
+    return runner.getPlayerInfo();
+  };
+  help.storeTrue(getPlayerInfo, pp);
 }
 
 // This won't work if the folder where the screenshot should be saved doesn't exist
@@ -240,7 +191,7 @@ if (args.getScreenshot !== 'defaultValue' || !args.getScreenshot) {
   const getScreenshot = params => {
     return runner.getScreenshot(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getScreenshot || './',
     defaultOpt: 'directoryPath',
     okOpts: ['directoryPath', 'fileName', 'fileType'],
@@ -255,12 +206,13 @@ if (args.verifyScreenLoaded) {
   const verifyIsScreenLoaded = params => {
     return runner.verifyIsScreenLoaded(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.verifyScreenLoaded,
     parseElementDataObject: true,
     okOpts: screenLoadedOkOpts,
     rrFunc: verifyIsScreenLoaded,
     print: { type: 'trueFalse', text: `Screen has been loaded.`, false: 'Screen has not been loaded.' },
+    pp,
   });
 }
 
@@ -268,12 +220,13 @@ if (args.verifyElementOnScreen) {
   const verifyIsElementOnScreen = params => {
     return runner.verifyIsElementOnScreen(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.verifyElementOnScreen,
     parseElementDataObject: true,
     okOpts: screenLoadedOkOpts,
     rrFunc: verifyIsElementOnScreen,
     print: { type: 'trueFalse', text: 'Element is on the screen', false: 'Element is not on the screen"' },
+    pp,
   });
 }
 
@@ -286,12 +239,13 @@ if (args.verifyChannelExist !== 'defaultValue' || !args.verifyChannelExist) {
   const verifyIsChannelExist = params => {
     return runner.verifyIsChannelExist(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.verifyChannelExist || 'dev',
     defaultOpt: 'id',
     okOpts: ['id'],
     rrFunc: verifyIsChannelExist,
     print: { type: 'trueFalse', text: 'Channel exists.', false: 'Channel does not exist.' },
+    pp,
   });
 }
 
@@ -299,7 +253,7 @@ if (args.verifyFocusedElementIsOfCertainTag) {
   const verifyFocusedElementIsOfCertainTag = params => {
     return runner.verifyFocusedElementIsOfCertainTag(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.verifyFocusedElementIsOfCertainTag,
     defaultOpt: 'tag',
     okOpts: ['tag', 'maxAttempts'],
@@ -309,6 +263,7 @@ if (args.verifyFocusedElementIsOfCertainTag) {
       text: 'Focused element is of specified tag type.',
       false: 'Focused element is not of specified tag type.',
     },
+    pp,
   });
 }
 
@@ -321,12 +276,13 @@ if (args.verifyChannelLoaded !== 'defaultValue' || !args.verifyChannelLoaded) {
   const verifyIsChannelLoaded = params => {
     return runner.verifyIsChannelLoaded(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.verifyChannelLoaded || 'dev',
     defaultOpt: 'id',
     okOpts: ['id, maxAttempts'],
     rrFunc: verifyIsChannelLoaded,
     print: { type: 'trueFalse', text: 'Channel is loaded.', false: 'Channel is not loaded' },
+    pp,
   });
 }
 
@@ -339,11 +295,12 @@ if (args.verifyPlaybackStarted !== 'defaultValue' || !args.verifyPlaybackStarted
   const verifyIsPlaybackStarted = params => {
     return runner.verifyIsPlaybackStarted(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.verifyIsPlaybackStarted || '',
     okOpts: ['maxAttempts'],
     rrFunc: verifyIsPlaybackStarted,
     print: { type: 'trueFalse', text: 'Playback is started.', false: 'Playback is not started.' },
+    pp,
   });
 }
 
@@ -351,12 +308,13 @@ if (args.getElement) {
   const getElement = params => {
     return runner.getElement(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElement,
     parseElementDataObject: true,
     okOpts: ['data'],
     rrFunc: getElement,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -364,13 +322,14 @@ if (args.getElementByText) {
   const getElementByText = params => {
     return runner.getElementByTag(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElementByText,
     parseElementDataObject: true,
     defaultOpt: 'value',
     okOpts: ['value'],
     rrFunc: getElementByText,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -378,12 +337,13 @@ if (args.getElementByAttr) {
   const getElementByAttr = params => {
     return runner.getElementByAttr(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElementByAttr,
     parseElementDataObject: true,
     okOpts: ['value', 'attribute'],
     rrFunc: getElementByAttr,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -391,13 +351,14 @@ if (args.getElementByTag) {
   const getElementByTag = params => {
     return runner.getElementByTag(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElementByTag,
     parseElementDataObject: true,
     defaultOpt: 'value',
     okOpts: ['value'],
     rrFunc: getElementByTag,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -405,12 +366,13 @@ if (args.getElements) {
   const getElements = params => {
     return runner.getElements(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElements,
     parseElementDataObject: true,
     okOpts: ['data'],
     rrFunc: getElements,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -418,13 +380,14 @@ if (args.getElementsByText) {
   const getElementsByText = params => {
     return runner.getElementsByText(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElementsByText,
     parseElementDataObject: true,
     defaultOpt: 'value',
     okOpts: ['value'],
     rrFunc: getElementsByText,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -432,12 +395,13 @@ if (args.getElementsByAttr) {
   const getElementsByAttr = params => {
     return runner.getElementsByAttr(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElementsByAttr,
     parseElementDataObject: true,
     okOpts: ['value', 'attribute'],
     rrFunc: getElementsByAttr,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -445,13 +409,14 @@ if (args.getElementsByTag) {
   const getElementsByTag = params => {
     return runner.getElementsByTag(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.getElementsByTag,
     parseElementDataObject: true,
     defaultOpt: 'value',
     okOpts: ['value'],
     rrFunc: getElementsByTag,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -459,12 +424,13 @@ if (args.pressBtn) {
   const pressBtn = params => {
     return runner.pressBtn(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.pressBtn,
     defaultOpt: 'keyPress',
     okOpts: ['keyPress', 'params'],
     rrFunc: pressBtn,
     print: { type: 'status' },
+    pp,
   });
 }
 
@@ -472,12 +438,13 @@ if (args.pressBtnDown) {
   const pressBtnDown = params => {
     return runner.pressBtnDown(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.pressBtnDown,
     defaultOpt: 'keyDown',
     okOpts: ['keyDown', 'params'],
     rrFunc: pressBtnDown,
     print: { type: 'status' },
+    pp,
   });
 }
 
@@ -485,12 +452,13 @@ if (args.pressBtnUp) {
   const pressBtnUp = params => {
     return runner.pressBtnUp(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.pressBtnUp,
     defaultOpt: 'keyUp',
     okOpts: ['keyUp', 'params'],
     rrFunc: pressBtnUp,
     print: { type: 'status' },
+    pp,
   });
 }
 
@@ -498,12 +466,13 @@ if (args.sendWord) {
   const sendWord = params => {
     return runner.sendWord(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.sendWord,
     defaultOpt: 'word',
     okOpts: ['word', 'params'],
     rrFunc: sendWord,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -511,13 +480,14 @@ if (args.sendSequence) {
   const sendSequence = params => {
     return runner.sendButtonSequence(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.sendSequence,
     defaultOpt: 'sequence',
     okOpts: ['sequence', 'params', 'keyType'],
     sequence: 'sequence',
     rrFunc: sendSequence,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -525,13 +495,14 @@ if (args.sendCustomSequence) {
   const sendCustomSequence = params => {
     return runner.sendMixedButtonSequence(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.sendCustomSequence,
     defaultOpt: 'customSequence',
     okOpts: ['customSequence', 'params'],
     sequence: 'customSequence',
     rrFunc: sendCustomSequence,
     print: { type: 'json' },
+    pp,
   });
 }
 
@@ -539,12 +510,13 @@ if (args.install) {
   const installChannel = params => {
     return runner.installChannel(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.install,
     defaultOpt: 'channelLocation',
     okOpts: ['channelLocation'],
     rrFunc: installChannel,
     print: { type: 'status' },
+    pp,
     stringInsteadOfObject: true,
   });
 }
@@ -553,12 +525,13 @@ if (args.replace) {
   const replaceChannel = params => {
     return runner.replaceChannel(params);
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: args.replace,
     defaultOpt: 'channelLocation',
     okOpts: ['channelLocation'],
     rrFunc: replaceChannel,
     print: { type: 'status' },
+    pp,
     stringInsteadOfObject: true,
   });
 }
@@ -567,10 +540,11 @@ if (args.delete) {
   const deleteChannel = () => {
     return runner.deleteChannel();
   };
-  baseFunction({
+  help.baseFunction({
     valuesToParse: '',
     rrFunc: deleteChannel,
     print: { type: 'status' },
+    pp,
   });
 }
 
