@@ -14,7 +14,9 @@ test
 .github
 .eslintrc.json
 .prettierrc
+rrconfig.json
 src/modules/images
 src/images
 test/resources/images
 *.tgz
+*.zip

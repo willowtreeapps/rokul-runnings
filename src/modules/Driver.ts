@@ -201,6 +201,7 @@ export class Driver {
     if (!sceneName || !elements) {
       throw new Error('Cannot find root Scene component');
     }
+
     const foundElements = matchElements(data, elements, sceneName);
 
     return foundElements;

@@ -49,7 +49,9 @@ export class RokulRunnings {
     this.retries = retries;
   }
 
-  /** Launches the channel corresponding to the specified channel ID. */
+  /** Launches the channel corresponding to the specified channel ID.
+   * Does not need to be async as it already returns a promise
+   */
   launchTheChannel({
     channelCode,
     contentId,
@@ -66,7 +68,9 @@ export class RokulRunnings {
     return this.driver.sendLaunchChannel({ channelCode, contentId, mediaType, retries, params });
   }
 
-  /** Deep Links into channel */
+  /** Deep Links into channel
+   * Does not need to be async as it already returns a promise
+   */
   deepLinkIntoChannel({
     channelCode,
     contentId,
@@ -83,7 +87,25 @@ export class RokulRunnings {
     return this.driver.deepLink({ channelCode, contentId, mediaType, retries, params });
   }
 
-  /** Returns a list of installed channels as an array of objects */
+  /**
+   * Installs a channel by the channel code as specified from Roku
+   * Can't be used to sideload a dev channel
+   */
+  sendInstallChannel({
+    channelCode,
+    retries = this.retries,
+    params,
+  }: {
+    channelCode: string;
+    retries?: number;
+    params?: Params;
+  }) {
+    return this.driver.sendInstallChannel({ channelCode, retries, params });
+  }
+
+  /** Returns a list of installed channels as an array of objects
+   * Does not need to be async as it already returns a promise
+   */
   getApps(retries = this.retries) {
     return this.driver.getApps(retries);
   }

@@ -1,8 +1,11 @@
 {
   "name": "@willowtreeapps/rokul-runnings",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Library to send automated commands to a Roku",
   "main": "dist/index.js",
+  "bin": {
+    "rr": "./dist/src/commandLine/CommandLine.js"
+  },
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
@@ -40,22 +43,27 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "argparse": "^1.0.10",
     "axios": "^0.19.0",
+    "chalk": "^4.0.0",
+    "configstore": "^5.0.1",
     "form-data": "^3.0.0",
     "indigestion": "^0.1.3",
-    "pm2": "^4.2.3",
     "xml-js": "^1.6.11"
   },
   "engines": {
     "node": ">=12.0.0"
   },
   "devDependencies": {
+    "@types/argparse": "^1.0.38",
     "@types/axios": "^0.14.0",
     "@types/chai": "^4.2.10",
+    "@types/chalk": "^2.2.0",
+    "@types/configstore": "^4.0.0",
     "@types/form-data": "^2.5.0",
     "@types/mocha": "^7.0.2",
     "@types/nock": "^11.1.0",
-    "@types/node": "^13.1.0",
+    "@types/node": "^13.13.12",
     "@types/xml-js": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^2.15.0",
     "@typescript-eslint/parser": "^2.15.0",
@@ -70,7 +78,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^4.0.1",
     "lint-staged": "^9.5.0",
-    "mocha": "^7.0.1",
+    "mocha": "^7.1.2",
     "nock": "^11.7.0",
     "prettier": "^1.19.1",
     "ts-node": "^8.6.2",

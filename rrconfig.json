@@ -1,0 +1,21 @@
+{
+  "rokuIPAddress": "0.0.0.0",
+  "username": "rokudev",
+  "password": "Pass123",
+  "options": {
+    "pressDelayInMillis": 1000,
+    "retryDelayInMillis": 1000,
+    "retries": 1
+  },
+  "printOptions": {
+    "trueStyle": "",
+    "falseStyle": "",
+    "jsonKeyStyle": "",
+    "jsonValueStyle": {
+      "stringStyle": "",
+      "booleanStyle": "",
+      "numberStyle": ""
+    },
+    "jsonIndentAmount": 4
+  }
+}
